@@ -140,59 +140,45 @@ typedef union
 } param_resp_t;
 
 
-  class Master
-  {
-    public:
-      Master(PortHandler *port, float protocol_ver = 2.0);
-      Master(float protocol_ver = 2.0);
+class Master
+{
+  public:
+    Master(PortHandler *port, float protocol_ver = 2.0);
+    Master(float protocol_ver = 2.0);
 
-      bool setPortProtocolVersion(float version);
-      float getPortProtocolVersion();
+    bool setPortProtocolVersion(float version);
+    float getPortProtocolVersion();
 
-      bool setPort(PortHandler *port);
+    bool setPort(PortHandler *port);
 
-      dxl_return_t ping(uint8_t id,
-       status_ping_t *p_resp, uint32_t timeout);
-      //bool pingBroadcast();
+    dxl_return_t ping(uint8_t id,
+     status_ping_t *p_resp, uint32_t timeout);
+    //bool pingBroadcast();
           
-      int32_t read(uint8_t id, uint16_t addr, uint16_t addr_length,
-       uint8_t *p_recv_buf, uint16_t recv_buf_length, uint32_t timeout);
+    int32_t read(uint8_t id, uint16_t addr, uint16_t addr_length,
+      uint8_t *p_recv_buf, uint16_t recv_buf_length, uint32_t timeout);
 
-      // uint8_t read8(uint8_t id, uint16_t addr, uint32_t timeout = 20);
-      // uint16_t read16(uint8_t id, uint16_t addr, uint32_t timeout = 20);
-      // uint32_t read32(uint8_t id, uint16_t addr, uint32_t timeout = 20);
-      // uint64_t read64(uint8_t id, uint16_t addr, uint32_t timeout = 20);
-      
-      // dxl_return_t write(uint8_t id, uint16_t addr,
-      //  uint8_t *param, uint16_t param_len);
+    bool write(uint8_t id, uint16_t addr, 
+      uint8_t *p_data, uint16_t data_length, uint32_t timeout = 100);
 
-      bool write(uint8_t id, uint16_t addr, 
-       uint8_t *p_data, uint16_t data_length, uint32_t timeout = 100);
+    bool writeNoResp(uint8_t id, uint16_t addr, 
+      uint8_t *p_data, uint16_t data_length);
 
-      bool writeNoResp(uint8_t id, uint16_t addr, 
-       uint8_t *p_data, uint16_t data_length);
+    //TODO: dxl_return_t regWrite();
+    //TODO: dxl_return_t action();
+    dxl_return_t factoryReset(uint8_t id, uint8_t option, uint32_t timeout);
+    dxl_return_t reboot(uint8_t id, uint32_t timeout);
 
-      // int write8(uint8_t id, uint16_t addr, uint8_t data, uint32_t timeout = 20);
-      // int write16(uint8_t id, uint16_t addr, uint16_t data, uint32_t timeout = 20);
-      // int write32(uint8_t id, uint16_t addr, uint32_t data, uint32_t timeout = 20);
-      // int write64(uint8_t id, uint16_t addr, uint64_t data, uint32_t timeout = 20);
+    //TODO: dxl_return_t clear();
+    dxl_return_t syncRead(param_sync_read_t *p_param,
+      status_read_t *p_resp, uint32_t timeout);
+    dxl_return_t syncWrite(param_sync_write_t *p_param);
+    dxl_return_t bulkRead(param_bulk_read_t *p_param,
+      status_read_t *p_resp, uint32_t timeout);
+    dxl_return_t bulkWrite(param_bulk_write_t *p_param);
 
-//      dxl_return_t regWrite();
-//      dxl_return_t action();
-      dxl_return_t factoryReset(uint8_t id, uint8_t option, uint32_t timeout);
-      dxl_return_t reboot(uint8_t id, uint32_t timeout);
-
-      /* Dynamixel 특화, 특정 버전 이상부터만 지원 */
-      //dxl_return_t clear();
-      dxl_return_t syncRead(param_sync_read_t *p_param,
-       status_read_t *p_resp, uint32_t timeout);
-      dxl_return_t syncWrite(param_sync_write_t *p_param);
-      dxl_return_t bulkRead(param_bulk_read_t *p_param,
-       status_read_t *p_resp, uint32_t timeout);
-      dxl_return_t bulkWrite(param_bulk_write_t *p_param);
-
-      uint8_t getLastStatusError() const;
-      dxl_return_t getLastDxlReturn() const;
+    uint8_t getLastStatusError() const;
+    dxl_return_t getLastDxlReturn() const;
 
     private:
       PortHandler *p_port_;
@@ -200,14 +186,7 @@ typedef union
       dxl_t packet_;
       uint8_t last_status_error_; 
       dxl_return_t last_dxl_return_;
-
   };
-
-
-// TODO : 향후에 다른곳으로 이동이 필요함
-//data_t getDataType(uint8_t *p_data, uint8_t length);
-
-
 }
 
 

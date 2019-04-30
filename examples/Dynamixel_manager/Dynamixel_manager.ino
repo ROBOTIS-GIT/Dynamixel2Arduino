@@ -11,7 +11,7 @@ void setup() {
   Serial.begin(9600);
   dynamixel_manager.begin(1000000);
   dynamixel_manager.scan();
-  dynamixel_manager.writeControlTableItem(DXL_ID, true, ControlTableItem::TORQUE_ENABLE);
+  dynamixel_manager.writeControlTableItem(ControlTableItem::TORQUE_ENABLE, DXL_ID, true);
 }
 
 void loop() {
@@ -26,9 +26,9 @@ void loop() {
     led_state = !led_state;
   }
 
-  if(millis() - pre_time[1] >= 2000) {
+  if(millis() - pre_time[1] >= 1500) {
     pre_time[1] = millis();
-    dynamixel_manager.writeControlTableItem(DXL_ID, value, ControlTableItem::GOAL_POSITION);
+    dynamixel_manager.writeControlTableItem(GOAL_POSITION, DXL_ID, value);
     if(value == 0){
       value = 4095;
     }else{
@@ -36,10 +36,10 @@ void loop() {
     }
   }
 
-  if(millis() - pre_time[2] >= 200) {
+  if(millis() - pre_time[2] >= 20) {
     pre_time[2] = millis();
     Serial.print("Present Position : ");
-    Serial.println(dynamixel_manager.readControlTableItem(DXL_ID, PRESENT_POSITION));
+    Serial.println(dynamixel_manager.readControlTableItem(PRESENT_POSITION, DXL_ID));
   }
 
 }

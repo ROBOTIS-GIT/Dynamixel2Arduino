@@ -83,8 +83,12 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
     uint8_t getHardwareError(uint8_t id);
 
-    int32_t readControlTableItem(uint8_t id, ControlTableItem item, uint32_t timeout = 100);
-    bool writeControlTableItem(uint8_t id, int32_t data, ControlTableItem item, uint32_t timeout = 100);
+
+
+    int32_t readControlTableItem(uint8_t item_idx, 
+      uint8_t id, uint32_t timeout = 100);
+    bool writeControlTableItem(uint8_t item_idx, 
+      uint8_t id, int32_t data, uint32_t timeout = 100);
 
 
   private:
@@ -92,8 +96,6 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
       uint16_t model_num;
       uint8_t id;
     } IdAndModelNum_t;
-
-
 
     DYNAMIXEL::SerialPortHandler dxl_port_;
     

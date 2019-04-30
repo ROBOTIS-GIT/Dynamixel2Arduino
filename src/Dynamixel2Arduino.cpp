@@ -138,34 +138,34 @@ bool Dynamixel2Arduino::ledOff(uint8_t id)
 
 bool Dynamixel2Arduino::setTorqueEnable(uint8_t id, bool enable)
 {
-  return writeControlTableItem(id, enable, ControlTableItem::TORQUE_ENABLE);
+  return writeControlTableItem(ControlTableItem::TORQUE_ENABLE, id, enable);
 }
 
 bool Dynamixel2Arduino::setLedState(uint8_t id, bool state)
 {
-  return writeControlTableItem(id, state, ControlTableItem::LED);
+  return writeControlTableItem(ControlTableItem::LED, id, state);
 }
 
 
-int32_t Dynamixel2Arduino::readControlTableItem(uint8_t id, ControlTableItem item, uint32_t timeout)
+int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
   int32_t ret = 0;
   ControlTableItemInfo_t item_info;
   uint16_t model_num = getModelNumberFromTable(id);
 
-  item_info = getControlTableItemInfo(model_num, item);
+  item_info = getControlTableItemInfo(model_num, item_idx);
 
   read(id, item_info.addr, item_info.addr_length, (uint8_t*)&ret, sizeof(ret), timeout);
 
   return ret;
 }
 
-bool Dynamixel2Arduino::writeControlTableItem(uint8_t id, int32_t data, ControlTableItem item, uint32_t timeout)
+bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
 {
   ControlTableItemInfo_t item_info;
   uint16_t model_num = getModelNumberFromTable(id);
 
-  item_info = getControlTableItemInfo(model_num, item);
+  item_info = getControlTableItemInfo(model_num, item_idx);
 
   return write(id, item_info.addr, (uint8_t*)&data, item_info.addr_length, timeout);  
 }

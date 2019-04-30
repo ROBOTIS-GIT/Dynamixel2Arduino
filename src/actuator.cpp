@@ -583,7 +583,7 @@ const ModelConrolTableInfo_t xmh540_control_table[] PROGMEM = {
 
 static bool getModelAvailableFunc(uint16_t model_num, ModelAvailableFunc_t *func_table);
 
-ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ControlTableItem control_item)
+ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, uint8_t control_item)
 {
   uint8_t item_idx, i = 0;
   ModelConrolTableInfo_t *p_ctable = nullptr;
@@ -666,10 +666,10 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, Co
   }
 
   do{
-    item_idx = pgm_read_byte_far(&p_ctable[i].index);
+    item_idx = pgm_read_byte(&p_ctable[i].index);
     if(item_idx == control_item) {
-      item_info.addr = pgm_read_word_far(&p_ctable[i].addr);
-      item_info.addr_length = pgm_read_byte_far(&p_ctable[i].addr_length);
+      item_info.addr = pgm_read_word(&p_ctable[i].addr);
+      item_info.addr_length = pgm_read_byte(&p_ctable[i].addr_length);
       break;
     }
     i++;

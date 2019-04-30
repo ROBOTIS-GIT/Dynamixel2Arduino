@@ -38,17 +38,13 @@ dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
   uint32_t mem_addr;
   uint8_t  *p_mem = (uint8_t *)p_resp->mem;
 
-
   p_resp->id_count = 0;
   p_resp->p_node[0] = (ping_node_t *)&p_mem[0];
 
-
-  if (p_port_->getOpenState() == true)
-  {
+  if (p_port_->getOpenState() == true) {
     pre_time_us = micros();
     ret = dxlTxPacketInst(&packet_, id, INST_PING, NULL, 0);
     packet_.tx_time = micros() - pre_time_us;
-
 
     mem_addr = 0;
     pre_time_ms = millis();
@@ -56,14 +52,12 @@ dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
     while(1)
     {
       ret = dxlRxPacket(&packet_);
-      if (ret == DXL_RET_RX_STATUS && p_resp->id_count < DXLCMD_MAX_NODE)
-      {
+      if (ret == DXL_RET_RX_STATUS && p_resp->id_count < DXLCMD_MAX_NODE) {
         packet_.rx_time = micros() - pre_time_us;
         pre_time_ms     = millis();
 
         p_resp->p_node[p_resp->id_count]->id = packet_.rx.id;
-        if(getPortProtocolVersion() == 2.0)
-        {
+        if(getPortProtocolVersion() == 2.0) {
           p_resp->p_node[p_resp->id_count]->model_number     = packet_.rx.p_param[0]<<0;
           p_resp->p_node[p_resp->id_count]->model_number    |= packet_.rx.p_param[1]<<8;
           p_resp->p_node[p_resp->id_count]->firmware_version = packet_.rx.p_param[2];
@@ -74,31 +68,24 @@ dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
         //-- 주소를 4바이트로 정렬( 구조체를 직접 타입변환하여 사용하기 위해서 )
         //
         mem_addr += sizeof(ping_node_t);
-        if (mem_addr%4)
-        {
+        if (mem_addr%4) {
           mem_addr += 4 - (mem_addr%4);
         }
 
         p_resp->p_node[p_resp->id_count] = (ping_node_t *)&p_mem[mem_addr];
 
-        if (id != DXL_BROADCAST_ID)
-        {
+        if (id != DXL_BROADCAST_ID) {
           ret = DXL_RET_RX_RESP;
           break;
         }
       }
 
-      if (millis()-pre_time_ms >= timeout)
-      {
-        if (p_resp->id_count > 0)
-        {
+      if (millis()-pre_time_ms >= timeout) {
+        if (p_resp->id_count > 0) {
           ret = DXL_RET_RX_RESP;
-        }
-        else
-        {
+        } else {
           ret = DXL_RET_ERROR_TIMEOUT;
-        }
-        
+        } 
         break;
       }
     }
@@ -497,7 +484,6 @@ dxl_return_t Master::syncWrite(param_sync_write_t *p_param)
   uint32_t i;
   uint32_t j;
   uint32_t data_index;
-
 
   if (p_port_->getOpenState() == true)
   {

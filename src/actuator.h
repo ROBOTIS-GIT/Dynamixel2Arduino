@@ -200,7 +200,7 @@ typedef struct ControlTableItemInfo{
 } ControlTableItemInfo_t;
 
 
-ControlTableItemInfo_t getControlTableItemInfo(uint16_t model_num, ControlTableItem control_item);
+ControlTableItemInfo_t getControlTableItemInfo(uint16_t model_num, uint8_t control_item);
 
 bool availableFunction(uint16_t model_num, Functions dxl_func);
 
