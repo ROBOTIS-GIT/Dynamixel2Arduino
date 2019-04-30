@@ -11,7 +11,7 @@ void setup() {
   Serial.begin(9600);
   dynamixel_manager.begin(1000000);
   dynamixel_manager.scan();
-  dynamixel_manager.writeControlTableItem(ControlTableItem::TORQUE_ENABLE, DXL_ID, true);
+  dynamixel_manager.torqueOn(DXL_ID);
 }
 
 void loop() {
@@ -28,12 +28,7 @@ void loop() {
 
   if(millis() - pre_time[1] >= 1500) {
     pre_time[1] = millis();
-    dynamixel_manager.writeControlTableItem(GOAL_POSITION, DXL_ID, value);
-    if(value == 0){
-      value = 4095;
-    }else{
-      value = 0;
-    }
+    dynamixel_manager.writeControlTableItem(GOAL_POSITION, DXL_ID, value == 0 ? 4095 : 0);
   }
 
   if(millis() - pre_time[2] >= 20) {

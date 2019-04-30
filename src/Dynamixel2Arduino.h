@@ -23,6 +23,14 @@
 #include "utility/slave.h"
 #include "actuator.h"
 
+enum ParamUnit{
+  UNIT_RAW = 0,
+  UNIT_RATIO,
+  UNIT_RPM,
+  UNIT_RADIAN,
+  UNIT_DEGREE,
+  UNIT_MILLI_AMPERE
+};
 
 class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
@@ -50,17 +58,17 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     bool ledOff(uint8_t id);
     bool setLedState(uint8_t id, bool state);
     
-    bool setGoalVelocity(uint8_t id, float value, uint8_t unit);
-    uint32_t getPresentVelocity(uint8_t id, uint8_t unit);
+    bool setGoalVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    uint32_t getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
 
-    bool setGoalPosition(uint8_t id, float value, uint8_t unit);
-    uint32_t getPresentPosition(uint8_t id, uint8_t unit);
+    bool setGoalPosition(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    uint32_t getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
 
-    bool setGoalCurrent(uint8_t id, float value, uint8_t unit);
-    uint32_t getPresentCurrent(uint8_t id, uint8_t unit);    
+    bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    uint32_t getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
 
-    bool setGoalPWM(uint8_t id, float value, uint8_t unit);
-    uint32_t getPresentPWM(uint8_t id, uint8_t unit);
+    bool setGoalPWM(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    uint32_t getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
 
     bool setDirectionToNormal(uint8_t id);
     bool setDirectionToReverse(uint8_t id);
@@ -70,8 +78,8 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     bool setProfileToVelocityBased(uint8_t id);
     bool setProfileToTimeBased(uint8_t id);
 
-    bool setProfileVelocity(uint8_t id, float value, uint8_t unit);
-    bool setProfileAcceleration(uint8_t id, float value, uint8_t unit);
+    bool setProfileVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    bool setProfileAcceleration(uint8_t id, float value, uint8_t unit = UNIT_RAW);
 
     bool setPositionPIDGain(uint8_t id, uint16_t p_gain, uint16_t i_gain, uint16_t d_gain);
     bool setVelocityPIGain(uint8_t id, uint16_t p_gain, uint16_t i_gain);

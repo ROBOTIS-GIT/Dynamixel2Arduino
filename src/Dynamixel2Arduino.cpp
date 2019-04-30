@@ -126,6 +126,11 @@ bool Dynamixel2Arduino::torqueOff(uint8_t id)
   return setTorqueEnable(id, false);
 }
 
+bool Dynamixel2Arduino::setTorqueEnable(uint8_t id, bool enable)
+{
+  return writeControlTableItem(ControlTableItem::TORQUE_ENABLE, id, enable);
+}
+
 bool Dynamixel2Arduino::ledOn(uint8_t id)
 {
   return setLedState(id, true);
@@ -134,11 +139,6 @@ bool Dynamixel2Arduino::ledOn(uint8_t id)
 bool Dynamixel2Arduino::ledOff(uint8_t id)
 {
   return setLedState(id, false);
-}
-
-bool Dynamixel2Arduino::setTorqueEnable(uint8_t id, bool enable)
-{
-  return writeControlTableItem(ControlTableItem::TORQUE_ENABLE, id, enable);
 }
 
 bool Dynamixel2Arduino::setLedState(uint8_t id, bool state)

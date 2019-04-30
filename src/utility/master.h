@@ -23,9 +23,9 @@
 
 namespace DYNAMIXEL {
 
-#define DXLCMD_MAX_NODE               16//DXL_MAX_NODE
-#define DXLCMD_MAX_NODE_BUFFER_SIZE   8//DXL_MAX_NODE_BUFFER_SIZE
-#define DXLCMD_MAX_BUFFER             156//DXL_BUF_LENGTH
+#define DXLCMD_MAX_NODE               DXL_MAX_NODE
+#define DXLCMD_MAX_NODE_BUFFER_SIZE   DXL_MAX_NODE_BUFFER_SIZE
+#define DXLCMD_MAX_BUFFER             DXL_BUF_LENGTH
 
 
 typedef struct

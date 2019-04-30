@@ -120,10 +120,6 @@ bool DYNAMIXEL::dxlInit(dxl_t *p_packet, float protocol_ver)
   p_packet->inst_func.bulk_read     = (dxl_return_t (*)(void *))dxlInstBulkRead;
   p_packet->inst_func.bulk_write    = (dxl_return_t (*)(void *))dxlInstBulkWrite;
 
-  p_packet->inst_func.memory_erase  = nullptr;
-  p_packet->inst_func.memory_read   = nullptr;
-  p_packet->inst_func.memory_write  = nullptr;
-
   p_packet->process_func.processPing          = nullptr;
   p_packet->process_func.processReboot        = nullptr;
   p_packet->process_func.processFactoryReset  = nullptr;
@@ -228,18 +224,6 @@ void DYNAMIXEL::dxlAddInstFunc(dxl_t *p_packet, uint8_t inst, dxl_return_t (*fun
 
     case INST_BULK_WRITE:
       p_packet->inst_func.bulk_write = (dxl_return_t (*)(void *))func;
-      break;
-
-    case INST_MEMORY_ERASE:
-      p_packet->inst_func.memory_erase = (dxl_return_t (*)(void *))func;
-      break;
-
-    case INST_MEMORY_READ:
-      p_packet->inst_func.memory_read = (dxl_return_t (*)(void *))func;
-      break;
-
-    case INST_MEMORY_WRITE:
-      p_packet->inst_func.memory_write = (dxl_return_t (*)(void *))func;
       break;
   }
 }
@@ -423,18 +407,6 @@ dxl_return_t DYNAMIXEL::dxlProcessInst(dxl_t *p_packet)
 
     case INST_BULK_WRITE:
       func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.bulk_write;
-      break;
-
-    case INST_MEMORY_ERASE:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.memory_erase;
-      break;
-
-    case INST_MEMORY_READ:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.memory_read;
-      break;
-
-    case INST_MEMORY_WRITE:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.memory_write;
       break;
   }
 
@@ -758,7 +730,7 @@ dxl_return_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
         p_packet->rx.cmd   = p_packet->rx.data[0];
         p_packet->rx.error = p_packet->rx.data[1];
 
-        if (p_packet->rx.data[0] == DXL_INST_STATUS)
+        if (p_packet->rx.data[0] == INST_STATUS)
         {
           p_packet->rx.p_param      = &p_packet->rx.data[2];
           p_packet->rx.param_length = p_packet->rx.packet_length - 4;
@@ -956,7 +928,7 @@ dxl_return_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error, 
   p_packet->tx.data[PKT_HDR_3_IDX] = 0xFD;
   p_packet->tx.data[PKT_RSV_IDX]   = 0x00;
   p_packet->tx.data[PKT_ID_IDX]    = id;
-  p_packet->tx.data[PKT_INST_IDX]  = DXL_INST_STATUS;
+  p_packet->tx.data[PKT_INST_IDX]  = INST_STATUS;
   p_packet->tx.data[PKT_ERROR_IDX] = error;
 
 

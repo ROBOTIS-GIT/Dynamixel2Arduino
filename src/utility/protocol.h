@@ -18,16 +18,15 @@
 
 #include <Arduino.h>
 #include "port_handler.h"
+#include "config.h"
 
 namespace DYNAMIXEL{
 
   #define DXL_PACKET_VER_1_0      ((float)(1.0))
   #define DXL_PACKET_VER_2_0      ((float)(2.0))
 
-
   #define DXL_STATE_WAIT_INST     0
   #define DXL_STATE_WAIT_STATUS   1
-
 
   #define DXL_TYPE_INST           0
   #define DXL_TYPE_STATUS         1
@@ -35,19 +34,14 @@ namespace DYNAMIXEL{
   #define DXL_MODE_SLAVE          0
   #define DXL_MODE_MASTER         1
 
-
-  #define DXL_INST_STATUS         0x55
-
   #define DXL_BROADCAST_ID        0xFE
-  #define DXL_ALL_ID              0xFE
+  #define DXL_ALL_ID              DXL_BROADCAST_ID
 
-
-
-  #define DXL_MAX_BUFFER          156//DXL_BUF_LENGTH
+  #define DXL_MAX_BUFFER          DXL_BUF_LENGTH
 
 
   //-- 2.0 Protocol
-  //
+  // 
   #define PKT_HDR_1_IDX           0
   #define PKT_HDR_2_IDX           1
   #define PKT_HDR_3_IDX           2
@@ -74,25 +68,20 @@ namespace DYNAMIXEL{
   #define PKT_1_0_INST_PARAM_IDX    5
   #define PKT_1_0_STATUS_PARAM_IDX  5
 
-
-
-  #define INST_PING               0x01
-  #define INST_READ               0x02
-  #define INST_WRITE              0x03
-  #define INST_REG_WRITE          0x04
-  #define INST_ACTION             0x05
-  #define INST_RESET              0x06
-  #define INST_REBOOT             0x08
-  #define INST_STATUS             0x55
-  #define INST_SYNC_READ          0x82
-  #define INST_SYNC_WRITE         0x83
-  #define INST_BULK_READ          0x92
-  #define INST_BULK_WRITE         0x93
-
-  #define INST_MEMORY_ERASE       0xF0
-  #define INST_MEMORY_READ        0xF1
-  #define INST_MEMORY_WRITE       0xF2
-
+enum Instruction{
+  INST_PING = 0x01,
+  INST_READ = 0x02,
+  INST_WRITE = 0x03,
+  INST_REG_WRITE = 0x04,
+  INST_ACTION = 0x05,
+  INST_RESET = 0x06,
+  INST_REBOOT = 0x08,
+  INST_STATUS = 0x55,
+  INST_SYNC_READ = 0x82,
+  INST_SYNC_WRITE = 0x83,
+  INST_BULK_READ = 0x92,
+  INST_BULK_WRITE = 0x93
+};
 
   #define DXL_ERR_NONE            0x00
   #define DXL_ERR_RESULT_FAIL     0x01
@@ -102,7 +91,6 @@ namespace DYNAMIXEL{
   #define DXL_ERR_DATA_LENGTH     0x05
   #define DXL_ERR_DATA_LIMIT      0x06
   #define DXL_ERR_ACCESS          0x07
-
 
   #define DXL_PROCESS_INST        0
   #define DXL_PROCESS_BROAD_PING  1
@@ -174,10 +162,6 @@ namespace DYNAMIXEL{
     dxl_return_t (*sync_write   )(void *p_arg);
     dxl_return_t (*bulk_read    )(void *p_arg);
     dxl_return_t (*bulk_write   )(void *p_arg);
-
-    dxl_return_t (*memory_erase )(void *p_arg);
-    dxl_return_t (*memory_read  )(void *p_arg);
-    dxl_return_t (*memory_write )(void *p_arg);
   } dxl_inst_func_t;
 
   typedef struct
