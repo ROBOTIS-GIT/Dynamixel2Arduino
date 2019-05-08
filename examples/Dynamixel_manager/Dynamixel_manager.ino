@@ -28,7 +28,8 @@ void loop() {
 
   if(millis() - pre_time[1] >= 1500) {
     pre_time[1] = millis();
-    dynamixel_manager.writeControlTableItem(GOAL_POSITION, DXL_ID, value == 0 ? 4095 : 0);
+    dynamixel_manager.writeControlTableItem(GOAL_POSITION, DXL_ID, value);
+    value = value == 0 ? 4095 : 0;
   }
 
   if(millis() - pre_time[2] >= 20) {

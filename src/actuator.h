@@ -2,7 +2,7 @@
 #define DYNAMIXEL_ACTUATOR_H_
 
 #include "stdint.h"
-
+#include "utility/config.h"
 
 
 #define AX12A               (uint16_t)12
@@ -66,6 +66,8 @@
 #define PRO_H42P_020_S300_R (uint16_t)2000
 #define PRO_H54P_100_S500_R (uint16_t)2010
 #define PRO_H54P_200_S500_R (uint16_t)2020
+
+#define UNREGISTERED_MODEL  (uint16_t)0xFFFF
 
 
 #define COMMON_MODEL_NUMBER_ADDR         0
@@ -169,27 +171,6 @@ enum ControlTableItem{
 };
 
 
-enum Functions{
-  TORQUE_ON_OFF = 0,
-  LED_CTRL,
-  VELOCITY_CTRL,
-  POSITION_CTRL,
-  EXT_POSITION_CTRL,
-  PWM_CTRL,
-  CURRENT_CTRL,
-  CURRENT_BASED_POS_CTRL,
-  DIRECTION_CTRL,
-  PROFILE_CTRL,
-  TIME_BASED_PROFILE_CTRL,
-  ACCELERATION_CTRL,
-  JOINT_SPEED_CTRL,
-  POSITION_PID_GAIN,
-  VELOCITY_PI_GAIN,
-  FEED_FORWARD_GAIN,
-  CW_CCW_COMPLIANCE,
-  MULTI_PROTOCOL,
-  GET_HARDWARE_ERROR_STATUS
-};
 
 
 namespace DYNAMIXEL{
@@ -201,8 +182,6 @@ typedef struct ControlTableItemInfo{
 
 
 ControlTableItemInfo_t getControlTableItemInfo(uint16_t model_num, uint8_t control_item);
-
-bool availableFunction(uint16_t model_num, Functions dxl_func);
 
 
 } // namespace DYNAMIXEL
