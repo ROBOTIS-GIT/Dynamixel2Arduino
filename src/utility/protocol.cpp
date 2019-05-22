@@ -150,7 +150,6 @@ bool DYNAMIXEL::dxlSetProtocolVersion(dxl_t *p_packet, float protocol_version)
 {
   bool ret = true;
 
-
   if (protocol_version == DXL_PACKET_VER_1_0)
   {
     p_packet->packet_ver = protocol_version;
@@ -174,8 +173,6 @@ float DYNAMIXEL::dxlGetProtocolVersion(dxl_t *p_packet)
 
 void DYNAMIXEL::dxlAddInstFunc(dxl_t *p_packet, uint8_t inst, dxl_return_t (*func)(dxl_t *p_dxl))
 {
-
-
   switch(inst)
   {
     case INST_PING:

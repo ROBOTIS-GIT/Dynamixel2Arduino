@@ -21,12 +21,12 @@
 #include "packet_handler.h"
 #include "protocol.h"
 
-namespace DYNAMIXEL {
-
 #define DXLCMD_MAX_NODE               DXL_MAX_NODE
 #define DXLCMD_MAX_NODE_BUFFER_SIZE   DXL_MAX_NODE_BUFFER_SIZE
 #define DXLCMD_MAX_BUFFER             DXL_BUF_LENGTH
 
+
+namespace DYNAMIXEL {
 
 typedef struct
 {
@@ -143,13 +143,13 @@ typedef union
 class Master
 {
   public:
-    Master(PortHandler *port, float protocol_ver = 2.0);
+    Master(PortHandler &port, float protocol_ver = 2.0);
     Master(float protocol_ver = 2.0);
 
     bool setPortProtocolVersion(float version);
     float getPortProtocolVersion();
 
-    bool setPort(PortHandler *port);
+    bool setPort(PortHandler &port);
 
     dxl_return_t ping(uint8_t id,
      status_ping_t *p_resp, uint32_t timeout);

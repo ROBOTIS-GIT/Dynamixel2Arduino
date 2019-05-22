@@ -20,88 +20,94 @@
 #include "port_handler.h"
 #include "config.h"
 
+
+#define DXL_PACKET_VER_1_0      ((float)(1.0))
+#define DXL_PACKET_VER_2_0      ((float)(2.0))
+
+#define DXL_STATE_WAIT_INST     0
+#define DXL_STATE_WAIT_STATUS   1
+
+#define DXL_TYPE_INST           0
+#define DXL_TYPE_STATUS         1
+
+#define DXL_MODE_SLAVE          0
+#define DXL_MODE_MASTER         1
+
+#define DXL_BROADCAST_ID        0xFE
+#define DXL_ALL_ID              DXL_BROADCAST_ID
+#define DXL_NONE_ID             0xFF
+
+#define DXL_MAX_BUFFER          DXL_BUF_LENGTH
+
+
+#define UNREGISTERED_MODEL  (uint16_t)0xFFFF
+#define COMMON_MODEL_NUMBER_ADDR         0
+#define COMMON_MODEL_NUMBER_ADDR_LENGTH  2
+
+
+//-- 2.0 Protocol
+// 
+#define PKT_HDR_1_IDX           0
+#define PKT_HDR_2_IDX           1
+#define PKT_HDR_3_IDX           2
+#define PKT_RSV_IDX             3
+#define PKT_ID_IDX              4
+#define PKT_LEN_L_IDX           5
+#define PKT_LEN_H_IDX           6
+#define PKT_INST_IDX            7
+#define PKT_ERROR_IDX           8
+
+#define PKT_INST_PARAM_IDX      8
+#define PKT_STATUS_PARAM_IDX    9
+
+
+//-- 1.0 Protocol
+//
+#define PKT_1_0_HDR_1_IDX         0
+#define PKT_1_0_HDR_2_IDX         1
+#define PKT_1_0_ID_IDX            2
+#define PKT_1_0_LEN_IDX           3
+#define PKT_1_0_INST_IDX          4
+#define PKT_1_0_ERROR_IDX         4
+
+#define PKT_1_0_INST_PARAM_IDX    5
+#define PKT_1_0_STATUS_PARAM_IDX  5
+
+#define DXL_ERR_NONE            0x00
+#define DXL_ERR_RESULT_FAIL     0x01
+#define DXL_ERR_INST_ERROR      0x02
+#define DXL_ERR_CRC_ERROR       0x03
+#define DXL_ERR_DATA_RANGE      0x04
+#define DXL_ERR_DATA_LENGTH     0x05
+#define DXL_ERR_DATA_LIMIT      0x06
+#define DXL_ERR_ACCESS          0x07
+
+#define DXL_PROCESS_INST        0
+#define DXL_PROCESS_BROAD_PING  1
+#define DXL_PROCESS_BROAD_READ  2
+#define DXL_PROCESS_BROAD_WRITE 3
+
+#define DXL_BYPASS_NONE         0
+#define DXL_BYPASS_ENABLE       1
+#define DXL_BYPASS_ONLY         2
+
+
 namespace DYNAMIXEL{
 
-  #define DXL_PACKET_VER_1_0      ((float)(1.0))
-  #define DXL_PACKET_VER_2_0      ((float)(2.0))
-
-  #define DXL_STATE_WAIT_INST     0
-  #define DXL_STATE_WAIT_STATUS   1
-
-  #define DXL_TYPE_INST           0
-  #define DXL_TYPE_STATUS         1
-
-  #define DXL_MODE_SLAVE          0
-  #define DXL_MODE_MASTER         1
-
-  #define DXL_BROADCAST_ID        0xFE
-  #define DXL_ALL_ID              DXL_BROADCAST_ID
-
-  #define DXL_MAX_BUFFER          DXL_BUF_LENGTH
-
-
-  //-- 2.0 Protocol
-  // 
-  #define PKT_HDR_1_IDX           0
-  #define PKT_HDR_2_IDX           1
-  #define PKT_HDR_3_IDX           2
-  #define PKT_RSV_IDX             3
-  #define PKT_ID_IDX              4
-  #define PKT_LEN_L_IDX           5
-  #define PKT_LEN_H_IDX           6
-  #define PKT_INST_IDX            7
-  #define PKT_ERROR_IDX           8
-
-  #define PKT_INST_PARAM_IDX      8
-  #define PKT_STATUS_PARAM_IDX    9
-
-
-  //-- 1.0 Protocol
-  //
-  #define PKT_1_0_HDR_1_IDX         0
-  #define PKT_1_0_HDR_2_IDX         1
-  #define PKT_1_0_ID_IDX            2
-  #define PKT_1_0_LEN_IDX           3
-  #define PKT_1_0_INST_IDX          4
-  #define PKT_1_0_ERROR_IDX         4
-
-  #define PKT_1_0_INST_PARAM_IDX    5
-  #define PKT_1_0_STATUS_PARAM_IDX  5
-
-enum Instruction{
-  INST_PING = 0x01,
-  INST_READ = 0x02,
-  INST_WRITE = 0x03,
-  INST_REG_WRITE = 0x04,
-  INST_ACTION = 0x05,
-  INST_RESET = 0x06,
-  INST_REBOOT = 0x08,
-  INST_STATUS = 0x55,
-  INST_SYNC_READ = 0x82,
-  INST_SYNC_WRITE = 0x83,
-  INST_BULK_READ = 0x92,
-  INST_BULK_WRITE = 0x93
-};
-
-  #define DXL_ERR_NONE            0x00
-  #define DXL_ERR_RESULT_FAIL     0x01
-  #define DXL_ERR_INST_ERROR      0x02
-  #define DXL_ERR_CRC_ERROR       0x03
-  #define DXL_ERR_DATA_RANGE      0x04
-  #define DXL_ERR_DATA_LENGTH     0x05
-  #define DXL_ERR_DATA_LIMIT      0x06
-  #define DXL_ERR_ACCESS          0x07
-
-  #define DXL_PROCESS_INST        0
-  #define DXL_PROCESS_BROAD_PING  1
-  #define DXL_PROCESS_BROAD_READ  2
-  #define DXL_PROCESS_BROAD_WRITE 3
-
-  #define DXL_BYPASS_NONE         0
-  #define DXL_BYPASS_ENABLE       1
-  #define DXL_BYPASS_ONLY         2
-
-
+  enum Instruction{
+    INST_PING = 0x01,
+    INST_READ = 0x02,
+    INST_WRITE = 0x03,
+    INST_REG_WRITE = 0x04,
+    INST_ACTION = 0x05,
+    INST_RESET = 0x06,
+    INST_REBOOT = 0x08,
+    INST_STATUS = 0x55,
+    INST_SYNC_READ = 0x82,
+    INST_SYNC_WRITE = 0x83,
+    INST_BULK_READ = 0x92,
+    INST_BULK_WRITE = 0x93
+  };
 
   typedef enum
   {

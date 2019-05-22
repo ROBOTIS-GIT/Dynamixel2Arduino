@@ -67,11 +67,6 @@
 #define PRO_H54P_100_S500_R (uint16_t)2010
 #define PRO_H54P_200_S500_R (uint16_t)2020
 
-#define UNREGISTERED_MODEL  (uint16_t)0xFFFF
-
-
-#define COMMON_MODEL_NUMBER_ADDR         0
-#define COMMON_MODEL_NUMBER_ADDR_LENGTH  2
 
 
 enum ControlTableItem{

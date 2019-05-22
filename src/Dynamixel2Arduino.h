@@ -23,6 +23,51 @@
 #include "utility/slave.h"
 #include "actuator.h"
 
+namespace DYNAMIXEL{
+
+enum Functions{
+  SET_ID,
+  SET_BAUD_RATE,
+
+  MULTI_PROTOCOL,
+
+  DIRECTION_CTRL,
+  PROFILE_MODE_CTRL,
+  TIME_BASED_PROFILE_CTRL,
+  OP_MODE_CTRL,
+  
+  SET_POSITION,
+  SET_EXTENDED_POSITION,
+  SET_CURRENT_BASED_POSITION,
+  GET_POSITION,
+
+  SET_VELOCITY,
+  GET_VELOCITY,
+
+  SET_PWM,
+  GET_PWM,
+
+  SET_CURRENT,
+  GET_CURRENT,
+
+  SET_ACCELERATION,
+  SET_POSITION_MOVING_SPEED,
+  GET_POSITION_MOVING_SPEED,
+
+  POSITION_PID_GAIN,
+  VELOCITY_PI_GAIN,
+  FEED_FORWARD_GAIN,
+  CW_CCW_COMPLIANCE,
+  // COMPLIANCE_MARGIN_CTRL,
+  // COMPLIANCE_SLOPE_CTRL,
+
+  GET_HARDWARE_ERROR_STATUS,
+
+  LAST_DUMMY_FUNC = 0xFF
+};
+
+}
+
 enum ParamUnit{
   UNIT_RAW = 0,
   UNIT_RATIO,
@@ -47,7 +92,6 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     uint16_t getModelNumber(uint8_t id);
 
     bool setID(uint8_t id, uint8_t new_id);
-
     bool setProtocol(uint8_t id, float version);
 
     bool torqueOn(uint8_t id);
@@ -59,16 +103,16 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     bool setLedState(uint8_t id, bool state);
     
     bool setGoalVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
-    uint32_t getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
+    float getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
 
     bool setGoalPosition(uint8_t id, float value, uint8_t unit = UNIT_RAW);
-    uint32_t getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
+    float getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
 
     bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
-    uint32_t getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
+    float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
 
     bool setGoalPWM(uint8_t id, float value, uint8_t unit = UNIT_RAW);
-    uint32_t getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
+    float getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
 
     bool setDirectionToNormal(uint8_t id);
     bool setDirectionToReverse(uint8_t id);

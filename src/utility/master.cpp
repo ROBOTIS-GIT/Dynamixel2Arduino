@@ -3,14 +3,15 @@
 
 using namespace DYNAMIXEL;
 
-Master::Master(PortHandler *port, float protocol_ver)
-  : p_port_(port), last_status_error_(0), last_dxl_return_(DXL_RET_OK)
+Master::Master(PortHandler &port, float protocol_ver)
+  : last_status_error_(0), last_dxl_return_(DXL_RET_OK)
 {
+  setPort(port);
   dxlInit(&packet_, protocol_ver);
 }
 
 Master::Master(float protocol_ver)
-  : p_port_(nullptr), last_status_error_(0), last_dxl_return_(DXL_RET_OK)
+  : last_status_error_(0), last_dxl_return_(DXL_RET_OK)
 {
   dxlInit(&packet_, protocol_ver);
 }
@@ -25,9 +26,13 @@ float Master::getPortProtocolVersion()
   return dxlGetProtocolVersion(&packet_);
 }
 
-bool Master::setPort(PortHandler *port)
+bool Master::setPort(PortHandler &port)
 {
-  return setDxlPort(port);
+  bool ret = setDxlPort(&port);
+
+  p_port_ = &port;
+
+  return ret;
 }
 
 dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
@@ -43,6 +48,7 @@ dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
 
   if (p_port_->getOpenState() == true) {
     pre_time_us = micros();
+
     ret = dxlTxPacketInst(&packet_, id, INST_PING, NULL, 0);
     packet_.tx_time = micros() - pre_time_us;
 
