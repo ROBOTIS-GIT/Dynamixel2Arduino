@@ -11,13 +11,13 @@
 using namespace DYNAMIXEL;
 
 
-typedef struct ModelConrolTableInfo{
+typedef struct ModelControlTableInfo{
   uint8_t index;
   uint16_t addr;
   uint8_t addr_length;
-} ModelConrolTableInfo_t;
+} ModelControlTableInfo_t;
 
-const ModelConrolTableInfo_t control_table_1_0[] PROGMEM = {
+const ModelControlTableInfo_t control_table_1_0[] PROGMEM = {
 #if (ENABLE_ACTUATOR_AX \
  || ENABLE_ACTUATOR_DX \
  || ENABLE_ACTUATOR_RX \
@@ -59,7 +59,7 @@ const ModelConrolTableInfo_t control_table_1_0[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,        0, 0}
 };
 
-const ModelConrolTableInfo_t ex_control_table[] PROGMEM = {
+const ModelControlTableInfo_t ex_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_EX)
   {ControlTableItem::DRIVE_MODE,            10, 1},
   {ControlTableItem::SENSED_CURRENT,        56, 2},
@@ -67,7 +67,7 @@ const ModelConrolTableInfo_t ex_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,        0, 0}
 };
 
-const ModelConrolTableInfo_t control_table_1_1[] PROGMEM = {
+const ModelControlTableInfo_t control_table_1_1[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX12W \
  || ENABLE_ACTUATOR_MX28 \
  || ENABLE_ACTUATOR_MX64 \
@@ -112,7 +112,7 @@ const ModelConrolTableInfo_t control_table_1_1[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,        0, 0}
 };
 
-const ModelConrolTableInfo_t mx64_control_table[] PROGMEM = {
+const ModelControlTableInfo_t mx64_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX64)
   {ControlTableItem::CURRENT,                 68, 2},
   {ControlTableItem::TORQUE_CTRL_MODE_ENABLE, 70, 1},
@@ -121,7 +121,7 @@ const ModelConrolTableInfo_t mx64_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelConrolTableInfo_t mx106_control_table[] PROGMEM = {
+const ModelControlTableInfo_t mx106_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX106)
   {ControlTableItem::DRIVE_MODE,              10, 1},
   {ControlTableItem::CURRENT,                 68, 2},
@@ -131,7 +131,7 @@ const ModelConrolTableInfo_t mx106_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelConrolTableInfo_t xl320_control_table[] PROGMEM = {
+const ModelControlTableInfo_t xl320_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XL320)
   {ControlTableItem::MODEL_NUMBER,           0, 2},
   {ControlTableItem::FIRMWARE_VERSION,       2, 1},
@@ -169,7 +169,7 @@ const ModelConrolTableInfo_t xl320_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,        0, 0}
 };
 
-const ModelConrolTableInfo_t control_table_2_0[] PROGMEM = {
+const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2 \
  || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
  || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
@@ -230,14 +230,14 @@ const ModelConrolTableInfo_t control_table_2_0[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelConrolTableInfo_t mx28_2_control_table[] PROGMEM = {
+const ModelControlTableInfo_t mx28_2_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2)
   {ControlTableItem::ACCELERATION_LIMIT,      40, 4},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelConrolTableInfo_t mx64_106_2_control_table[] PROGMEM = {
+const ModelControlTableInfo_t mx64_106_2_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX64_PROTOCOL2 \
  || ENABLE_ACTUATOR_MX106_PROTOCOL2)
   {ControlTableItem::CURRENT_LIMIT,           38, 2},
@@ -247,7 +247,7 @@ const ModelConrolTableInfo_t mx64_106_2_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelConrolTableInfo_t xmh430_control_table[] PROGMEM = {
+const ModelControlTableInfo_t xmh430_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430)
   {ControlTableItem::CURRENT_LIMIT,           38, 2},
   {ControlTableItem::GOAL_CURRENT,           102, 2},
@@ -255,7 +255,7 @@ const ModelConrolTableInfo_t xmh430_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelConrolTableInfo_t xmh540_control_table[] PROGMEM = {
+const ModelControlTableInfo_t xmh540_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
   {ControlTableItem::CURRENT_LIMIT,           38, 2},
   {ControlTableItem::EXTERNAL_PORT_MODE_1,    56, 1},
@@ -274,8 +274,8 @@ const ModelConrolTableInfo_t xmh540_control_table[] PROGMEM = {
 ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, uint8_t control_item)
 {
   uint8_t item_idx, i = 0;
-  ModelConrolTableInfo_t *p_common_ctable = nullptr;
-  ModelConrolTableInfo_t *p_dep_ctable = nullptr;
+  const ModelControlTableInfo_t *p_common_ctable = nullptr;
+  const ModelControlTableInfo_t *p_dep_ctable = nullptr;
   ControlTableItemInfo_t item_info;
   memset(&item_info, 0, sizeof(item_info));
 
@@ -291,44 +291,46 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case RX24F:
     case RX28:
     case RX64:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_1_0;
+      p_common_ctable = control_table_1_0;
+      break;
+
     case EX106:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_1_0;
-      p_dep_ctable = (ModelConrolTableInfo_t*) ex_control_table;
+      p_common_ctable = control_table_1_0;
+      p_dep_ctable = ex_control_table;
       break;
 
     case MX12W:
     case MX28:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_1_1;
+      p_common_ctable = control_table_1_1;
       break;
 
     case MX64:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_1_1;
-      p_dep_ctable = (ModelConrolTableInfo_t*) mx64_control_table;
+      p_common_ctable = control_table_1_1;
+      p_dep_ctable = mx64_control_table;
       break;      
 
     case MX106:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_1_1;
-      p_dep_ctable = (ModelConrolTableInfo_t*) mx106_control_table;
+      p_common_ctable = control_table_1_1;
+      p_dep_ctable = mx106_control_table;
       break;            
 
     case MX28_2:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_2_0;
-      p_dep_ctable = (ModelConrolTableInfo_t*) mx28_2_control_table;
+      p_common_ctable = control_table_2_0;
+      p_dep_ctable = mx28_2_control_table;
       break;
 
     case MX64_2:
     case MX106_2:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_2_0;
-      p_dep_ctable = (ModelConrolTableInfo_t*) mx64_106_2_control_table;
+      p_common_ctable = control_table_2_0;
+      p_dep_ctable = mx64_106_2_control_table;
       break;
 
     case XL320:
-      p_common_ctable = (ModelConrolTableInfo_t*) xl320_control_table;
+      p_common_ctable = xl320_control_table;
       break;   
 
     case XL430_W250:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_2_0;
+      p_common_ctable = control_table_2_0;
       break;
 
     case XM430_W210:
@@ -337,8 +339,8 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case XH430_V350:
     case XH430_W210:
     case XH430_W350:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_2_0;    
-      p_dep_ctable = (ModelConrolTableInfo_t*) xmh430_control_table;
+      p_common_ctable = control_table_2_0;    
+      p_dep_ctable = xmh430_control_table;
       break;
 
     case XM540_W150:
@@ -347,8 +349,8 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
-      p_common_ctable = (ModelConrolTableInfo_t*) control_table_2_0;
-      p_dep_ctable = (ModelConrolTableInfo_t*) xmh540_control_table;
+      p_common_ctable = control_table_2_0;
+      p_dep_ctable = xmh540_control_table;
       break;            
 
     default:
