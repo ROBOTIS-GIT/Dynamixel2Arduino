@@ -35,6 +35,12 @@ enum Functions{
   PROFILE_MODE_CTRL,
   TIME_BASED_PROFILE_CTRL,
   OP_MODE_CTRL,
+  SET_OP_MODE_VELOCITY, //WHEEL
+  SET_OP_MODE_POSITION, //JOINT
+  SET_OP_MODE_EXTENDED_POSITION, //MULTI_TURN
+  SET_OP_MODE_PWM,
+  SET_OP_MODE_CURRENT, //TORQUE
+  SET_OP_MODE_CURRENT_BASED_POSITION,
   
   SET_POSITION,
   SET_EXTENDED_POSITION,
@@ -50,14 +56,17 @@ enum Functions{
   SET_CURRENT,
   GET_CURRENT,
 
-  SET_ACCELERATION,
-  SET_POSITION_MOVING_SPEED,
-  GET_POSITION_MOVING_SPEED,
-
   POSITION_PID_GAIN,
   VELOCITY_PI_GAIN,
   FEED_FORWARD_GAIN,
-  CW_CCW_COMPLIANCE,
+
+
+
+  SET_ACCELERATION,
+  // SET_POSITION_MOVING_SPEED,
+  // GET_POSITION_MOVING_SPEED,
+ 
+  // CW_CCW_COMPLIANCE,
   // COMPLIANCE_MARGIN_CTRL,
   // COMPLIANCE_SLOPE_CTRL,
 
@@ -67,6 +76,17 @@ enum Functions{
 };
 
 }
+
+enum OperatingMode{
+  OP_POSITION = 0,
+  OP_EXTENDED_POSITION,
+  OP_CURRENT_BASED_POSITION,
+  OP_VELOCITY,
+  OP_PWM,
+  OP_CURRENT,
+
+  UNKNOWN_OP
+};
 
 enum ParamUnit{
   UNIT_RAW = 0,
@@ -96,23 +116,42 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
     bool torqueOn(uint8_t id);
     bool torqueOff(uint8_t id);
-    bool setTorqueEnable(uint8_t id, bool enable);
 
     bool ledOn(uint8_t id);
     bool ledOff(uint8_t id);
-    bool setLedState(uint8_t id, bool state);
     
-    bool setGoalVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
-    float getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
+    bool setOperatingMode(uint8_t id, uint8_t mode);
+    //uint8_t getOperatingMode(uint8_t id);
 
     bool setGoalPosition(uint8_t id, float value, uint8_t unit = UNIT_RAW);
     float getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
 
-    bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
-    float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
+    bool setGoalVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    float getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
 
     bool setGoalPWM(uint8_t id, float value, uint8_t unit = UNIT_RAW);
     float getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
+
+
+
+
+
+    int32_t readControlTableItem(uint16_t model_num,
+      uint8_t item_idx, uint8_t id, uint32_t timeout = 100);
+
+    int32_t readControlTableItem(uint8_t item_idx, 
+      uint8_t id, uint32_t timeout = 100);
+
+    bool writeControlTableItem(uint8_t item_idx, 
+      uint8_t id, int32_t data, uint32_t timeout = 100);
+
+    bool writeControlTableItem(uint16_t model_num, 
+      uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout = 100);
+
+
+#if 0 //TODO
+    bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
 
     bool setDirectionToNormal(uint8_t id);
     bool setDirectionToReverse(uint8_t id);
@@ -129,19 +168,8 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     bool setVelocityPIGain(uint8_t id, uint16_t p_gain, uint16_t i_gain);
     bool setFeedForwardGain(uint8_t id, uint16_t fisrt_gain, uint16_t second_gain);
 
-    bool setCompliance(uint8_t id, 
-      uint8_t cw_margin, uint8_t ccw_margin,
-      uint8_t cw_slope, uint8_t ccw_slope);
-
     uint8_t getHardwareError(uint8_t id);
-
-
-
-    int32_t readControlTableItem(uint8_t item_idx, 
-      uint8_t id, uint32_t timeout = 100);
-    bool writeControlTableItem(uint8_t item_idx, 
-      uint8_t id, int32_t data, uint32_t timeout = 100);
-
+#endif     
 
   private:
     typedef struct IdAndModelNum{
@@ -158,6 +186,10 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     uint32_t        err_code_;
 
     uint16_t getModelNumberFromTable(uint8_t id);
+
+
+    bool setTorqueEnable(uint8_t id, bool enable);
+    bool setLedState(uint8_t id, bool state);
 };
 
 
