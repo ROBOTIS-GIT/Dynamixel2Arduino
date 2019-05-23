@@ -29,19 +29,8 @@ enum Functions{
   SET_ID,
   SET_BAUD_RATE,
 
-  MULTI_PROTOCOL,
-
-  DIRECTION_CTRL,
-  PROFILE_MODE_CTRL,
-  TIME_BASED_PROFILE_CTRL,
-  OP_MODE_CTRL,
-  SET_OP_MODE_VELOCITY, //WHEEL
-  SET_OP_MODE_POSITION, //JOINT
-  SET_OP_MODE_EXTENDED_POSITION, //MULTI_TURN
-  SET_OP_MODE_PWM,
-  SET_OP_MODE_CURRENT, //TORQUE
-  SET_OP_MODE_CURRENT_BASED_POSITION,
-  
+  SET_PROTOCOL,
+ 
   SET_POSITION,
   SET_EXTENDED_POSITION,
   SET_CURRENT_BASED_POSITION,
@@ -55,6 +44,12 @@ enum Functions{
 
   SET_CURRENT,
   GET_CURRENT,
+
+
+
+  DIRECTION_CTRL,
+  PROFILE_MODE_CTRL,
+  TIME_BASED_PROFILE_CTRL,
 
   POSITION_PID_GAIN,
   VELOCITY_PI_GAIN,
@@ -132,7 +127,8 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     bool setGoalPWM(uint8_t id, float value, uint8_t unit = UNIT_RAW);
     float getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
 
-
+    bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+    float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
 
 
 
@@ -150,8 +146,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
 
 #if 0 //TODO
-    bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
-    float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
+
 
     bool setDirectionToNormal(uint8_t id);
     bool setDirectionToReverse(uint8_t id);
@@ -190,6 +185,9 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
     bool setTorqueEnable(uint8_t id, bool enable);
     bool setLedState(uint8_t id, bool state);
+
+    float readForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, uint8_t unit);
+    bool writeForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit);
 };
 
 

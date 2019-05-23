@@ -304,110 +304,67 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
 
 bool Dynamixel2Arduino::setGoalPosition(uint8_t id, float value, uint8_t unit)
 {
-  if(unit == UNIT_RATIO)
+  if(unit == UNIT_RATIO || unit == UNIT_RPM || unit == UNIT_MILLI_AMPERE)
     return false;
 
-  bool ret = false;
-  int32_t data = 0;
-  uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, SET_POSITION);
-
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
-    return false;
-
-  if(checkAndconvertWriteData(value, data, unit, item_info) == false)
-    return false;
-
-  ret = writeControlTableItem(model_num, item_info.item_idx, id, data);
-
-  return ret;
+  return writeForRangeDepandancyFunc(SET_POSITION, id, value, unit);
 }
 
 float Dynamixel2Arduino::getPresentPosition(uint8_t id, uint8_t unit)
 {
-  float ret = 0;
-  int32_t ret_data = 0;
-  uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, GET_POSITION);
+  if(unit == UNIT_RATIO || unit == UNIT_RPM || unit == UNIT_MILLI_AMPERE)
+    return 0.0;
 
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
-    return false;
-
-  ret_data = readControlTableItem(model_num, item_info.item_idx, id);
-  checkAndconvertReadData(ret_data, ret, unit, item_info);
-
-  return ret;
+  return readForRangeDepandancyFunc(GET_POSITION, id, unit);
 }
 
 bool Dynamixel2Arduino::setGoalVelocity(uint8_t id, float value, uint8_t unit)
 {
-  bool ret = false;
-  int32_t data = 0;
-  uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, SET_VELOCITY);
-
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
+  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE)
     return false;
 
-  if(checkAndconvertWriteData(value, data, unit, item_info) == false)
-    return false;
-
-  ret = writeControlTableItem(model_num, item_info.item_idx, id, data);
-
-  return ret;
+  return writeForRangeDepandancyFunc(SET_VELOCITY, id, value, unit);
 }
 
 float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
 {
-  float ret = 0;
-  int32_t ret_data = 0;
-  uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, GET_VELOCITY);
+  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE)
+    return 0.0;
 
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
-    return false;
-
-  ret_data = readControlTableItem(model_num, item_info.item_idx, id);
-  checkAndconvertReadData(ret_data, ret, unit, item_info);
-
-  return ret;
+  return readForRangeDepandancyFunc(GET_VELOCITY, id, unit);
 }
 
 bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
 {
-  bool ret = false;
-  int32_t data = 0;
-  uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, SET_PWM);
-
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
+  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM || unit == UNIT_RADIAN)
     return false;
 
-  if(checkAndconvertWriteData(value, data, unit, item_info) == false)
-    return false;
-
-  ret = writeControlTableItem(model_num, item_info.item_idx, id, data);
-
-  return ret;
+  return writeForRangeDepandancyFunc(SET_PWM, id, value, unit);
 }
 
 float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
 {
-  float ret = 0;
-  int32_t ret_data = 0;
-  uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, GET_PWM);
+  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM || unit == UNIT_RADIAN)
+    return 0.0;
 
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
-    return false;
-
-  ret_data = readControlTableItem(model_num, item_info.item_idx, id);
-  checkAndconvertReadData(ret_data, ret, unit, item_info);
-
-  return ret;
+  return readForRangeDepandancyFunc(GET_PWM, id, unit);
 }
 
+bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
+{
+  if(unit == UNIT_DEGREE || unit == UNIT_RPM || unit == UNIT_RADIAN)
+    return false;
 
+  return writeForRangeDepandancyFunc(SET_CURRENT, id, value, unit);
+}
+
+float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
+{
+  if(unit == UNIT_DEGREE || unit == UNIT_RPM || unit == UNIT_RADIAN)
+    return 0.0;
+
+  return readForRangeDepandancyFunc(GET_CURRENT, id, unit);
+}
 
 
 
@@ -487,7 +444,39 @@ uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
   return model_num;
 }
 
+float Dynamixel2Arduino::readForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, uint8_t unit)
+{
+  float ret = 0;
+  int32_t ret_data = 0;
+  uint16_t model_num = getModelNumberFromTable(id);
+  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, func_idx);
 
+  if(item_info.item_idx == LAST_DUMMY_ITEM)
+    return false;
+
+  ret_data = readControlTableItem(model_num, item_info.item_idx, id);
+  checkAndconvertReadData(ret_data, ret, unit, item_info);
+
+  return ret;
+}
+
+bool Dynamixel2Arduino::writeForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit)
+{
+  bool ret = false;
+  int32_t data = 0;
+  uint16_t model_num = getModelNumberFromTable(id);
+  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, func_idx);
+
+  if(item_info.item_idx == LAST_DUMMY_ITEM)
+    return false;
+
+  if(checkAndconvertWriteData(value, data, unit, item_info) == false)
+    return false;
+
+  ret = writeControlTableItem(model_num, item_info.item_idx, id, data);
+
+  return ret;
+}
 
 
 
@@ -508,18 +497,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_1_0_common[] PROGM
 
   {SET_VELOCITY, MOVING_SPEED, UNIT_RATIO, 0, 2047, 0.1},
   {GET_VELOCITY, PRESENT_SPEED, UNIT_RATIO, 0, 2047, 0.1},  
-
-  // {SET_OP_MODE_VELOCITY, CW_ANGLE_LIMIT, UNIT_RAW, 0, 0, 1},
-  // {SET_OP_MODE_POSITION, CW_ANGLE_LIMIT, UNIT_RAW, 0, 1023, 1},
 #endif 
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
-};
-
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_xl320[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XL320)
-  // {SET_OP_MODE_VELOCITY, CONTROL_MODE, UNIT_RAW, 1, 1, 1},
-  // {SET_OP_MODE_POSITION, CONTROL_MODE, UNIT_RAW, 2, 2, 1},
-#endif
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
@@ -536,8 +514,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_1_1_common[] PROGM
  || ENABLE_ACTUATOR_MX28 \
  || ENABLE_ACTUATOR_MX64 \
  || ENABLE_ACTUATOR_MX106)
-  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, 0, 4095, 0.088},
-  {SET_EXTENDED_POSITION, GOAL_POSITION, UNIT_DEGREE, -28672, 28672, 0.088},
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -28672, 28672, 0.088},
   {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -28672, 28672, 0.088},
 
   {SET_VELOCITY, MOVING_SPEED, UNIT_RPM, 0, 2047, 0.114},
@@ -570,10 +547,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_2_0_common[] PROGM
   || ENABLE_ACTUATOR_XL430 \
   || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
   || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
-
-  //{SET_POSITION, GOAL_POSITION, UNIT_DEGREE, 0, 4095, 0.088},
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -1048575, 1048575, 0.088},
-  //{SET_CURRENT_BASED_POSITION, GOAL_POSITION, UNIT_DEGREE, -1048575, 1048575, 0.088},
   {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.088},
 
   {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
@@ -581,25 +555,57 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_2_0_common[] PROGM
 
   {SET_PWM, GOAL_PWM, UNIT_RAW, -885, 885, 1},
   {GET_PWM, PRESENT_PWM, UNIT_RAW, -885, 885, 1},
-
-  // Each has its own dependency. -> must call current range fucntion for get its own range.
-  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, 0, 0, 0},
-  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, 0, 0, 0},
-
-#if 0 //TODO
-  // Bit0:Direction
-  {DIRECTION_CTRL, DRIVE_MODE, UNIT_RAW, 0, 1, 1},
-  // Bit2:Profile
-  {PROFILE_MODE_CTRL, DRIVE_MODE, UNIT_RAW, 0, 4, 4},
-  // 0:Current, 1:Velocity, 3:Position, 4:Extended Position, 5:Current Based Position, 16:PWM
-  {OP_MODE_CTRL, OPERATING_MODE, UNIT_RAW, 0, 16, 1},
-#endif  
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 #endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
+const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx64_2[] PROGMEM = {
+#if (ENABLE_ACTUATOR_MX64_PROTOCOL2)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
 
+const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx106_2[] PROGMEM = {
+#if (ENABLE_ACTUATOR_MX106_PROTOCOL2)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
 
+const ModelDependancyFuncItemAndRangeInfo_t dependancy_xm430_w210_w350[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XM430)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependancyFuncItemAndRangeInfo_t dependancy_xh430_w210_w350[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XH430)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependancyFuncItemAndRangeInfo_t dependancy_xh430_v210_v350[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XH430)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependancyFuncItemAndRangeInfo_t dependancy_xm540_xh540[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
 
 
 
@@ -635,6 +641,7 @@ static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t
     case RX24F:
     case RX28:
     case RX64:
+    case XL320:
       p_common_ctable = dependancy_ctable_1_0_common;
       break;
 
@@ -658,21 +665,33 @@ static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t
       p_dep_ctable = dependancy_mx64_mx106;
       break;              
 
-    case XL320:
-      p_common_ctable = dependancy_ctable_1_0_common;
-      p_dep_ctable = dependancy_xl320;
-      break;
-
     case MX28_2:
-    case MX64_2:
-    case MX106_2:
     case XL430_W250:
+      p_common_ctable = dependancy_ctable_2_0_common;
+      break;
+    case MX64_2:
+      p_common_ctable = dependancy_ctable_2_0_common;
+      p_dep_ctable = dependancy_mx64_2;
+      break;    
+    case MX106_2:
+      p_common_ctable = dependancy_ctable_2_0_common;
+      p_dep_ctable = dependancy_mx106_2;
+      break;        
     case XM430_W210:
     case XM430_W350:
+      p_common_ctable = dependancy_ctable_2_0_common;
+      p_dep_ctable = dependancy_xm430_w210_w350;
+      break;
     case XH430_V210:
     case XH430_V350:
+      p_common_ctable = dependancy_ctable_2_0_common;
+      p_dep_ctable = dependancy_xh430_v210_v350;
+      break;
     case XH430_W210:
     case XH430_W350:
+      p_common_ctable = dependancy_ctable_2_0_common;
+      p_dep_ctable = dependancy_xh430_w210_w350;
+      break;    
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
@@ -680,6 +699,7 @@ static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t
     case XH540_V150:
     case XH540_V270:
       p_common_ctable = dependancy_ctable_2_0_common;
+      p_dep_ctable = dependancy_xm540_xh540;
       break;            
 
     default:
@@ -800,8 +820,6 @@ static bool checkAndconvertReadData(int32_t in_data, float &out_data, uint8_t un
 
 static float f_map(float x, float in_min, float in_max, float out_min, float out_max)
 {
-  Serial.print(x);Serial.print(" ");Serial.print(in_min);Serial.print(" ");Serial.print(in_max);
-  Serial.print(" ");Serial.print(out_min);Serial.print(" ");Serial.println(out_max);
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
