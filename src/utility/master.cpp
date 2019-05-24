@@ -189,7 +189,7 @@ bool Master::write(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len
   uint32_t pre_time_us, pre_time_ms;
   
   if(writeNoResp(id, addr, p_data, data_length) != false){
-    Serial.print("write dxl ret : ");Serial.println(getLastDxlReturn());
+    //Serial.print("write dxl ret : ");Serial.println(getLastDxlReturn());
     return ret;
   }
     

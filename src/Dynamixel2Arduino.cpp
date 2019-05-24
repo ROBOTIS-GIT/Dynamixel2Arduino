@@ -371,10 +371,6 @@ float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
 
 
 
-
-
-
-
 int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
   uint16_t model_num = getModelNumberFromTable(id);
@@ -382,16 +378,9 @@ int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, ui
   return readControlTableItem(model_num, item_idx, id, timeout);
 }
 
-bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
-{
-  uint16_t model_num = getModelNumberFromTable(id);
-
-  return writeControlTableItem(model_num, item_idx, id, data, timeout);
-}
-
 int32_t Dynamixel2Arduino::readControlTableItem(uint16_t model_num, uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
-  int32_t ret = 0;
+  int32_t recv_len, ret = 0;
   ControlTableItemInfo_t item_info;
 
   item_info = getControlTableItemInfo(model_num, item_idx);
@@ -399,9 +388,24 @@ int32_t Dynamixel2Arduino::readControlTableItem(uint16_t model_num, uint8_t item
   if(item_info.addr_length == 0)
     return 0;
 
-  read(id, item_info.addr, item_info.addr_length, (uint8_t*)&ret, sizeof(ret), timeout);
+  recv_len = read(id, item_info.addr, item_info.addr_length, (uint8_t*)&ret, sizeof(ret), timeout);
+
+  if(recv_len == 1){
+    int8_t t_data = (int8_t)ret;
+    ret = (int32_t)t_data;
+  }else if(recv_len == 2){
+    int16_t t_data = (int16_t)ret;
+    ret = (int32_t)t_data;
+  }
 
   return ret;
+}
+
+bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
+{
+  uint16_t model_num = getModelNumberFromTable(id);
+
+  return writeControlTableItem(model_num, item_idx, id, data, timeout);
 }
 
 bool Dynamixel2Arduino::writeControlTableItem(uint16_t model_num, uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
@@ -608,8 +612,6 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_xm540_xh540[] PROGMEM = {
 };
 
 
-
-
 const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_pro_model[] PROGMEM = {
 #if (0) //PRO
   {SET_ID, ID, UNIT_RAW, 0, 253, 1},
@@ -731,11 +733,11 @@ static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t
   do{
     func_idx = pgm_read_byte(&p_dep_ctable[i].func_idx);
     if(func_idx == func_num) {
-      item_info.item_idx = pgm_read_byte(&p_common_ctable[i].item_idx);
-      item_info.min_value = (int32_t)pgm_read_dword(&p_common_ctable[i].min_value);
-      item_info.max_value = (int32_t)pgm_read_dword(&p_common_ctable[i].max_value);
-      item_info.unit_type = pgm_read_byte(&p_common_ctable[i].unit_type);
-      item_info.unit_value = (float)pgm_read_dword(&p_common_ctable[i].unit_value);
+      item_info.item_idx = pgm_read_byte(&p_dep_ctable[i].item_idx);
+      item_info.min_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].min_value);
+      item_info.max_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].max_value);
+      item_info.unit_type = pgm_read_byte(&p_dep_ctable[i].unit_type);
+      item_info.unit_value = (float)pgm_read_dword(&p_dep_ctable[i].unit_value);
       break;
     }
     i++;
@@ -760,15 +762,12 @@ static bool checkAndconvertWriteData(float in_data, int32_t &out_data, uint8_t u
   case UNIT_RATIO:
     data_f = f_map(in_data, -100.0, 100.0,
      (float)item_info.min_value, (float)item_info.max_value);
-    Serial.print(data_f);Serial.print("  ");
     data = (int32_t)data_f;
-    Serial.println(data);
     break;
 
   case UNIT_RPM:
   case UNIT_DEGREE:
   case UNIT_MILLI_AMPERE:
-  //case UNIT_RADIAN:
     if(unit != item_info.unit_type)
       return false;
     data = round(in_data/item_info.unit_value);

@@ -219,7 +219,6 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
   {ControlTableItem::MOVING,                 122, 1},    
   {ControlTableItem::MOVING_STATUS,          123, 1},    
   {ControlTableItem::PRESENT_PWM,            124, 2},
-  {ControlTableItem::PRESENT_LOAD,           126, 2},
   {ControlTableItem::PRESENT_VELOCITY,       128, 4},
   {ControlTableItem::PRESENT_POSITION,       132, 4},
   {ControlTableItem::VELOCITY_TRAJECTORY,    136, 4},
@@ -233,6 +232,7 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
 const ModelControlTableInfo_t mx28_2_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2)
   {ControlTableItem::ACCELERATION_LIMIT,      40, 4},
+  {ControlTableItem::PRESENT_LOAD,           126, 2},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
@@ -243,6 +243,14 @@ const ModelControlTableInfo_t mx64_106_2_control_table[] PROGMEM = {
   {ControlTableItem::CURRENT_LIMIT,           38, 2},
   {ControlTableItem::ACCELERATION_LIMIT,      40, 4},  
   {ControlTableItem::GOAL_CURRENT,           102, 2},
+  {ControlTableItem::PRESENT_CURRENT,        126, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+const ModelControlTableInfo_t xl430_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XL430)
+  {ControlTableItem::PRESENT_LOAD,           126, 2},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
@@ -251,6 +259,7 @@ const ModelControlTableInfo_t xmh430_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430)
   {ControlTableItem::CURRENT_LIMIT,           38, 2},
   {ControlTableItem::GOAL_CURRENT,           102, 2},
+  {ControlTableItem::PRESENT_CURRENT,        126, 2},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
@@ -263,6 +272,7 @@ const ModelControlTableInfo_t xmh540_control_table[] PROGMEM = {
   {ControlTableItem::EXTERNAL_PORT_MODE_3,    58, 1},  
 
   {ControlTableItem::GOAL_CURRENT,           102, 2},
+  {ControlTableItem::PRESENT_CURRENT,        126, 2},
   {ControlTableItem::EXTERNAL_PORT_DATA_1,   152, 2},
   {ControlTableItem::EXTERNAL_PORT_DATA_2,   154, 2},
   {ControlTableItem::EXTERNAL_PORT_DATA_3,   156, 2},  
@@ -331,6 +341,7 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
 
     case XL430_W250:
       p_common_ctable = control_table_2_0;
+      p_dep_ctable = xl430_control_table;
       break;
 
     case XM430_W210:

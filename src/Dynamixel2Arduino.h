@@ -14,6 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+/**
+ * @Dynamixel2Arduino.h
+ * @author Kei
+ * @date 24 May 2019
+ * @brief This file defines a class for controlling the DYNAMIXEL Actuators in Arduino boards.
+ *
+ * Supported actors are hardcoded, defined in actuator.cpp and Dynamixel2Arduino.cpp, and can be enabled or disabled in config.h.
+ * Therefore, in order to support the new Actuator, hard coding must be done.
+ * 
+ * @see 
+ * @see 
+ */
+
 
 #ifndef DYNAMIXEL_2_ARDUINO_H_
 #define DYNAMIXEL_2_ARDUINO_H_
@@ -32,8 +45,6 @@ enum Functions{
   SET_PROTOCOL,
  
   SET_POSITION,
-  SET_EXTENDED_POSITION,
-  SET_CURRENT_BASED_POSITION,
   GET_POSITION,
 
   SET_VELOCITY,
@@ -118,7 +129,31 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     bool setOperatingMode(uint8_t id, uint8_t mode);
     //uint8_t getOperatingMode(uint8_t id);
 
+    /**
+     * @brief It is API for position (joint) control of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
+     * dynamixel_manager.setGoalPosition(1, 512);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param value data which you want set control table item.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool setGoalPosition(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+
+    /**
+     * @brief It is API for position (joint) control of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
+     * Serial.print(dynamixel_manager.getPresentPosition(1));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param value data which you want set control table item.
+     * @return It returns the data readed from DXL control table item.
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     */    
     float getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
 
     bool setGoalVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
@@ -146,8 +181,6 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
 
 #if 0 //TODO
-
-
     bool setDirectionToNormal(uint8_t id);
     bool setDirectionToReverse(uint8_t id);
     bool setDirection(uint8_t id, bool dir);
@@ -181,7 +214,6 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     uint32_t        err_code_;
 
     uint16_t getModelNumberFromTable(uint8_t id);
-
 
     bool setTorqueEnable(uint8_t id, bool enable);
     bool setLedState(uint8_t id, bool state);
