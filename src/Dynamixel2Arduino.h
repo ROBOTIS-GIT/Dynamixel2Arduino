@@ -56,27 +56,13 @@ enum Functions{
   SET_CURRENT,
   GET_CURRENT,
 
-
-
   DIRECTION_CTRL,
-  PROFILE_MODE_CTRL,
-  TIME_BASED_PROFILE_CTRL,
+//  PROFILE_MODE_CTRL,
+//  TIME_BASED_PROFILE_CTRL,
 
   POSITION_PID_GAIN,
   VELOCITY_PI_GAIN,
   FEED_FORWARD_GAIN,
-
-
-
-  SET_ACCELERATION,
-  // SET_POSITION_MOVING_SPEED,
-  // GET_POSITION_MOVING_SPEED,
- 
-  // CW_CCW_COMPLIANCE,
-  // COMPLIANCE_MARGIN_CTRL,
-  // COMPLIANCE_SLOPE_CTRL,
-
-  GET_HARDWARE_ERROR_STATUS,
 
   LAST_DUMMY_FUNC = 0xFF
 };
@@ -98,7 +84,6 @@ enum ParamUnit{
   UNIT_RAW = 0,
   UNIT_RATIO,
   UNIT_RPM,
-  UNIT_RADIAN,
   UNIT_DEGREE,
   UNIT_MILLI_AMPERE
 };
@@ -119,38 +104,50 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
     bool setID(uint8_t id, uint8_t new_id);
     bool setProtocol(uint8_t id, float version);
+    bool setBaudrate(uint8_t id, uint32_t baudrate);
 
     bool torqueOn(uint8_t id);
     bool torqueOff(uint8_t id);
 
     bool ledOn(uint8_t id);
     bool ledOff(uint8_t id);
-    
-    bool setOperatingMode(uint8_t id, uint8_t mode);
-    //uint8_t getOperatingMode(uint8_t id);
 
     /**
-     * @brief It is API for position (joint) control of DYNAMIXEL.
+     * @brief It is API for controlling operating mode of DYNAMIXEL.
+     * @code
+     * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
+     * dynamixel_manager.setGoalPosition(1, 512);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param mode The operating mode you want.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
+    bool setOperatingMode(uint8_t id, uint8_t mode);
+
+    /**
+     * @brief It is API for controlling position(joint) of DYNAMIXEL.
      * You can use the @unit parameter to specify the unit of @value.
      * @code
      * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
      * dynamixel_manager.setGoalPosition(1, 512);
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
-     * @param value data which you want set control table item.
+     * @param value The value you want to set.
+     * @param unit The unit of the value you entered.
      * @return It returns true(1) on success, false(0) on failure.
      */
     bool setGoalPosition(uint8_t id, float value, uint8_t unit = UNIT_RAW);
 
     /**
-     * @brief It is API for position (joint) control of DYNAMIXEL.
+     * @brief It is API for getting present position (joint) of DYNAMIXEL.
      * You can use the @unit parameter to specify the unit of @value.
      * @code
      * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
      * Serial.print(dynamixel_manager.getPresentPosition(1));
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
-     * @param value data which you want set control table item.
+     * @param The unit you want to return (the function converts the raw value to the unit you specified and returns it)
+     *    Only support UNIT_RAW, UNIT_DEGREE.
      * @return It returns the data readed from DXL control table item.
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */    

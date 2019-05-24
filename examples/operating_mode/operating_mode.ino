@@ -10,14 +10,34 @@ enum TimerType{
   TIMER_MAX
 };
 
-const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
+#ifdef ARDUINO_AVR_UNO
+  #include <SoftwareSerial.h>
+  SoftwareSerial soft_serial(10, 11); //RX,TX
+  #define DXL_SERIAL   Serial
+  #define DEBUG_SERIAL soft_serial
+#elif ARDUINO_AVR_MEGA2560
+  #define DXL_SERIAL   Serial
+  #define DEBUG_SERIAL Serial1
+#elif CommXEL_W
+  #define DXL_SERIAL    Serial2
+  #define DEBUG_SERIAL  Serial
+  #define RS485_DIR_PIN 15
+#else
+  #define DXL_SERIAL   Serial1
+  #define DEBUG_SERIAL Serial
+#endif
+
+#ifndef RS485_DIR_PIN
+  const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
+#endif
+
 const uint8_t DXL_ID = 1;
 
-Dynamixel2Arduino dynamixel(Serial1, RS485_DIR_PIN);
+Dynamixel2Arduino dynamixel(DXL_SERIAL, RS485_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
+  DEBUG_SERIAL.begin(115200);
   dynamixel.begin(1000000);
   dynamixel.scan();
 }
@@ -50,8 +70,8 @@ void loop() {
       }     
       if(millis() - pre_time[TIMER_GET_COMMAND] >= 50) {
         pre_time[TIMER_GET_COMMAND] = millis();
-        Serial.print("Present Position : ");
-        Serial.println(dynamixel.getPresentPosition(DXL_ID));
+        DEBUG_SERIAL.print("Present Position : ");
+        DEBUG_SERIAL.println(dynamixel.getPresentPosition(DXL_ID));
       }
       break;
     
@@ -74,8 +94,8 @@ void loop() {
       }
       if(millis() - pre_time[TIMER_GET_COMMAND] >= 50) {
         pre_time[TIMER_GET_COMMAND] = millis();
-        Serial.print("Present Extended Position : ");
-        Serial.println(dynamixel.getPresentPosition(DXL_ID));
+        DEBUG_SERIAL.print("Present Extended Position : ");
+        DEBUG_SERIAL.println(dynamixel.getPresentPosition(DXL_ID));
       }
       break;
     case OP_CURRENT_BASED_POSITION:
@@ -97,8 +117,8 @@ void loop() {
       }
       if(millis() - pre_time[TIMER_GET_COMMAND] >= 50) {
         pre_time[TIMER_GET_COMMAND] = millis();
-        Serial.print("Present Current Based Position : ");
-        Serial.println(dynamixel.getPresentPosition(DXL_ID));
+        DEBUG_SERIAL.print("Present Current Based Position : ");
+        DEBUG_SERIAL.println(dynamixel.getPresentPosition(DXL_ID));
       }
       break;
 
@@ -121,8 +141,8 @@ void loop() {
       }
       if(millis() - pre_time[TIMER_GET_COMMAND] >= 50) {
         pre_time[TIMER_GET_COMMAND] = millis();
-        Serial.print("Present Velocity : ");
-        Serial.println(dynamixel.getPresentVelocity(DXL_ID));
+        DEBUG_SERIAL.print("Present Velocity : ");
+        DEBUG_SERIAL.println(dynamixel.getPresentVelocity(DXL_ID));
       }    
       break;
 
@@ -145,8 +165,8 @@ void loop() {
       }
       if(millis() - pre_time[TIMER_GET_COMMAND] >= 50) {
         pre_time[TIMER_GET_COMMAND] = millis();
-        Serial.print("Present PWM : ");
-        Serial.println(dynamixel.getPresentPWM(DXL_ID));
+        DEBUG_SERIAL.print("Present PWM : ");
+        DEBUG_SERIAL.println(dynamixel.getPresentPWM(DXL_ID));
       }    
       break;
 
@@ -169,8 +189,8 @@ void loop() {
       }
       if(millis() - pre_time[TIMER_GET_COMMAND] >= 50) {
         pre_time[TIMER_GET_COMMAND] = millis();
-        Serial.print("Present Current : ");
-        Serial.println(dynamixel.getPresentCurrent(DXL_ID));
+        DEBUG_SERIAL.print("Present Current : ");
+        DEBUG_SERIAL.println(dynamixel.getPresentCurrent(DXL_ID));
       }
       break;
 

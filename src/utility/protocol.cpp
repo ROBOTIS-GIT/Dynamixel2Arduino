@@ -150,16 +150,11 @@ bool DYNAMIXEL::dxlSetProtocolVersion(dxl_t *p_packet, float protocol_version)
 {
   bool ret = true;
 
-  if (protocol_version == DXL_PACKET_VER_1_0)
-  {
+  if(protocol_version == DXL_PACKET_VER_1_0){
     p_packet->packet_ver = protocol_version;
-  }
-  else if (protocol_version == DXL_PACKET_VER_2_0)
-  {
+  }else if(protocol_version == DXL_PACKET_VER_2_0){
     p_packet->packet_ver = protocol_version;
-  }
-  else
-  {
+  }else{
     ret = false;
   }
 

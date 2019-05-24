@@ -141,6 +141,147 @@ uint16_t Dynamixel2Arduino::getModelNumber(uint8_t id)
   return model_num;
 }
 
+bool Dynamixel2Arduino::setID(uint8_t id, uint8_t new_id)
+{
+  return writeControlTableItem(ControlTableItem::ID, id, new_id);
+}
+
+
+bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
+{
+  uint8_t ver_idx;
+
+  if(version == DXL_PACKET_VER_1_0){
+    ver_idx = 1;
+  }else if(version == DXL_PACKET_VER_2_0){
+    ver_idx = 2;
+  }else{
+    return false;
+  }
+
+  return writeControlTableItem(ControlTableItem::PROTOCOL_VERSION, id, ver_idx);
+}
+
+bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
+{
+  uint16_t model_num = getModelNumberFromTable(id);
+  uint8_t baud_idx = 0;
+
+  switch(model_num)
+  {
+    case AX12A:
+    case AX12W:
+    case AX18A:
+    case DX113:
+    case DX116:
+    case DX117:
+    case RX10:
+    case RX24F:
+    case RX28:
+    case RX64:
+    case EX106:    
+    case MX12W:
+    case MX28:
+    case MX64:
+    case MX106:
+      // baud_idx = round(2000000.0/(float)baudrate) - 1;
+      // if(baud_idx > 254)
+      //   return false;
+      switch(baudrate)
+      {
+        case 9600:
+          baud_idx = 207;
+          break;
+        case 57600:
+          baud_idx = 34;
+          break;
+        case 115200:
+          baud_idx = 16;
+          break;
+        case 1000000:
+          baud_idx = 1;
+          break;
+        default:
+          return false;                    
+      }        
+      break;
+
+    case XL320:
+      switch(baudrate)
+      {
+        case 9600:
+          baud_idx = 0;
+          break;
+        case 57600:
+          baud_idx = 1;
+          break;
+        case 115200:
+          baud_idx = 2;
+          break;
+        case 1000000:
+          baud_idx = 3;
+          break;
+        default:
+          return false;                    
+      }    
+      break;
+
+    case MX28_2:
+    case MX64_2:
+    case MX106_2:
+    case XL430_W250:
+    case XM430_W210:
+    case XM430_W350:
+    case XH430_V210:
+    case XH430_V350:
+    case XH430_W210:
+    case XH430_W350:
+    case XM540_W150:
+    case XM540_W270:
+    case XH540_W150:
+    case XH540_W270:
+    case XH540_V150:
+    case XH540_V270:
+      switch(baudrate)
+      {
+        case 9600:
+          baud_idx = 0;
+          break;
+        case 57600:
+          baud_idx = 1;
+          break;
+        case 115200:
+          baud_idx = 2;
+          break;
+        case 1000000:
+          baud_idx = 3;
+          break;
+        case 2000000:
+          baud_idx = 4;
+          break;
+        case 3000000:
+          baud_idx = 5;
+          break;
+        case 4000000:
+          baud_idx = 6;
+          break;
+        case 4500000:
+          baud_idx = 7;
+          break;    
+        default:
+          return false;          
+      }
+      break;            
+
+    default:
+      return false;
+      break;
+  }
+
+  return writeControlTableItem(ControlTableItem::BAUD_RATE, id, baud_idx);
+}
+
+
 /* Commands for Slave */
 bool Dynamixel2Arduino::torqueOn(uint8_t id)
 {
@@ -336,7 +477,7 @@ float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM || unit == UNIT_RADIAN)
+  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM)
     return false;
 
   return writeForRangeDepandancyFunc(SET_PWM, id, value, unit);
@@ -344,7 +485,7 @@ bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM || unit == UNIT_RADIAN)
+  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM)
     return 0.0;
 
   return readForRangeDepandancyFunc(GET_PWM, id, unit);
@@ -352,7 +493,7 @@ float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_RPM || unit == UNIT_RADIAN)
+  if(unit == UNIT_DEGREE || unit == UNIT_RPM)
     return false;
 
   return writeForRangeDepandancyFunc(SET_CURRENT, id, value, unit);
@@ -360,7 +501,7 @@ bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_RPM || unit == UNIT_RADIAN)
+  if(unit == UNIT_DEGREE || unit == UNIT_RPM)
     return 0.0;
 
   return readForRangeDepandancyFunc(GET_CURRENT, id, unit);
@@ -802,7 +943,6 @@ static bool checkAndconvertReadData(int32_t in_data, float &out_data, uint8_t un
   case UNIT_RPM:
   case UNIT_DEGREE:
   case UNIT_MILLI_AMPERE:
-  case UNIT_RADIAN:
     if(unit != item_info.unit_type)
       return false;
     data = (float)in_data*item_info.unit_value;
