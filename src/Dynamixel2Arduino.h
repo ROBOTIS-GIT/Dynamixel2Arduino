@@ -215,8 +215,8 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
     bool setTorqueEnable(uint8_t id, bool enable);
     bool setLedState(uint8_t id, bool state);
 
-    float readForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, uint8_t unit);
-    bool writeForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit);
+    float readForRangeDependencyFunc(uint8_t func_idx, uint8_t id, uint8_t unit);
+    bool writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit);
 };
 
 

@@ -19,14 +19,14 @@
 
 using namespace DYNAMIXEL;
 
-typedef struct ModelDependancyFuncItemAndRangeInfo{
+typedef struct ModelDependencyFuncItemAndRangeInfo{
   uint8_t func_idx;
   uint8_t item_idx;
   uint8_t unit_type;
   int32_t min_value;
   int32_t max_value;
   float unit_value;
-} ModelDependancyFuncItemAndRangeInfo_t;
+} ModelDependencyFuncItemAndRangeInfo_t;
 
 typedef struct ItemAndRangeInfo{
   uint8_t item_idx;
@@ -36,7 +36,7 @@ typedef struct ItemAndRangeInfo{
   float unit_value;
 } ItemAndRangeInfo_t;
 
-static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t func_num);
+static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t func_num);
 static float f_map(float x, float in_min, float in_max, float out_min, float out_max);
 static bool checkAndconvertWriteData(float in_data, int32_t &out_data, uint8_t unit, ItemAndRangeInfo_t &item_info);
 static bool checkAndconvertReadData(int32_t in_data, float &out_data, uint8_t unit, ItemAndRangeInfo_t &item_info);
@@ -448,7 +448,7 @@ bool Dynamixel2Arduino::setGoalPosition(uint8_t id, float value, uint8_t unit)
   if(unit == UNIT_RATIO || unit == UNIT_RPM || unit == UNIT_MILLI_AMPERE)
     return false;
 
-  return writeForRangeDepandancyFunc(SET_POSITION, id, value, unit);
+  return writeForRangeDependencyFunc(SET_POSITION, id, value, unit);
 }
 
 float Dynamixel2Arduino::getPresentPosition(uint8_t id, uint8_t unit)
@@ -456,7 +456,7 @@ float Dynamixel2Arduino::getPresentPosition(uint8_t id, uint8_t unit)
   if(unit == UNIT_RATIO || unit == UNIT_RPM || unit == UNIT_MILLI_AMPERE)
     return 0.0;
 
-  return readForRangeDepandancyFunc(GET_POSITION, id, unit);
+  return readForRangeDependencyFunc(GET_POSITION, id, unit);
 }
 
 bool Dynamixel2Arduino::setGoalVelocity(uint8_t id, float value, uint8_t unit)
@@ -464,7 +464,7 @@ bool Dynamixel2Arduino::setGoalVelocity(uint8_t id, float value, uint8_t unit)
   if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE)
     return false;
 
-  return writeForRangeDepandancyFunc(SET_VELOCITY, id, value, unit);
+  return writeForRangeDependencyFunc(SET_VELOCITY, id, value, unit);
 }
 
 float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
@@ -472,7 +472,7 @@ float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
   if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE)
     return 0.0;
 
-  return readForRangeDepandancyFunc(GET_VELOCITY, id, unit);
+  return readForRangeDependencyFunc(GET_VELOCITY, id, unit);
 }
 
 bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
@@ -480,7 +480,7 @@ bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
   if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM)
     return false;
 
-  return writeForRangeDepandancyFunc(SET_PWM, id, value, unit);
+  return writeForRangeDependencyFunc(SET_PWM, id, value, unit);
 }
 
 float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
@@ -488,7 +488,7 @@ float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
   if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM)
     return 0.0;
 
-  return readForRangeDepandancyFunc(GET_PWM, id, unit);
+  return readForRangeDependencyFunc(GET_PWM, id, unit);
 }
 
 bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
@@ -496,7 +496,7 @@ bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
   if(unit == UNIT_DEGREE || unit == UNIT_RPM)
     return false;
 
-  return writeForRangeDepandancyFunc(SET_CURRENT, id, value, unit);
+  return writeForRangeDependencyFunc(SET_CURRENT, id, value, unit);
 }
 
 float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
@@ -504,7 +504,7 @@ float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
   if(unit == UNIT_DEGREE || unit == UNIT_RPM)
     return 0.0;
 
-  return readForRangeDepandancyFunc(GET_CURRENT, id, unit);
+  return readForRangeDependencyFunc(GET_CURRENT, id, unit);
 }
 
 
@@ -589,12 +589,12 @@ uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
   return model_num;
 }
 
-float Dynamixel2Arduino::readForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, uint8_t unit)
+float Dynamixel2Arduino::readForRangeDependencyFunc(uint8_t func_idx, uint8_t id, uint8_t unit)
 {
   float ret = 0;
   int32_t ret_data = 0;
   uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, func_idx);
+  ItemAndRangeInfo_t item_info = getModelDependencyFuncInfo(model_num, func_idx);
 
   if(item_info.item_idx == LAST_DUMMY_ITEM)
     return false;
@@ -605,12 +605,12 @@ float Dynamixel2Arduino::readForRangeDepandancyFunc(uint8_t func_idx, uint8_t id
   return ret;
 }
 
-bool Dynamixel2Arduino::writeForRangeDepandancyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit)
+bool Dynamixel2Arduino::writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit)
 {
   bool ret = false;
   int32_t data = 0;
   uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependancyFuncInfo(model_num, func_idx);
+  ItemAndRangeInfo_t item_info = getModelDependencyFuncInfo(model_num, func_idx);
 
   if(item_info.item_idx == LAST_DUMMY_ITEM)
     return false;
@@ -631,7 +631,7 @@ bool Dynamixel2Arduino::writeForRangeDepandancyFunc(uint8_t func_idx, uint8_t id
 
 
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_1_0_common[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_0_common[] PROGMEM = {
 #if (ENABLE_ACTUATOR_AX \
  || ENABLE_ACTUATOR_DX \
  || ENABLE_ACTUATOR_RX \
@@ -646,7 +646,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_1_0_common[] PROGM
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_ex[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ex[] PROGMEM = {
 #if (ENABLE_ACTUATOR_EX)
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, 0, 4095, 0.06},
   {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, 0, 4095, 0.06},
@@ -654,7 +654,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ex[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_1_1_common[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_1_common[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX12W \
  || ENABLE_ACTUATOR_MX28 \
  || ENABLE_ACTUATOR_MX64 \
@@ -668,7 +668,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_1_1_common[] PROGM
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx12[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_mx12[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX12W)
   {SET_VELOCITY, MOVING_SPEED, UNIT_RPM, 0, 2047, 0.916},
   {GET_VELOCITY, PRESENT_SPEED, UNIT_RPM, 0, 2047, 0.916},  
@@ -676,7 +676,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx12[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx64_mx106[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_mx106[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX64 \
  || ENABLE_ACTUATOR_MX106)
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, 0, 2047, 4.5},
@@ -685,7 +685,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx64_mx106[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_2_0_common[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
@@ -704,7 +704,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_2_0_common[] PROGM
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx64_2[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_2[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX64_PROTOCOL2)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
@@ -712,7 +712,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx64_2[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx106_2[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_mx106_2[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX106_PROTOCOL2)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
@@ -720,7 +720,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_mx106_2[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_xm430_w210_w350[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xm430_w210_w350[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XM430)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
@@ -728,7 +728,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_xm430_w210_w350[] PROGMEM
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_xh430_w210_w350[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_w210_w350[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XH430)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
@@ -736,7 +736,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_xh430_w210_w350[] PROGMEM
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_xh430_v210_v350[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_v210_v350[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XH430)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
@@ -744,7 +744,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_xh430_v210_v350[] PROGMEM
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_xm540_xh540[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
@@ -753,7 +753,7 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_xm540_xh540[] PROGMEM = {
 };
 
 
-const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_pro_model[] PROGMEM = {
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_pro_model[] PROGMEM = {
 #if (0) //PRO
   {SET_ID, ID, UNIT_RAW, 0, 253, 1},
   {SET_BAUD_RATE, BAUD_RATE, UNIT_RAW, 0, 3, 1},
@@ -763,11 +763,11 @@ const ModelDependancyFuncItemAndRangeInfo_t dependancy_ctable_pro_model[] PROGME
 };
 
 
-static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t func_num)
+static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t func_num)
 {
   uint8_t func_idx, i = 0;
-  const ModelDependancyFuncItemAndRangeInfo_t *p_common_ctable = nullptr;
-  const ModelDependancyFuncItemAndRangeInfo_t *p_dep_ctable = nullptr;
+  const ModelDependencyFuncItemAndRangeInfo_t *p_common_ctable = nullptr;
+  const ModelDependencyFuncItemAndRangeInfo_t *p_dep_ctable = nullptr;
   ItemAndRangeInfo_t item_info;
   memset(&item_info, 0, sizeof(item_info));
   item_info.item_idx = LAST_DUMMY_ITEM;
@@ -785,55 +785,55 @@ static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t
     case RX28:
     case RX64:
     case XL320:
-      p_common_ctable = dependancy_ctable_1_0_common;
+      p_common_ctable = dependency_ctable_1_0_common;
       break;
 
     case EX106:
-      p_common_ctable = dependancy_ctable_1_0_common;
-      p_dep_ctable = dependancy_ex;
+      p_common_ctable = dependency_ctable_1_0_common;
+      p_dep_ctable = dependency_ex;
       break;
 
     case MX12W:
-      p_common_ctable = dependancy_ctable_1_1_common;
-      p_dep_ctable = dependancy_mx12;
+      p_common_ctable = dependency_ctable_1_1_common;
+      p_dep_ctable = dependency_mx12;
       break;
 
     case MX28:
-      p_common_ctable = dependancy_ctable_1_1_common;
+      p_common_ctable = dependency_ctable_1_1_common;
       break;
 
     case MX64:
     case MX106:
-      p_common_ctable = dependancy_ctable_1_1_common;
-      p_dep_ctable = dependancy_mx64_mx106;
+      p_common_ctable = dependency_ctable_1_1_common;
+      p_dep_ctable = dependency_mx64_mx106;
       break;              
 
     case MX28_2:
     case XL430_W250:
-      p_common_ctable = dependancy_ctable_2_0_common;
+      p_common_ctable = dependency_ctable_2_0_common;
       break;
     case MX64_2:
-      p_common_ctable = dependancy_ctable_2_0_common;
-      p_dep_ctable = dependancy_mx64_2;
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_mx64_2;
       break;    
     case MX106_2:
-      p_common_ctable = dependancy_ctable_2_0_common;
-      p_dep_ctable = dependancy_mx106_2;
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_mx106_2;
       break;        
     case XM430_W210:
     case XM430_W350:
-      p_common_ctable = dependancy_ctable_2_0_common;
-      p_dep_ctable = dependancy_xm430_w210_w350;
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xm430_w210_w350;
       break;
     case XH430_V210:
     case XH430_V350:
-      p_common_ctable = dependancy_ctable_2_0_common;
-      p_dep_ctable = dependancy_xh430_v210_v350;
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xh430_v210_v350;
       break;
     case XH430_W210:
     case XH430_W350:
-      p_common_ctable = dependancy_ctable_2_0_common;
-      p_dep_ctable = dependancy_xh430_w210_w350;
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xh430_w210_w350;
       break;    
     case XM540_W150:
     case XM540_W270:
@@ -841,8 +841,8 @@ static ItemAndRangeInfo_t getModelDependancyFuncInfo(uint16_t model_num, uint8_t
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
-      p_common_ctable = dependancy_ctable_2_0_common;
-      p_dep_ctable = dependancy_xm540_xh540;
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xm540_xh540;
       break;            
 
     default:
