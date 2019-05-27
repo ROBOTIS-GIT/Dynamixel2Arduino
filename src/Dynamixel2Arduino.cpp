@@ -46,6 +46,7 @@ Dynamixel2Arduino::Dynamixel2Arduino(HardwareSerial& port, int dir_pin)
   : Master(), dxl_port_(port, dir_pin)
 {
   setPort(dxl_port_);
+  begin();
 }
 
 /* For Master configuration */
@@ -445,7 +446,7 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
 
 bool Dynamixel2Arduino::setGoalPosition(uint8_t id, float value, uint8_t unit)
 {
-  if(unit == UNIT_RATIO || unit == UNIT_RPM || unit == UNIT_MILLI_AMPERE)
+  if(unit != UNIT_RAW && unit != UNIT_DEGREE)
     return false;
 
   return writeForRangeDependencyFunc(SET_POSITION, id, value, unit);
@@ -453,7 +454,7 @@ bool Dynamixel2Arduino::setGoalPosition(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentPosition(uint8_t id, uint8_t unit)
 {
-  if(unit == UNIT_RATIO || unit == UNIT_RPM || unit == UNIT_MILLI_AMPERE)
+  if(unit != UNIT_RAW && unit != UNIT_DEGREE)
     return 0.0;
 
   return readForRangeDependencyFunc(GET_POSITION, id, unit);
@@ -461,7 +462,7 @@ float Dynamixel2Arduino::getPresentPosition(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalVelocity(uint8_t id, float value, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE)
+  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_RPM)
     return false;
 
   return writeForRangeDependencyFunc(SET_VELOCITY, id, value, unit);
@@ -469,7 +470,7 @@ bool Dynamixel2Arduino::setGoalVelocity(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE)
+  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_RPM)
     return 0.0;
 
   return readForRangeDependencyFunc(GET_VELOCITY, id, unit);
@@ -477,7 +478,7 @@ float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM)
+  if(unit != UNIT_RAW && unit != UNIT_RATIO)
     return false;
 
   return writeForRangeDependencyFunc(SET_PWM, id, value, unit);
@@ -485,7 +486,7 @@ bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_MILLI_AMPERE || unit == UNIT_RPM)
+  if(unit != UNIT_RAW && unit != UNIT_RATIO)
     return 0.0;
 
   return readForRangeDependencyFunc(GET_PWM, id, unit);
@@ -493,7 +494,7 @@ float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_RPM)
+  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_MILLI_AMPERE)
     return false;
 
   return writeForRangeDependencyFunc(SET_CURRENT, id, value, unit);
@@ -501,7 +502,7 @@ bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
 {
-  if(unit == UNIT_DEGREE || unit == UNIT_RPM)
+  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_MILLI_AMPERE)
     return 0.0;
 
   return readForRangeDependencyFunc(GET_CURRENT, id, unit);

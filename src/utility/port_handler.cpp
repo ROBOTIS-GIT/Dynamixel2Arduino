@@ -24,9 +24,7 @@ void PortHandler::setOpenState(bool state)
 /* SerialPortHandler */
 SerialPortHandler::SerialPortHandler(HardwareSerial& port, const int dir_pin)
  : PortHandler(), port_(port), dir_pin_(dir_pin), baud_(57600)
-{
-  //begin();
-}
+{}
 
 void SerialPortHandler::begin()
 {

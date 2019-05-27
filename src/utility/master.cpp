@@ -71,8 +71,7 @@ dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
 
         p_resp->id_count++;
 
-        //-- 주소를 4바이트로 정렬( 구조체를 직접 타입변환하여 사용하기 위해서 )
-        //
+        // Arranges addresses in 4 bytes (for direct use of struct type conversion)
         mem_addr += sizeof(ping_node_t);
         if (mem_addr%4) {
           mem_addr += 4 - (mem_addr%4);
@@ -178,8 +177,6 @@ int32_t Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
     }
   }
 
-  //Serial.print("read dxl ret : ");Serial.println(getLastDxlReturn());
-
   return recv_param_len;
 }
 
@@ -189,7 +186,6 @@ bool Master::write(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len
   uint32_t pre_time_us, pre_time_ms;
   
   if(writeNoResp(id, addr, p_data, data_length) != false){
-    //Serial.print("write dxl ret : ");Serial.println(getLastDxlReturn());
     return ret;
   }
     
@@ -217,8 +213,6 @@ bool Master::write(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len
       break;
     }
   }
-
-  //Serial.print("write dxl ret : ");Serial.println(getLastDxlReturn());
 
   return ret;
 }
@@ -431,8 +425,7 @@ dxl_return_t Master::syncRead(param_sync_read_t *p_param, status_read_t *p_resp,
         pre_time_ms = millis();
         packet_.rx_time = micros() - pre_time_us;
 
-        //-- 주소를 4바이트로 정렬( 구조체를 직접 타입변환하여 사용하기 위해서 )
-        //
+        // Arranges addresses in 4 bytes (for direct use of struct type conversion)
         mem_addr += sizeof(read_node_t);
         if (mem_addr%4)
         {
@@ -604,8 +597,7 @@ dxl_return_t Master::bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp,
 
         mem_addr += packet_.rx.param_length;
 
-        //-- 주소를 4바이트로 정렬( 구조체를 직접 타입변환하여 사용하기 위해서 )
-        //
+        // Arranges addresses in 4 bytes (for direct use of struct type conversion)
         mem_addr += sizeof(read_node_t);
         if (mem_addr%4)
         {
@@ -646,7 +638,7 @@ dxl_return_t Master::bulkWrite(param_bulk_write_t *p_param)
   dxl_return_t ret = DXL_RET_OK;
   uint32_t pre_time_us;
 
-  uint8_t tx_param[4 + DXLCMD_MAX_NODE];
+  uint8_t tx_param[(5 + DXLCMD_MAX_NODE_BUFFER_SIZE) * DXLCMD_MAX_NODE];
   uint32_t i;
   uint32_t j;
   uint32_t data_index;

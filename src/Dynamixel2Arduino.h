@@ -56,14 +56,6 @@ enum Functions{
   SET_CURRENT,
   GET_CURRENT,
 
-  DIRECTION_CTRL,
-//  PROFILE_MODE_CTRL,
-//  TIME_BASED_PROFILE_CTRL,
-
-  POSITION_PID_GAIN,
-  VELOCITY_PI_GAIN,
-  FEED_FORWARD_GAIN,
-
   LAST_DUMMY_FUNC = 0xFF
 };
 
@@ -88,35 +80,176 @@ enum ParamUnit{
   UNIT_MILLI_AMPERE
 };
 
+
 class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
   public:
+    /**
+     * @brief The constructor.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * @endcode
+     * @param port The HardwareSerial port you want to use on the board to communicate with DYNAMIXELs.
+     *          It is automatically initialized baudrate to 57600 by calling the begin () function.
+     * @param dir_pin Directional pins for using half-duplex communication. -1 uses full duplex. (default : -1)
+     * @return It returns true(1) on success, false(0) on failure.
+     */   
     Dynamixel2Arduino(HardwareSerial& port, int dir_pin = -1);
     
-    /* For Master configuration */
-    void begin(unsigned long baud);
+    /**
+     * @brief Initialization function to start communication with DYNAMIXEL.
+     *      Or change baudrate of baud serial port.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.begin(57600);
+     * @endcode
+     * @param baud The port speed you want on the board (the speed to communicate with DYNAMIXEL) (default : 57600)
+     * @return It returns true(1) on success, false(0) on failure.
+     */    
+    void begin(unsigned long baud = 57600);
+
+    /**
+     * @brief It is API for getting serial baudrate of board port.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getPortBaud());
+     * @endcode
+     * @return It returns serial baudrate of board port.
+     */   
     unsigned long getPortBaud() const;
     
-    /* Commands for Slave access & control */
-    bool scan(); //broadcast ping
+    /**
+     * @brief It is API for To checking the communication connection status of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.ping(1);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID or BROADCAST ID (0xFE). (default : 0xFE)
+     * @return It returns true(1) on success, false(0) on failure.
+     */    
     bool ping(uint8_t id = DXL_BROADCAST_ID);
+
+    /**
+     * @brief It is same as using the broadcast parameter(0xFE) of the ping function.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.scan();
+     * @endcode
+     * @return If a dynamixel succeeds in pinging, it returns 1, and returns 0 if none succeeds.
+     */    
+    bool scan();
+
+    /**
+     * @brief It is API for getting model number of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getModelNumber(1));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @return It returns the data readed from DXL control table item.
+     * If the read fails, 0xFFFF is returned.
+     */      
     uint16_t getModelNumber(uint8_t id);
 
+    /**
+     * @brief It is API for changing ID of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setID(1, 2);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param new_id DYNAMIXEL Actuator's ID you want.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool setID(uint8_t id, uint8_t new_id);
+
+    /**
+     * @brief It is API for changing protocol of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setProtocol(1, 1.0);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param version DYNAMIXEL Actuator's protocol version you want. (1.0 or 2.0)
+     * @return It returns true(1) on success, false(0) on failure.
+     */    
     bool setProtocol(uint8_t id, float version);
+
+    /**
+     * @brief It is API for changing baudrate of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setBaudrate(1, 57600);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param baudrate DYNAMIXEL Actuator's baudrate value. (Refer to the control table of each actuator for supported values (e-manual))
+     * @return It returns true(1) on success, false(0) on failure.
+     */    
     bool setBaudrate(uint8_t id, uint32_t baudrate);
 
+    /**
+     * @brief It is API for controlling torque on/off(turn on) of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.torqueOn(1);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool torqueOn(uint8_t id);
+
+    /**
+     * @brief It is API for controlling torque on/off(turn on) of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.torqueOff(1);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @return It returns true(1) on success, false(0) on failure.
+     */    
     bool torqueOff(uint8_t id);
 
+    /**
+     * @brief It is API for controlling LED(turn on) of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.ledOn(1);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool ledOn(uint8_t id);
+
+     /**
+     * @brief It is API for controlling LED(turn off) of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.ledOff(1);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool ledOff(uint8_t id);
 
     /**
      * @brief It is API for controlling operating mode of DYNAMIXEL.
      * @code
-     * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
-     * dynamixel_manager.setGoalPosition(1, 512);
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setGoalPosition(1, 512);
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
      * @param mode The operating mode you want.
@@ -128,12 +261,14 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @brief It is API for controlling position(joint) of DYNAMIXEL.
      * You can use the @unit parameter to specify the unit of @value.
      * @code
-     * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
-     * dynamixel_manager.setGoalPosition(1, 512);
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setGoalPosition(1, 512);
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
      * @param value The value you want to set.
-     * @param unit The unit of the value you entered.
+     * @param unit The unit of the value you entered. (default : UNIT_RAW)
+     *    Only support UNIT_RAW, UNIT_DEGREE.
      * @return It returns true(1) on success, false(0) on failure.
      */
     bool setGoalPosition(uint8_t id, float value, uint8_t unit = UNIT_RAW);
@@ -142,39 +277,151 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @brief It is API for getting present position (joint) of DYNAMIXEL.
      * You can use the @unit parameter to specify the unit of @value.
      * @code
-     * Dynamixel2Arduino dynamixel_manager(Serial1, 2);
-     * Serial.print(dynamixel_manager.getPresentPosition(1));
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getPresentPosition(1));
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
-     * @param The unit you want to return (the function converts the raw value to the unit you specified and returns it)
+     * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_DEGREE.
-     * @return It returns the data readed from DXL control table item.
+     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */    
     float getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
 
+    /**
+     * @brief It is API for controlling velocity(wheel mode speed) of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setGoalVelocity(1, 512);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param value The value you want to set.
+     * @param unit The unit of the value you entered. (default : UNIT_RAW)
+     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_RPM.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool setGoalVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+
+    /**
+     * @brief It is API for getting present velocity(wheel mode speed) of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getPresentVelocity(1));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
+     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_RPM.
+     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     */    
     float getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
 
+    /**
+     * @brief It is API for controlling PWM of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setGoalPWM(1, 50.0, UNIT_RATIO);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param value The value you want to set.
+     * @param unit The unit of the value you entered.  (default : UNIT_RAW)
+     *    Only support UNIT_RAW, UNIT_RATIO.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool setGoalPWM(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+
+    /**
+     * @brief It is API for getting present PWM of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getPresentPWM(1, UNIT_RATIO));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
+     *    Only support UNIT_RAW, UNIT_RATIO.
+     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     */    
     float getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
 
+    /**
+     * @brief It is API for controlling current of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setGoalCurrent(1, 512);
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param value The value you want to set.
+     * @param unit The unit of the value you entered.  (default : UNIT_RAW)
+     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_MILLI_AMPERE.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
+
+    /**
+     * @brief It is API for getting present current of DYNAMIXEL.
+     * You can use the @unit parameter to specify the unit of @value.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getPresentCurrent(1));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
+     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_MILLI_AMPERE.
+     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     */  
     float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
 
-
-
-    int32_t readControlTableItem(uint16_t model_num,
-      uint8_t item_idx, uint8_t id, uint32_t timeout = 100);
-
+    /**
+     * @brief It is API for getting data of a DYNAMIXEL control table item.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.readControlTableItem(PRESENT_VOLTAGE, 1));
+     * @endcode
+     * @param item_idx DYNAMIXEL Actuator's control table item's index.
+     *    For each index, replace the name of the control table item in the e-manual with capital letters and replace the space with an underscore (_).
+     *    For the list of indexes, please refer to the link below.
+     *    TODO: add link (It is defined as 'enum ControlTableItem' in actuator.h)
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param timeout A timeout waiting for a response to a data transfer.
+     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     */  
     int32_t readControlTableItem(uint8_t item_idx, 
       uint8_t id, uint32_t timeout = 100);
 
+    /**
+     * @brief It is API for controlling data of a DYNAMIXEL control table item.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.writeControlTableItem(TORQUE_ENABLE, 1, 1);
+     * @endcode
+     * @param item_idx DYNAMIXEL Actuator's control table item's index.
+     *    For each index, replace the name of the control table item in the e-manual with capital letters and replace the space with an underscore (_).
+     *    For the list of indexes, please refer to the link below.
+     *    TODO: add link (It is defined as 'enum ControlTableItem' in actuator.h)
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param data The data you want to write. Only the data size allowed by the address is applied.
+     * @param timeout A timeout waiting for a response to a data transfer.
+     * @return It returns true(1) on success, false(0) on failure.
+     */
     bool writeControlTableItem(uint8_t item_idx, 
       uint8_t id, int32_t data, uint32_t timeout = 100);
-
-    bool writeControlTableItem(uint16_t model_num, 
-      uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout = 100);
 
 
 #if 0 //TODO
@@ -217,6 +464,12 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
     float readForRangeDependencyFunc(uint8_t func_idx, uint8_t id, uint8_t unit);
     bool writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit);
+
+    int32_t readControlTableItem(uint16_t model_num,
+      uint8_t item_idx, uint8_t id, uint32_t timeout = 100);
+    
+    bool writeControlTableItem(uint16_t model_num, 
+      uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout = 100);  
 };
 
 
