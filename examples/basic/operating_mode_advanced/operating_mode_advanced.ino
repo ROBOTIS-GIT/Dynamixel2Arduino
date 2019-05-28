@@ -33,7 +33,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  static uint32_t pre_time_op_mode, pre_time_write, pre_time_read, pre_time_led;
   static float value = 0;
   static bool led_state, flag_op_changed = true;
   static uint8_t op_mode = OP_POSITION;
@@ -87,6 +86,7 @@ void loop() {
         DEBUG_SERIAL.println(dynamixel.getPresentPosition(DXL_ID));
       }
       break;
+      
     case OP_CURRENT_BASED_POSITION:
       if(flag_op_changed){
         value = 0;

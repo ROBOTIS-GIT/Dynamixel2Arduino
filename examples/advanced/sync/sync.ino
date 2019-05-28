@@ -23,6 +23,9 @@
 
 #define DXL_CNT 2
 uint8_t id_list[DXL_CNT] = {1, 3};
+uint32_t data_list[DXL_CNT];
+uint32_t recv_data_list[DXL_CNT];
+bool led_state_list[DXL_CNT];  
 
 Dynamixel2Arduino dynamixel(DXL_SERIAL, RS485_DIR_PIN);
 
@@ -43,45 +46,54 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  uint8_t i;
-  static uint32_t pre_time_sync_write, pre_time_sync_read, pre_time_led;
-  static uint32_t data_list[DXL_CNT];
-  static uint32_t recv_data_list[DXL_CNT];
-  static bool led_state_list[DXL_CNT];  
 
-  if(millis() - pre_time_sync_write >= 100) {    
-    pre_time_sync_write = millis();
-
-    if(data_list[0] >= 4095){
-      data_list[0] = 0;
-    }else{
-      data_list[0] += 5;
-    }
-    data_list[1] = data_list[0];
-
-    dynamixel.syncWrite(116, 4, id_list, DXL_CNT, (uint8_t*)data_list, sizeof(data_list));
-  }     
-
-  if(millis() - pre_time_sync_read >= 50) {
-    pre_time_sync_read = millis();
-
-    dynamixel.syncRead(132, 4, id_list, DXL_CNT, (uint8_t*)recv_data_list, sizeof(recv_data_list));
-
-    DEBUG_SERIAL.print("Present Position : ");      
-    DEBUG_SERIAL.print(recv_data_list[0]);
-    DEBUG_SERIAL.print(" ");
-    DEBUG_SERIAL.print(recv_data_list[1]);
-    DEBUG_SERIAL.println();
+  // set value to data buffer for syncWrite
+  if(data_list[0] >= 4095){
+    data_list[0] = 0;
+  }else{
+    data_list[0] += 5;
   }
+  data_list[1] = data_list[0];
 
-  if(millis() - pre_time_led >= 500) {
-    pre_time_led = millis();
+  led_state_list[0] = !led_state_list[0];
+  led_state_list[1] = !led_state_list[1];
 
-    led_state_list[0] = !led_state_list[0];
-    led_state_list[1] = !led_state_list[1];
+  /** 
+   * parameter1 : Address of DYNAMIXEL control table item to write. In example, (116) is address of "Goal Postion" in protocol2.0.
+   *             (For details, please refer to control table information of each DYNAMIXEL in http://emanual.robotis.com)
+   * parameter2 : Length of DYNAMIXEL control table item to write.
+   * parameter3 : List of DYNAMIXEL IDs to write.
+   * parameter4 : Number of DYNAMIXEL to write.
+   * parameter5 : buffer where the data to be transferred is stored.
+   * parameter6 : Max size of buffer where the data to be transferred is stored.
+  */
+  dynamixel.syncWrite(116, 4, id_list, DXL_CNT, (uint8_t*)data_list, sizeof(data_list));
+  delay(100);
 
-    dynamixel.syncWrite(65, 1, id_list, DXL_CNT, (uint8_t*)led_state_list, sizeof(led_state_list));
-  }
+  // parameter1(65) is address of "LED" in protocol2.0 
+  //  (For details, please refer to control table information of each DYNAMIXEL in http://emanual.robotis.com)
+  dynamixel.syncWrite(65, 1, id_list, DXL_CNT, (uint8_t*)led_state_list, sizeof(led_state_list));
+  delay(100);
+
+  /** 
+   * parameter1 : Address of DYNAMIXEL control table item to read. In example, (132) is address of "Present Postion" item in protocol2.0.
+   *             (For details, please refer to control table information of each DYNAMIXEL in http://emanual.robotis.com)
+   * parameter2 : Length of DYNAMIXEL control table item to read.
+   * parameter3 : List of DYNAMIXEL IDs to read.
+   * parameter4 : Number of DYNAMIXEL to read.
+   * parameter5 : Buffer to store the read data.
+   * parameter6 : Max size of buffer to store the read data.
+   * parameter7 : Timeout(unit: milliseconds, default: 100ms).
+  */
+  dynamixel.syncRead(132, 4, id_list, DXL_CNT, (uint8_t*)recv_data_list, sizeof(recv_data_list));
+  delay(100);
+
+  // Print the read data using syncRead
+  DEBUG_SERIAL.print("Present Position : ");      
+  DEBUG_SERIAL.print(recv_data_list[0]);
+  DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(recv_data_list[1]);
+  DEBUG_SERIAL.println();
 }
 
 
