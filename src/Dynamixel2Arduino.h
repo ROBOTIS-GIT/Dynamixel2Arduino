@@ -451,7 +451,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
 
     DYNAMIXEL::SerialPortHandler dxl_port_;
     
-    DYNAMIXEL::param_t  param_;
+    //DYNAMIXEL::param_t  param_;
     DYNAMIXEL::status_t resp_;
     IdAndModelNum_t registered_dxl_[DXLCMD_MAX_NODE];
     uint8_t         registered_dxl_cnt_;

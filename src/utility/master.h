@@ -166,15 +166,23 @@ class Master
 
     //TODO: dxl_return_t regWrite();
     //TODO: dxl_return_t action();
-    dxl_return_t factoryReset(uint8_t id, uint8_t option, uint32_t timeout);
+    dxl_return_t factoryReset(uint8_t id, uint8_t option, uint32_t timeout = 100);
     dxl_return_t reboot(uint8_t id, uint32_t timeout);
 
     //TODO: dxl_return_t clear();
+    bool syncWrite(uint16_t addr, uint16_t addr_len,
+      uint8_t *id_list, uint8_t *data_list, uint8_t id_cnt);
+
+    int32_t syncRead(uint16_t addr, uint16_t addr_len,
+      uint8_t *id_list, uint8_t id_cnt, 
+      uint8_t *recv_buf, uint16_t recv_buf_size, uint32_t timeout = 100);
+
+
     dxl_return_t syncRead(param_sync_read_t *p_param,
-      status_read_t *p_resp, uint32_t timeout);
+      status_read_t *p_resp, uint32_t timeout = 100);
     dxl_return_t syncWrite(param_sync_write_t *p_param);
     dxl_return_t bulkRead(param_bulk_read_t *p_param,
-      status_read_t *p_resp, uint32_t timeout);
+      status_read_t *p_resp, uint32_t timeout = 100);
     dxl_return_t bulkWrite(param_bulk_write_t *p_param);
 
     uint8_t getLastStatusError() const;

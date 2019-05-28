@@ -1600,7 +1600,7 @@ dxl_return_t dxlInstBulkRead(dxl_t *p_dxl)
 
   if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
   {
-    return DXL_RET_ERROR_NOT_COMMAND;
+    return DXL_RET_ERROR_NOT_INSTRUCTION;
   }
 
   if (p_dxl->rx.id != DXL_BROADCAST_ID)
@@ -1674,7 +1674,7 @@ dxl_return_t dxlInstBulkWrite(dxl_t *p_dxl)
 
   if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
   {
-    return DXL_RET_ERROR_NOT_COMMAND;
+    return DXL_RET_ERROR_NOT_INSTRUCTION;
   }
 
   if (p_dxl->rx.id != DXL_BROADCAST_ID)

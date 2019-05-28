@@ -165,10 +165,6 @@ int32_t Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
       break;
     }else if (last_dxl_return_ != DXL_RET_EMPTY){
       break;
-    }else{
-// #ifdef _USE_HW_RTOS
-//         osThreadYield();
-// #endif
     }
 
     if (millis()-pre_time_ms >= timeout) {
@@ -453,12 +449,6 @@ dxl_return_t Master::syncRead(param_sync_read_t *p_param, status_read_t *p_resp,
           break;
         }
       }
-      else
-      {
-// #ifdef _USE_HW_RTOS
-//         osThreadYield();
-// #endif
-      }
 
       if (millis()-pre_time_ms >= timeout)
       {
@@ -473,6 +463,150 @@ dxl_return_t Master::syncRead(param_sync_read_t *p_param, status_read_t *p_resp,
 
   return ret;
 }
+
+
+int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
+  uint8_t *id_list, uint8_t id_cnt, 
+  uint8_t *recv_buf, uint16_t recv_buf_size, uint32_t timeout)
+{
+  if(id_list == nullptr || recv_buf == nullptr || id_cnt > DXLCMD_MAX_NODE)
+    return -1;
+
+  uint8_t i, id_idx = 0;
+  int32_t recv_len = 0;  
+  uint32_t pre_time_us, pre_time_ms;
+  uint8_t tx_param[4 + DXLCMD_MAX_NODE];
+
+  if (packet_.packet_ver == DXL_PACKET_VER_1_0 ){
+    last_dxl_return_ = DXL_RET_ERROR_NOT_INSTRUCTION;
+    return -1;
+  }
+
+  if (p_port_->getOpenState() != true){
+    last_dxl_return_ = DXL_RET_NOT_OPEN;
+    return -1;
+  }
+
+  if(id_cnt > DXLCMD_MAX_NODE){
+    id_cnt = DXLCMD_MAX_NODE;
+  }
+
+  tx_param[0] = addr >> 0;
+  tx_param[1] = addr >> 8;
+  tx_param[2] = addr_len >> 0;
+  tx_param[3] = addr_len >> 8;
+
+  for( i=0; i<id_cnt; i++)
+  {
+    tx_param[4+i] = id_list[i];
+  }
+
+  pre_time_us = micros();
+  last_dxl_return_ = dxlTxPacketInst(&packet_, 
+    DXL_BROADCAST_ID, INST_SYNC_READ, tx_param, 4 + id_cnt);
+  packet_.tx_time = micros() - pre_time_us;
+
+  if(last_dxl_return_ != DXL_RET_OK)
+    return false;
+
+  pre_time_ms = millis();
+  pre_time_us = micros();
+  while(1)
+  {
+    last_dxl_return_ = dxlRxPacket(&packet_);
+    if (last_dxl_return_ == DXL_RET_RX_STATUS)
+    {
+      pre_time_ms = millis();
+      packet_.rx_time = micros() - pre_time_us;
+
+      if(recv_len >= recv_buf_size - addr_len)
+
+      while(id_list[id_idx] < packet_.rx.id){
+        for (i=0; i<addr_len; i++)
+        {
+          recv_buf[id_idx*addr_len + i] = 0;
+        }
+        id_idx++;
+      }
+
+      if(id_list[id_idx] == packet_.rx.id){
+        for (i=0; i<addr_len; i++)
+        {
+          recv_buf[id_idx*addr_len + i] = packet_.rx.p_param[i];
+        }
+        id_idx++;
+      }
+
+      recv_len += packet_.rx.param_length;
+
+      if(id_idx >= id_cnt){
+        last_dxl_return_ = DXL_RET_RX_RESP;
+        break;
+      }
+    }
+
+    if (millis()-pre_time_ms >= timeout){
+      last_dxl_return_ = DXL_RET_ERROR_TIMEOUT;
+      return -1;
+    }
+  }
+
+  return recv_len;
+}
+
+
+bool Master::syncWrite(uint16_t addr, uint16_t addr_len, uint8_t *id_list, uint8_t *data_list, uint8_t id_cnt)
+{
+  if(id_list == nullptr || data_list == nullptr || id_cnt > DXLCMD_MAX_NODE)
+    return false;
+
+  bool ret = false;
+  uint32_t pre_time_us, i, j = 0, data_index = 0;
+  uint8_t tx_param[4 + DXLCMD_MAX_NODE * DXL_MAX_NODE_BUFFER_SIZE];
+
+  if (p_port_->getOpenState() != true){
+    last_dxl_return_ = DXL_RET_NOT_OPEN;
+    return false;
+  }
+  
+  if (addr_len*id_cnt > DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE){
+    last_dxl_return_ = DXL_RET_ERROR_LENGTH;
+    return false;
+  }
+
+  if (packet_.packet_ver == DXL_PACKET_VER_1_0 ){
+    if(addr > 0xFF || addr_len > 0xFF)
+      return false;
+    tx_param[0] = (uint8_t)addr;
+    tx_param[1] = (uint8_t)addr_len;
+    data_index = 2;
+  }else if(packet_.packet_ver == DXL_PACKET_VER_2_0){
+    tx_param[0] = addr >> 0;
+    tx_param[1] = addr >> 8;
+    tx_param[2] = addr_len >> 0;
+    tx_param[3] = addr_len >> 8;
+    data_index = 4;
+  }else{
+    return false;
+  }
+
+  for(i=0; i<id_cnt; i++)
+  {
+    tx_param[data_index++] = id_list[i];
+    for(j=0; j<addr_len; j++)
+      tx_param[data_index++] = data_list[i*addr_len + j];
+  }
+
+  pre_time_us = micros();
+  last_dxl_return_ = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_SYNC_WRITE, tx_param, data_index);
+  packet_.tx_time = micros() - pre_time_us;
+
+  if(last_dxl_return_ == DXL_RET_OK)
+    ret = true;
+
+  return ret;
+}
+
 
 dxl_return_t Master::syncWrite(param_sync_write_t *p_param)
 {
@@ -611,12 +745,6 @@ dxl_return_t Master::bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp,
           ret = DXL_RET_RX_RESP;
           break;
         }
-      }
-      else
-      {
-// #ifdef _USE_HW_RTOS
-//         osThreadYield();
-// #endif
       }
 
       if (millis()-pre_time_ms >= timeout)
