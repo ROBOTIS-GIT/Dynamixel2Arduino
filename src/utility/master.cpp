@@ -472,11 +472,6 @@ int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
   if(id_list == nullptr || recv_buf == nullptr || id_cnt > DXLCMD_MAX_NODE)
     return -1;
 
-  uint8_t i, id_idx = 0;
-  int32_t recv_len = 0;  
-  uint32_t pre_time_us, pre_time_ms;
-  uint8_t tx_param[4 + DXLCMD_MAX_NODE];
-
   if (packet_.packet_ver == DXL_PACKET_VER_1_0 ){
     last_dxl_return_ = DXL_RET_ERROR_NOT_INSTRUCTION;
     return -1;
@@ -487,7 +482,13 @@ int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
     return -1;
   }
 
+  uint8_t i, id_idx = 0;
+  int32_t recv_len = 0;  
+  uint32_t pre_time_us, pre_time_ms;
+  uint8_t tx_param[4 + DXLCMD_MAX_NODE];
+
   if(id_cnt > DXLCMD_MAX_NODE){
+    last_dxl_return_ = DXL_RET_ERROR_RX_BUFFER_SIZE;
     id_cnt = DXLCMD_MAX_NODE;
   }
 
@@ -555,24 +556,31 @@ int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
 }
 
 
-bool Master::syncWrite(uint16_t addr, uint16_t addr_len, uint8_t *id_list, uint8_t *data_list, uint8_t id_cnt)
+bool Master::syncWrite(uint16_t addr, uint16_t addr_len,
+  uint8_t *id_list, uint8_t id_cnt, 
+  uint8_t *data_list, uint16_t data_list_size)
 {
   if(id_list == nullptr || data_list == nullptr || id_cnt > DXLCMD_MAX_NODE)
     return false;
 
-  bool ret = false;
-  uint32_t pre_time_us, i, j = 0, data_index = 0;
-  uint8_t tx_param[4 + DXLCMD_MAX_NODE * DXL_MAX_NODE_BUFFER_SIZE];
+  if (addr_len*id_cnt > DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE){
+    last_dxl_return_ = DXL_RET_ERROR_LENGTH;
+    return false;
+  }
+
+  if(addr_len*id_cnt > data_list_size){
+    last_dxl_return_ = DXL_RET_ERROR_TX_BUFFER_SIZE;
+    return false;
+  }
 
   if (p_port_->getOpenState() != true){
     last_dxl_return_ = DXL_RET_NOT_OPEN;
     return false;
   }
-  
-  if (addr_len*id_cnt > DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE){
-    last_dxl_return_ = DXL_RET_ERROR_LENGTH;
-    return false;
-  }
+
+  bool ret = false;
+  uint32_t pre_time_us, i, j = 0, data_index = 0;
+  uint8_t tx_param[4 + DXLCMD_MAX_NODE * DXL_MAX_NODE_BUFFER_SIZE];
 
   if (packet_.packet_ver == DXL_PACKET_VER_1_0 ){
     if(addr > 0xFF || addr_len > 0xFF)
@@ -594,7 +602,9 @@ bool Master::syncWrite(uint16_t addr, uint16_t addr_len, uint8_t *id_list, uint8
   {
     tx_param[data_index++] = id_list[i];
     for(j=0; j<addr_len; j++)
+    {
       tx_param[data_index++] = data_list[i*addr_len + j];
+    }
   }
 
   pre_time_us = micros();

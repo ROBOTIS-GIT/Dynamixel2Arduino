@@ -171,7 +171,8 @@ class Master
 
     //TODO: dxl_return_t clear();
     bool syncWrite(uint16_t addr, uint16_t addr_len,
-      uint8_t *id_list, uint8_t *data_list, uint8_t id_cnt);
+      uint8_t *id_list, uint8_t id_cnt, 
+      uint8_t *data_list, uint16_t data_list_size);
 
     int32_t syncRead(uint16_t addr, uint16_t addr_len,
       uint8_t *id_list, uint8_t id_cnt, 
