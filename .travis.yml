@@ -1,0 +1,27 @@
+language: cpp
+sudo: required
+before_install:
+  - source <(curl -SLs https://raw.githubusercontent.com/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/install.sh)
+
+script:
+  - build_platform opencr
+  - build_platform uno
+  - build_platform mega2560
+  - build_platform leonardo
+  - build_platform due
+  - build_platform zero
+  - build_platform mzero
+  - build_platform mzeropro
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+    recipients:
+      - kkw@robotis.com
+      - chc@robotis.com
+      - pyo@robotis.com
+
+branches:
+  only:
+    - master
