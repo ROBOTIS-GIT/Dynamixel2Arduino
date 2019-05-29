@@ -510,9 +510,6 @@ float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
 
 
 
-
-
-
 int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
   uint16_t model_num = getModelNumberFromTable(id);
@@ -543,6 +540,13 @@ int32_t Dynamixel2Arduino::readControlTableItem(uint16_t model_num, uint8_t item
   return ret;
 }
 
+
+
+
+
+
+/* Private Member Function */
+
 bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
 {
   uint16_t model_num = getModelNumberFromTable(id);
@@ -561,6 +565,7 @@ bool Dynamixel2Arduino::writeControlTableItem(uint16_t model_num, uint8_t item_i
 
   return write(id, item_info.addr, (uint8_t*)&data, item_info.addr_length, timeout);  
 }
+
 
 uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
 {
@@ -628,9 +633,7 @@ bool Dynamixel2Arduino::writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id
 
 
 
-
-
-
+/* Const structure & Static Function */
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_0_common[] PROGMEM = {
 #if (ENABLE_ACTUATOR_AX \

@@ -22,13 +22,13 @@
 
 const uint8_t DXL_ID = 1;
 
-Dynamixel2Arduino dynamixel(DXL_SERIAL, RS485_DIR_PIN);
+Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
   DEBUG_SERIAL.begin(115200);
-  dynamixel.begin(1000000);
-  dynamixel.scan();
+  dxl.begin(1000000);
+  dxl.scan();
 }
 
 void loop() {
@@ -42,144 +42,144 @@ void loop() {
     case OP_POSITION:
       if(flag_op_changed){
         value = 0;
-        dynamixel.torqueOff(DXL_ID);
-        if(dynamixel.setOperatingMode(DXL_ID, op_mode) == false){
+        dxl.torqueOff(DXL_ID);
+        if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
           op_mode++;
           break;
         }
-        dynamixel.torqueOn(DXL_ID);
+        dxl.torqueOn(DXL_ID);
         flag_op_changed = false;
       }
 
       if(millis() - pre_time_write >= 100) {    
         pre_time_write = millis();
-        dynamixel.setGoalPosition(DXL_ID, value);
+        dxl.setGoalPosition(DXL_ID, value);
         value += 5;
       }     
       if(millis() - pre_time_read >= 50) {
         pre_time_read = millis();
         DEBUG_SERIAL.print("Present Position : ");
-        DEBUG_SERIAL.println(dynamixel.getPresentPosition(DXL_ID));
+        DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID));
       }
       break;
     
     case OP_EXTENDED_POSITION:
       if(flag_op_changed){
         value = 0;
-        dynamixel.torqueOff(DXL_ID);
-        if(dynamixel.setOperatingMode(DXL_ID, op_mode) == false){
+        dxl.torqueOff(DXL_ID);
+        if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
           op_mode++;
           break;
         }
-        dynamixel.torqueOn(DXL_ID);
+        dxl.torqueOn(DXL_ID);
         flag_op_changed = false;
       }
 
       if(millis() - pre_time_write >= 100) {    
         pre_time_write = millis();
-        dynamixel.setGoalPosition(DXL_ID, value);
+        dxl.setGoalPosition(DXL_ID, value);
         value += 50;
       }
       if(millis() - pre_time_read >= 50) {
         pre_time_read = millis();
         DEBUG_SERIAL.print("Present Extended Position : ");
-        DEBUG_SERIAL.println(dynamixel.getPresentPosition(DXL_ID));
+        DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID));
       }
       break;
       
     case OP_CURRENT_BASED_POSITION:
       if(flag_op_changed){
         value = 0;
-        dynamixel.torqueOff(DXL_ID);
-        if(dynamixel.setOperatingMode(DXL_ID, op_mode) == false){
+        dxl.torqueOff(DXL_ID);
+        if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
           op_mode++;
           break;
         }
-        dynamixel.torqueOn(DXL_ID);
+        dxl.torqueOn(DXL_ID);
         flag_op_changed = false;
       }
 
       if(millis() - pre_time_write >= 100) {    
         pre_time_write = millis();
-        dynamixel.setGoalPosition(DXL_ID, value);
+        dxl.setGoalPosition(DXL_ID, value);
         value += 50;
       }
       if(millis() - pre_time_read >= 50) {
         pre_time_read = millis();
         DEBUG_SERIAL.print("Present Current Based Position : ");
-        DEBUG_SERIAL.println(dynamixel.getPresentPosition(DXL_ID));
+        DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID));
       }
       break;
 
     case OP_VELOCITY:
       if(flag_op_changed){
         value = 0;
-        dynamixel.torqueOff(DXL_ID);
-        if(dynamixel.setOperatingMode(DXL_ID, op_mode) == false){
+        dxl.torqueOff(DXL_ID);
+        if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
           op_mode++;
           break;
         }
-        dynamixel.torqueOn(DXL_ID);
+        dxl.torqueOn(DXL_ID);
         flag_op_changed = false;
       }
 
       if(millis() - pre_time_write >= 100) {    
         pre_time_write = millis();
-        dynamixel.setGoalVelocity(DXL_ID, value);
+        dxl.setGoalVelocity(DXL_ID, value);
         value += 2;
       }
       if(millis() - pre_time_read >= 50) {
         pre_time_read = millis();
         DEBUG_SERIAL.print("Present Velocity : ");
-        DEBUG_SERIAL.println(dynamixel.getPresentVelocity(DXL_ID));
+        DEBUG_SERIAL.println(dxl.getPresentVelocity(DXL_ID));
       }    
       break;
 
     case OP_PWM:
       if(flag_op_changed){
         value = 0;
-        dynamixel.torqueOff(DXL_ID);
-        if(dynamixel.setOperatingMode(DXL_ID, op_mode) == false){
+        dxl.torqueOff(DXL_ID);
+        if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
           op_mode++;
           break;
         }
-        dynamixel.torqueOn(DXL_ID);
+        dxl.torqueOn(DXL_ID);
         flag_op_changed = false;
       }
 
       if(millis() - pre_time_write >= 100) {    
         pre_time_write = millis();
-        dynamixel.setGoalPWM(DXL_ID, value);
+        dxl.setGoalPWM(DXL_ID, value);
         value += 2;
       }
       if(millis() - pre_time_read >= 50) {
         pre_time_read = millis();
         DEBUG_SERIAL.print("Present PWM : ");
-        DEBUG_SERIAL.println(dynamixel.getPresentPWM(DXL_ID));
+        DEBUG_SERIAL.println(dxl.getPresentPWM(DXL_ID));
       }    
       break;
 
     case OP_CURRENT:
       if(flag_op_changed){
         value = 0;
-        dynamixel.torqueOff(DXL_ID);
-        if(dynamixel.setOperatingMode(DXL_ID, op_mode) == false){
+        dxl.torqueOff(DXL_ID);
+        if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
           op_mode++;
           break;
         }
-        dynamixel.torqueOn(DXL_ID);
+        dxl.torqueOn(DXL_ID);
         flag_op_changed = false;
       }
 
       if(millis() - pre_time_write >= 100) {    
         pre_time_write = millis();
-        dynamixel.setGoalCurrent(DXL_ID, value);
+        dxl.setGoalCurrent(DXL_ID, value);
         value += 2;
       }
       if(millis() - pre_time_read >= 50) {
         pre_time_read = millis();
         DEBUG_SERIAL.print("Present Current : ");
-        DEBUG_SERIAL.println(dynamixel.getPresentCurrent(DXL_ID));
+        DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID));
       }
       break;
 
@@ -196,7 +196,7 @@ void loop() {
 
   if(millis() - pre_time_led >= 500) {
     pre_time_led = millis();
-    led_state == true ? dynamixel.ledOn(DXL_ID) : dynamixel.ledOff(DXL_ID);
+    led_state == true ? dxl.ledOn(DXL_ID) : dxl.ledOff(DXL_ID);
     led_state = !led_state;
   }
 }

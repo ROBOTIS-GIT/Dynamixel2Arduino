@@ -25,7 +25,6 @@
 #define DXLCMD_MAX_NODE_BUFFER_SIZE   DXL_MAX_NODE_BUFFER_SIZE
 #define DXLCMD_MAX_BUFFER             DXL_BUF_LENGTH
 
-
 namespace DYNAMIXEL {
 
 typedef struct
@@ -58,10 +57,7 @@ typedef struct
   uint32_t       mem[DXLCMD_MAX_BUFFER/4];
 } status_ping_t;
 
-
-
 //-- SyncRead
-//
 typedef struct
 {
   uint8_t   id_count;
@@ -70,9 +66,7 @@ typedef struct
   uint8_t   length;
 } param_sync_read_t;
 
-
 //-- BulkRead
-//
 typedef struct
 {
   uint8_t   id_count;
@@ -81,9 +75,7 @@ typedef struct
   uint8_t   length[DXLCMD_MAX_NODE];
 } param_bulk_read_t;
 
-
 //-- SyncWrite
-//
 typedef struct
 {
   uint8_t  id;
@@ -98,9 +90,7 @@ typedef struct
   sync_write_node_t node[DXLCMD_MAX_NODE];
 } param_sync_write_t;
 
-
 //-- BulkWrite
-//
 typedef struct
 {
   uint8_t  id;
@@ -114,8 +104,6 @@ typedef struct
   uint8_t   id_count;
   bulk_write_node_t node[DXLCMD_MAX_NODE];
 } param_bulk_write_t;
-
-
 
 typedef union
 {

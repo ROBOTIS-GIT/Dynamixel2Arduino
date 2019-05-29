@@ -27,21 +27,21 @@ uint32_t data_list[DXL_CNT];
 uint32_t recv_data_list[DXL_CNT];
 bool led_state_list[DXL_CNT];  
 
-Dynamixel2Arduino dynamixel(DXL_SERIAL, RS485_DIR_PIN);
+Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
   DEBUG_SERIAL.begin(115200);
-  dynamixel.begin(1000000);
-  dynamixel.scan();
+  dxl.begin(1000000);
+  dxl.scan();
 
-  dynamixel.torqueOff(1);
-  dynamixel.setOperatingMode(1, OP_POSITION);
-  dynamixel.torqueOn(1);
+  dxl.torqueOff(1);
+  dxl.setOperatingMode(1, OP_POSITION);
+  dxl.torqueOn(1);
 
-  dynamixel.torqueOff(3);
-  dynamixel.setOperatingMode(3, OP_POSITION);
-  dynamixel.torqueOn(3);
+  dxl.torqueOff(3);
+  dxl.setOperatingMode(3, OP_POSITION);
+  dxl.torqueOn(3);
 }
 
 void loop() {
@@ -67,12 +67,12 @@ void loop() {
    * parameter5 : buffer where the data to be transferred is stored.
    * parameter6 : Max size of buffer where the data to be transferred is stored.
   */
-  dynamixel.syncWrite(116, 4, id_list, DXL_CNT, (uint8_t*)data_list, sizeof(data_list));
+  dxl.syncWrite(116, 4, id_list, DXL_CNT, (uint8_t*)data_list, sizeof(data_list));
   delay(100);
 
   // parameter1(65) is address of "LED" in protocol2.0 
   //  (For details, please refer to control table information of each DYNAMIXEL in http://emanual.robotis.com)
-  dynamixel.syncWrite(65, 1, id_list, DXL_CNT, (uint8_t*)led_state_list, sizeof(led_state_list));
+  dxl.syncWrite(65, 1, id_list, DXL_CNT, (uint8_t*)led_state_list, sizeof(led_state_list));
   delay(100);
 
   /** 
@@ -85,7 +85,7 @@ void loop() {
    * parameter6 : Max size of buffer to store the read data.
    * parameter7 : Timeout(unit: milliseconds, default: 100ms).
   */
-  dynamixel.syncRead(132, 4, id_list, DXL_CNT, (uint8_t*)recv_data_list, sizeof(recv_data_list));
+  dxl.syncRead(132, 4, id_list, DXL_CNT, (uint8_t*)recv_data_list, sizeof(recv_data_list));
   delay(100);
 
   // Print the read data using syncRead
