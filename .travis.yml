@@ -5,8 +5,13 @@ before_install:
 
 script:
   - build_platform opencr
+  - build_platform uno
+  - build_platform mega2560
+  - build_platform leonardo
   - build_platform due
-  - build_platform mkr1000
+  - build_platform zero
+  - build_platform mzero
+  - build_platform mzeropro
 
 notifications:
   email:

@@ -517,6 +517,18 @@ int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, ui
   return readControlTableItem(model_num, item_idx, id, timeout);
 }
 
+bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
+{
+  uint16_t model_num = getModelNumberFromTable(id);
+
+  return writeControlTableItem(model_num, item_idx, id, data, timeout);
+}
+
+
+
+
+/* Private Member Function */
+
 int32_t Dynamixel2Arduino::readControlTableItem(uint16_t model_num, uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
   int32_t recv_len, ret = 0;
@@ -538,20 +550,6 @@ int32_t Dynamixel2Arduino::readControlTableItem(uint16_t model_num, uint8_t item
   }
 
   return ret;
-}
-
-
-
-
-
-
-/* Private Member Function */
-
-bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
-{
-  uint16_t model_num = getModelNumberFromTable(id);
-
-  return writeControlTableItem(model_num, item_idx, id, data, timeout);
 }
 
 bool Dynamixel2Arduino::writeControlTableItem(uint16_t model_num, uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)

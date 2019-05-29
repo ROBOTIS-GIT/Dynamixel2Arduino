@@ -8,7 +8,7 @@ fi
 
 # associative array for the platforms that will be verified in build_main_platforms()
 # this will be eval'd in the functions below because arrays can't be exported
-export MAIN_PLATFORMS='declare -A main_platforms=([due]="arduino:sam:arduino_due_x" [mkr1000]="arduino:samd:mkr1000" [opencr]="OpenCR:OpenCR:OpenCR")'
+export MAIN_PLATFORMS='declare -A main_platforms=([uno]="arduino:avr:uno" [mega2560]="arduino:avr:mega:cpu=atmega2560" [leonardo]="arduino:avr:leonardo" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [mzero]="arduino:samd:mzero_bl" [mzeropro]="arduino:samd:mzero_pro_bl" [opencr]="OpenCR:OpenCR:OpenCR")'
 
 # make display available for arduino CLI
 /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
@@ -40,6 +40,10 @@ DEPENDENCY_OUTPUT=$(arduino --pref "boardsmanager.additional.urls=https://raw.gi
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
 # install other board packages
+echo -n "ADD OpenCR PACKAGE INDEX: "
+DEPENDENCY_OUTPUT=$(arduino --pref "boardsmanager.additional.urls=https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCR/master/arduino/opencr_release/package_opencr_index.json" --save-prefs 2>&1)
+if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
+
 echo -n "INSTALL DUE(sam): "
 DEPENDENCY_OUTPUT=$(arduino --install-boards arduino:sam 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
@@ -51,14 +55,6 @@ if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 echo -n "INSTALL OpenCR: "
 DEPENDENCY_OUTPUT=$(arduino --install-boards OpenCR:OpenCR 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
-
-#echo -n "INSTALL OpenCM9.04: "
-#DEPENDENCY_OUTPUT=$(arduino --install-boards OpenCM904:OpenCM904 2>&1)
-#if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
-
-#echo -n "INSTALL ESP32: "
-#DEPENDENCY_OUTPUT=$(arduino --install-boards esp32:esp32 2>&1)
-#if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
 # install random lib so the arduino IDE grabs a new library index
 # see: https://github.com/arduino/Arduino/issues/3535
