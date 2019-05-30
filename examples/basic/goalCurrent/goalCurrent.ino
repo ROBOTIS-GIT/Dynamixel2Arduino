@@ -31,26 +31,33 @@ void setup() {
   dxl.ping(DXL_ID);
 
   dxl.torqueOff(DXL_ID);
-  dxl.setOperatingMode(DXL_ID, OP_POSITION);
+  dxl.setOperatingMode(DXL_ID, OP_CURRENT);
   dxl.torqueOn(DXL_ID);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
+   
   // Please refer to e-Manual(http://emanual.robotis.com) for available range of value. 
-  //Set goalPosition using RAW unit
-  dxl.setGoalPosition(DXL_ID, 512);
+  // Set goalCurrent using RAW unit
+  dxl.setGoalCurrent(DXL_ID, 200);
   delay(1000);
-  //Print present position
-  DEBUG_SERIAL.print("Present Position(raw) : ");
-  DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID));
+  // Print present current
+  DEBUG_SERIAL.print("Present Current(raw) : ");
+  DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID));
   delay(1000);
 
-  // using DEGREE unit
-  dxl.setGoalPosition(DXL_ID, 5.7, UNIT_DEGREE);
+  // using mA unit
+  dxl.setGoalCurrent(DXL_ID, 25.8, UNIT_MILLI_AMPERE);
   delay(1000);
-  DEBUG_SERIAL.print("Present Position(degree) : ");
-  DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID, UNIT_DEGREE));
+  DEBUG_SERIAL.print("Present Current(mA) : ");
+  DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID, UNIT_MILLI_AMPERE));
+  delay(1000);
+
+  // using RATIO unit (-100.0 ~ 100.0)
+  dxl.setGoalCurrent(DXL_ID, -10.2, UNIT_RATIO);
+  delay(1000);
+  DEBUG_SERIAL.print("Present Current(ratio) : ");
+  DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID, UNIT_RATIO));
   delay(1000);
 }
