@@ -488,7 +488,7 @@ float Dynamixel2Arduino::getPresentPosition(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalVelocity(uint8_t id, float value, uint8_t unit)
 {
-  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_RPM)
+  if(unit != UNIT_RAW && unit != UNIT_PERCENT && unit != UNIT_RPM)
     return false;
 
   return writeForRangeDependencyFunc(SET_VELOCITY, id, value, unit);
@@ -496,7 +496,7 @@ bool Dynamixel2Arduino::setGoalVelocity(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
 {
-  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_RPM)
+  if(unit != UNIT_RAW && unit != UNIT_PERCENT && unit != UNIT_RPM)
     return 0.0;
 
   return readForRangeDependencyFunc(GET_VELOCITY, id, unit);
@@ -504,7 +504,7 @@ float Dynamixel2Arduino::getPresentVelocity(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
 {
-  if(unit != UNIT_RAW && unit != UNIT_RATIO)
+  if(unit != UNIT_RAW && unit != UNIT_PERCENT)
     return false;
 
   return writeForRangeDependencyFunc(SET_PWM, id, value, unit);
@@ -512,7 +512,7 @@ bool Dynamixel2Arduino::setGoalPWM(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
 {
-  if(unit != UNIT_RAW && unit != UNIT_RATIO)
+  if(unit != UNIT_RAW && unit != UNIT_PERCENT)
     return 0.0;
 
   return readForRangeDependencyFunc(GET_PWM, id, unit);
@@ -520,7 +520,7 @@ float Dynamixel2Arduino::getPresentPWM(uint8_t id, uint8_t unit)
 
 bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
 {
-  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_MILLI_AMPERE)
+  if(unit != UNIT_RAW && unit != UNIT_PERCENT && unit != UNIT_MILLI_AMPERE)
     return false;
 
   return writeForRangeDependencyFunc(SET_CURRENT, id, value, unit);
@@ -528,7 +528,7 @@ bool Dynamixel2Arduino::setGoalCurrent(uint8_t id, float value, uint8_t unit)
 
 float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
 {
-  if(unit != UNIT_RAW && unit != UNIT_RATIO && unit != UNIT_MILLI_AMPERE)
+  if(unit != UNIT_RAW && unit != UNIT_PERCENT && unit != UNIT_MILLI_AMPERE)
     return 0.0;
 
   return readForRangeDependencyFunc(GET_CURRENT, id, unit);
@@ -668,8 +668,8 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_0_common[] PROGM
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, 0, 1023, 0.29},
   {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, 0, 1023, 0.29},
 
-  {SET_VELOCITY, MOVING_SPEED, UNIT_RATIO, 0, 2047, 0.1},
-  {GET_VELOCITY, PRESENT_SPEED, UNIT_RATIO, 0, 2047, 0.1},  
+  {SET_VELOCITY, MOVING_SPEED, UNIT_PERCENT, 0, 2047, 0.1},
+  {GET_VELOCITY, PRESENT_SPEED, UNIT_PERCENT, 0, 2047, 0.1},  
 #endif 
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
@@ -928,7 +928,7 @@ static bool checkAndconvertWriteData(float in_data, int32_t &out_data, uint8_t u
       return false;
     break;
 
-  case UNIT_RATIO:
+  case UNIT_PERCENT:
     data_f = f_map(in_data, -100.0, 100.0,
      (float)item_info.min_value, (float)item_info.max_value);
     data = (int32_t)data_f;
@@ -964,7 +964,7 @@ static bool checkAndconvertReadData(int32_t in_data, float &out_data, uint8_t un
     data = (float)in_data;
     break;
 
-  case UNIT_RATIO:
+  case UNIT_PERCENT:
     data = (float)f_map(in_data, 
      (float)item_info.min_value, (float)item_info.max_value, -100.0, 100.0);
     break;    

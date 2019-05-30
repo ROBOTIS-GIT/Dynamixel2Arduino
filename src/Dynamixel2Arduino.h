@@ -49,7 +49,7 @@ enum OperatingMode{
 
 enum ParamUnit{
   UNIT_RAW = 0,
-  UNIT_RATIO,
+  UNIT_PERCENT,
   UNIT_RPM,
   UNIT_DEGREE,
   UNIT_MILLI_AMPERE
@@ -275,7 +275,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param id DYNAMIXEL Actuator's ID.
      * @param value The value you want to set.
      * @param unit The unit of the value you entered. (default : UNIT_RAW)
-     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_RPM.
+     *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_RPM.
      * @return It returns true(1) on success, false(0) on failure.
      */
     bool setGoalVelocity(uint8_t id, float value, uint8_t unit = UNIT_RAW);
@@ -290,7 +290,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
-     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_RPM.
+     *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_RPM.
      * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */    
@@ -302,12 +302,12 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @code
      * const int DXL_DIR_PIN = 2;
      * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
-     * dxl.setGoalPWM(1, 50.0, UNIT_RATIO);
+     * dxl.setGoalPWM(1, 50.0, UNIT_PERCENT);
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
      * @param value The value you want to set.
      * @param unit The unit of the value you entered.  (default : UNIT_RAW)
-     *    Only support UNIT_RAW, UNIT_RATIO.
+     *    Only support UNIT_RAW, UNIT_PERCENT.
      * @return It returns true(1) on success, false(0) on failure.
      */
     bool setGoalPWM(uint8_t id, float value, uint8_t unit = UNIT_RAW);
@@ -318,11 +318,11 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @code
      * const int DXL_DIR_PIN = 2;
      * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
-     * Serial.print(dxl.getPresentPWM(1, UNIT_RATIO));
+     * Serial.print(dxl.getPresentPWM(1, UNIT_PERCENT));
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
-     *    Only support UNIT_RAW, UNIT_RATIO.
+     *    Only support UNIT_RAW, UNIT_PERCENT.
      * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */    
@@ -339,7 +339,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param id DYNAMIXEL Actuator's ID.
      * @param value The value you want to set.
      * @param unit The unit of the value you entered.  (default : UNIT_RAW)
-     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_MILLI_AMPERE.
+     *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_MILLI_AMPERE.
      * @return It returns true(1) on success, false(0) on failure.
      */
     bool setGoalCurrent(uint8_t id, float value, uint8_t unit = UNIT_RAW);
@@ -354,7 +354,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
-     *    Only support UNIT_RAW, UNIT_RATIO, UNIT_MILLI_AMPERE.
+     *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_MILLI_AMPERE.
      * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */  
