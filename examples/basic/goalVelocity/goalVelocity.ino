@@ -2,7 +2,7 @@
 
 #ifdef ARDUINO_AVR_UNO
   #include <SoftwareSerial.h>
-  SoftwareSerial soft_serial(10, 11); //RX,TX
+  SoftwareSerial soft_serial(7, 8); //RX,TX
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL soft_serial
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
@@ -26,6 +26,7 @@ Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
+  DEBUG_SERIAL.begin(115200);
   dxl.begin(1000000);
   dxl.setPortProtocolVersion(2.0);
   dxl.ping(DXL_ID);
@@ -55,9 +56,9 @@ void loop() {
   delay(1000);
 
   // using RATIO unit (-100.0 ~ 100.0)
-  dxl.setGoalVelocity(DXL_ID, -10.2, UNIT_RATIO);
+  dxl.setGoalVelocity(DXL_ID, -10.2, UNIT_PERCENT);
   delay(1000);
   DEBUG_SERIAL.print("Present Velocity(ratio) : ");
-  DEBUG_SERIAL.println(dxl.getPresentVelocity(DXL_ID, UNIT_RATIO));
+  DEBUG_SERIAL.println(dxl.getPresentVelocity(DXL_ID, UNIT_PERCENT));
   delay(1000);
 }

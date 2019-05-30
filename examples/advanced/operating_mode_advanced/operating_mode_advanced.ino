@@ -2,7 +2,7 @@
 
 #ifdef ARDUINO_AVR_UNO
   #include <SoftwareSerial.h>
-  SoftwareSerial soft_serial(10, 11); //RX,TX
+  SoftwareSerial soft_serial(7, 8); //RX,TX
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL soft_serial
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
@@ -33,6 +33,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  static uint32_t pre_time_write, pre_time_read, pre_time_op_mode, pre_time_led;
   static float value = 0;
   static bool led_state, flag_op_changed = true;
   static uint8_t op_mode = OP_POSITION;
