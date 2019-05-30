@@ -67,6 +67,9 @@
 #define PRO_H54P_100_S500_R (uint16_t)2010
 #define PRO_H54P_200_S500_R (uint16_t)2020
 
+#define PRO_M42P_010_S260_R (uint16_t)2100
+#define PRO_M54P_040_S250_R (uint16_t)2110
+#define PRO_M54P_060_S250_R (uint16_t)2120
 
 
 enum ControlTableItem{

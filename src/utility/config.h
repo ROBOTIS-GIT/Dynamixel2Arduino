@@ -28,7 +28,8 @@
 #define ENABLE_ACTUATOR_XM540           1
 #define ENABLE_ACTUATOR_XH540           1
 
-
+#define ENABLE_ACTUATOR_PRO             1
+#define ENABLE_ACTUATOR_PRO_PLUS        1       //includes PRO(A) series
 
 
 #endif /* DYNAMIXEL_CONFIG_H_ */
