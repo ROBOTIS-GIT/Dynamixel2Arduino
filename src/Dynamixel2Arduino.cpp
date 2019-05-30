@@ -19,18 +19,43 @@
 
 using namespace DYNAMIXEL;
 
+namespace DYNAMIXEL{
+
+enum Functions{
+  SET_ID,
+  SET_BAUD_RATE,
+
+  SET_PROTOCOL,
+ 
+  SET_POSITION,
+  GET_POSITION,
+
+  SET_VELOCITY,
+  GET_VELOCITY,
+
+  SET_PWM,
+  GET_PWM,
+
+  SET_CURRENT,
+  GET_CURRENT,
+
+  LAST_DUMMY_FUNC = 0xFF
+};
+
+}
+
 typedef struct ModelDependencyFuncItemAndRangeInfo{
-  uint8_t func_idx;
-  uint8_t item_idx;
-  uint8_t unit_type;
+  uint8_t func_idx; //enum Functions
+  uint8_t item_idx; //enum ControlTableItem
+  uint8_t unit_type; //enum ParamUnit
   int32_t min_value;
   int32_t max_value;
   float unit_value;
 } ModelDependencyFuncItemAndRangeInfo_t;
 
 typedef struct ItemAndRangeInfo{
-  uint8_t item_idx;
-  uint8_t unit_type;
+  uint8_t item_idx; //enum ControlTableItem
+  uint8_t unit_type; //enum ParamUnit
   int32_t min_value;
   int32_t max_value;
   float unit_value;
@@ -163,6 +188,7 @@ bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
   return writeControlTableItem(ControlTableItem::PROTOCOL_VERSION, id, ver_idx);
 }
 
+//TODO: Simplify the code by grouping model numbers.
 bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
 {
   uint16_t model_num = getModelNumberFromTable(id);
@@ -315,7 +341,7 @@ bool Dynamixel2Arduino::setLedState(uint8_t id, bool state)
 }
 
 
-
+//TODO: Simplify the code by grouping model numbers.
 bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
 {
   bool ret = false;
@@ -862,7 +888,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       item_info.min_value = (int32_t)pgm_read_dword(&p_common_ctable[i].min_value);
       item_info.max_value = (int32_t)pgm_read_dword(&p_common_ctable[i].max_value);
       item_info.unit_type = pgm_read_byte(&p_common_ctable[i].unit_type);
-      item_info.unit_value = (float)pgm_read_dword(&p_common_ctable[i].unit_value);
+      item_info.unit_value = pgm_read_float(&p_common_ctable[i].unit_value);
       break;
     }
     i++;
@@ -880,7 +906,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       item_info.min_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].min_value);
       item_info.max_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].max_value);
       item_info.unit_type = pgm_read_byte(&p_dep_ctable[i].unit_type);
-      item_info.unit_value = (float)pgm_read_dword(&p_dep_ctable[i].unit_value);
+      item_info.unit_value = pgm_read_float(&p_common_ctable[i].unit_value);
       break;
     }
     i++;
@@ -913,7 +939,8 @@ static bool checkAndconvertWriteData(float in_data, int32_t &out_data, uint8_t u
   case UNIT_MILLI_AMPERE:
     if(unit != item_info.unit_type)
       return false;
-    data = round(in_data/item_info.unit_value);
+    data = (int32_t)round(in_data/item_info.unit_value);
+
     if(data < item_info.min_value || data > item_info.max_value)
       return false;
     break;
@@ -947,6 +974,7 @@ static bool checkAndconvertReadData(int32_t in_data, float &out_data, uint8_t un
   case UNIT_MILLI_AMPERE:
     if(unit != item_info.unit_type)
       return false;
+
     data = (float)in_data*item_info.unit_value;
     break;
 

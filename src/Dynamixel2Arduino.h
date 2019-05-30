@@ -36,31 +36,6 @@
 #include "utility/slave.h"
 #include "actuator.h"
 
-namespace DYNAMIXEL{
-
-enum Functions{
-  SET_ID,
-  SET_BAUD_RATE,
-
-  SET_PROTOCOL,
- 
-  SET_POSITION,
-  GET_POSITION,
-
-  SET_VELOCITY,
-  GET_VELOCITY,
-
-  SET_PWM,
-  GET_PWM,
-
-  SET_CURRENT,
-  GET_CURRENT,
-
-  LAST_DUMMY_FUNC = 0xFF
-};
-
-}
-
 enum OperatingMode{
   OP_POSITION = 0,
   OP_EXTENDED_POSITION,
