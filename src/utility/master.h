@@ -177,12 +177,12 @@ class Master
     uint8_t getLastStatusError() const;
     dxl_return_t getLastDxlReturn() const;
 
-    private:
-      PortHandler *p_port_;
-      //PacketHandler packet_handler_;
-      dxl_t packet_;
-      uint8_t last_status_error_; 
-      dxl_return_t last_dxl_return_;
+  private:
+    PortHandler *p_port_;
+    //PacketHandler packet_handler_;
+    dxl_t packet_;
+    uint8_t last_status_error_; 
+    dxl_return_t last_dxl_return_;
   };
 }
 
