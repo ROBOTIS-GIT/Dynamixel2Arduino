@@ -85,3 +85,4 @@ void loop() {
   DEBUG_SERIAL.print("Present Current(ratio) : ");
   DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID, UNIT_PERCENT));
   delay(1000);
+}

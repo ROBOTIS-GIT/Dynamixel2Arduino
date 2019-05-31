@@ -61,4 +61,3 @@ void loop() {
   dxl.torqueOff(DXL_ID);
   delay(2000);
 }
-}
