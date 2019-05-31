@@ -229,8 +229,62 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelControlTableInfo_t pro_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_PRO)
+const ModelControlTableInfo_t mx28_2_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_MX28_PROTOCOL2)
+  {ControlTableItem::ACCELERATION_LIMIT,      40, 4},
+  {ControlTableItem::PRESENT_LOAD,           126, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+const ModelControlTableInfo_t mx64_106_2_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_MX64_PROTOCOL2 \
+ || ENABLE_ACTUATOR_MX106_PROTOCOL2)
+  {ControlTableItem::CURRENT_LIMIT,           38, 2},
+  {ControlTableItem::ACCELERATION_LIMIT,      40, 4},  
+  {ControlTableItem::GOAL_CURRENT,           102, 2},
+  {ControlTableItem::PRESENT_CURRENT,        126, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+const ModelControlTableInfo_t xl430_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XL430)
+  {ControlTableItem::PRESENT_LOAD,           126, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+const ModelControlTableInfo_t xmh430_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XM430 \
+ || ENABLE_ACTUATOR_XH430)
+  {ControlTableItem::CURRENT_LIMIT,           38, 2},
+  {ControlTableItem::GOAL_CURRENT,           102, 2},
+  {ControlTableItem::PRESENT_CURRENT,        126, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+const ModelControlTableInfo_t xmh540_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XM540 \
+ || ENABLE_ACTUATOR_XH540)
+  {ControlTableItem::CURRENT_LIMIT,           38, 2},
+  {ControlTableItem::EXTERNAL_PORT_MODE_1,    56, 1},
+  {ControlTableItem::EXTERNAL_PORT_MODE_2,    57, 1},
+  {ControlTableItem::EXTERNAL_PORT_MODE_3,    58, 1},  
+
+  {ControlTableItem::GOAL_CURRENT,           102, 2},
+  {ControlTableItem::PRESENT_CURRENT,        126, 2},
+  {ControlTableItem::EXTERNAL_PORT_DATA_1,   152, 2},
+  {ControlTableItem::EXTERNAL_PORT_DATA_2,   154, 2},
+  {ControlTableItem::EXTERNAL_PORT_DATA_3,   156, 2},  
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+
+const ModelControlTableInfo_t pro_r_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_R)
   {ControlTableItem::MODEL_NUMBER,             0, 2},
   {ControlTableItem::MODEL_INFORMATION,        2, 4},
   {ControlTableItem::FIRMWARE_VERSION,         6, 1},
@@ -283,8 +337,9 @@ const ModelControlTableInfo_t pro_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelControlTableInfo_t pro_plus_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_PRO_PLUS)
+const ModelControlTableInfo_t pro_ra_pro_plus_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA\
+ || ENABLE_ACTUATOR_PRO_PLUS)
   {ControlTableItem::MODEL_NUMBER,             0, 2},
   {ControlTableItem::MODEL_INFORMATION,        2, 4},
   {ControlTableItem::FIRMWARE_VERSION,         6, 1},
@@ -350,58 +405,6 @@ const ModelControlTableInfo_t pro_plus_control_table[] PROGMEM = {
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
-
-const ModelControlTableInfo_t mx28_2_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_MX28_PROTOCOL2)
-  {ControlTableItem::ACCELERATION_LIMIT,      40, 4},
-  {ControlTableItem::PRESENT_LOAD,           126, 2},
-#endif
-  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
-};
-
-const ModelControlTableInfo_t mx64_106_2_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_MX64_PROTOCOL2 \
- || ENABLE_ACTUATOR_MX106_PROTOCOL2)
-  {ControlTableItem::CURRENT_LIMIT,           38, 2},
-  {ControlTableItem::ACCELERATION_LIMIT,      40, 4},  
-  {ControlTableItem::GOAL_CURRENT,           102, 2},
-  {ControlTableItem::PRESENT_CURRENT,        126, 2},
-#endif
-  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
-};
-
-const ModelControlTableInfo_t xl430_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XL430)
-  {ControlTableItem::PRESENT_LOAD,           126, 2},
-#endif
-  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
-};
-
-const ModelControlTableInfo_t xmh430_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430)
-  {ControlTableItem::CURRENT_LIMIT,           38, 2},
-  {ControlTableItem::GOAL_CURRENT,           102, 2},
-  {ControlTableItem::PRESENT_CURRENT,        126, 2},
-#endif
-  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
-};
-
-const ModelControlTableInfo_t xmh540_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
-  {ControlTableItem::CURRENT_LIMIT,           38, 2},
-  {ControlTableItem::EXTERNAL_PORT_MODE_1,    56, 1},
-  {ControlTableItem::EXTERNAL_PORT_MODE_2,    57, 1},
-  {ControlTableItem::EXTERNAL_PORT_MODE_3,    58, 1},  
-
-  {ControlTableItem::GOAL_CURRENT,           102, 2},
-  {ControlTableItem::PRESENT_CURRENT,        126, 2},
-  {ControlTableItem::EXTERNAL_PORT_DATA_1,   152, 2},
-  {ControlTableItem::EXTERNAL_PORT_DATA_2,   154, 2},
-  {ControlTableItem::EXTERNAL_PORT_DATA_3,   156, 2},  
-#endif
-  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
-};
-
 
 ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, uint8_t control_item)
 {
@@ -486,27 +489,33 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
       p_dep_ctable = xmh540_control_table;
       break;            
 
-    case PRO_L42_10_S300_R:
-    case PRO_L54_30_S400_R:
-    case PRO_L54_30_S500_R:
-    case PRO_L54_50_S290_R:
-    case PRO_L54_50_S500_R:
+    // case PRO_L42_10_S300_R:
+    // case PRO_L54_30_S400_R:
+    // case PRO_L54_30_S500_R:
+    // case PRO_L54_50_S290_R:
+    // case PRO_L54_50_S500_R:
     case PRO_M42_10_S260_R:
     case PRO_M54_40_S250_R:
     case PRO_M54_60_S250_R:
     case PRO_H42_20_S300_R:
     case PRO_H54_100_S500_R:
     case PRO_H54_200_S500_R:
-      p_common_ctable = pro_control_table;
+      p_common_ctable = pro_r_control_table;
       break;
 
+    case PRO_M42_10_S260_RA:
+    case PRO_M54_40_S250_RA:
+    case PRO_M54_60_S250_RA:
+    case PRO_H42_20_S300_RA:
+    case PRO_H54_100_S500_RA:
+    case PRO_H54_200_S500_RA:
     case PRO_H42P_020_S300_R:
     case PRO_H54P_100_S500_R:
     case PRO_H54P_200_S500_R:
     case PRO_M42P_010_S260_R:
     case PRO_M54P_040_S250_R:
     case PRO_M54P_060_S250_R:
-      p_common_ctable = pro_plus_control_table;
+      p_common_ctable = pro_ra_pro_plus_control_table;
       break;
       
     default:

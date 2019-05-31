@@ -63,6 +63,14 @@
 #define PRO_H54_100_S500_R  (uint16_t)53768
 #define PRO_H54_200_S500_R  (uint16_t)54024
 
+#define PRO_M42_10_S260_RA  (uint16_t)43289
+#define PRO_M54_40_S250_RA  (uint16_t)46097
+#define PRO_M54_60_S250_RA  (uint16_t)46353
+
+#define PRO_H42_20_S300_RA  (uint16_t)51201
+#define PRO_H54_100_S500_RA (uint16_t)53761
+#define PRO_H54_200_S500_RA (uint16_t)54025
+
 #define PRO_H42P_020_S300_R (uint16_t)2000
 #define PRO_H54P_100_S500_R (uint16_t)2010
 #define PRO_H54P_200_S500_R (uint16_t)2020

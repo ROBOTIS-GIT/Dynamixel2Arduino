@@ -298,7 +298,101 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
         default:
           return false;          
       }
-      break;            
+      break;
+
+    // case PRO_L42_10_S300_R:
+    // case PRO_L54_30_S400_R:
+    // case PRO_L54_30_S500_R:
+    // case PRO_L54_50_S290_R:
+    // case PRO_L54_50_S500_R:
+    case PRO_M42_10_S260_R:
+    case PRO_M54_40_S250_R:
+    case PRO_M54_60_S250_R:
+    case PRO_H42_20_S300_R:
+    case PRO_H54_100_S500_R:
+    case PRO_H54_200_S500_R:
+      switch(baudrate)
+      {
+        case 9600:
+          baud_idx = 0;
+          break;
+        case 57600:
+          baud_idx = 1;
+          break;
+        case 115200:
+          baud_idx = 2;
+          break;
+        case 1000000:
+          baud_idx = 3;
+          break;
+        case 2000000:
+          baud_idx = 4;
+          break;
+        case 3000000:
+          baud_idx = 5;
+          break;
+        case 4000000:
+          baud_idx = 6;
+          break;
+        case 4500000:
+          baud_idx = 7;
+          break;
+        case 10500000:
+          baud_idx = 8;
+          break;
+        default:
+          return false;          
+      }
+      break;
+
+    case PRO_M42_10_S260_RA:
+    case PRO_M54_40_S250_RA:
+    case PRO_M54_60_S250_RA:
+    case PRO_H42_20_S300_RA:
+    case PRO_H54_100_S500_RA:
+    case PRO_H54_200_S500_RA:
+    case PRO_H42P_020_S300_R:
+    case PRO_H54P_100_S500_R:
+    case PRO_H54P_200_S500_R:
+    case PRO_M42P_010_S260_R:
+    case PRO_M54P_040_S250_R:
+    case PRO_M54P_060_S250_R:
+      switch(baudrate)  
+      {
+        case 9600:
+          baud_idx = 0;
+          break;
+        case 57600:
+          baud_idx = 1;
+          break;
+        case 115200:
+          baud_idx = 2;
+          break;
+        case 1000000:
+          baud_idx = 3;
+          break;
+        case 2000000:
+          baud_idx = 4;
+          break;
+        case 3000000:
+          baud_idx = 5;
+          break;
+        case 4000000:
+          baud_idx = 6;
+          break;
+        case 4500000:
+          baud_idx = 7;
+          break;
+        case 6000000:
+          baud_idx = 8;
+          break;          
+        case 10500000:
+          baud_idx = 9;
+          break;          
+        default:
+          return false;          
+      }                
+      break;
 
     default:
       return false;
@@ -460,6 +554,55 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 5);
       }
       break;            
+
+    // case PRO_L42_10_S300_R:
+    // case PRO_L54_30_S400_R:
+    // case PRO_L54_30_S500_R:
+    // case PRO_L54_50_S290_R:
+    // case PRO_L54_50_S500_R:
+    case PRO_M42_10_S260_R:
+    case PRO_M54_40_S250_R:
+    case PRO_M54_60_S250_R:
+    case PRO_H42_20_S300_R:
+    case PRO_H54_100_S500_R:
+    case PRO_H54_200_S500_R:
+      if(mode == OP_POSITION){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 3);
+      }else if(mode == OP_VELOCITY){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 1);
+      }else if(mode == OP_EXTENDED_POSITION){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 4);
+      }else if(mode == OP_CURRENT){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 0);
+      }
+      break;
+
+    case PRO_M42_10_S260_RA:
+    case PRO_M54_40_S250_RA:
+    case PRO_M54_60_S250_RA:
+    case PRO_H42_20_S300_RA:
+    case PRO_H54_100_S500_RA:
+    case PRO_H54_200_S500_RA:
+    case PRO_H42P_020_S300_R:
+    case PRO_H54P_100_S500_R:
+    case PRO_H54P_200_S500_R:
+    case PRO_M42P_010_S260_R:
+    case PRO_M54P_040_S250_R:
+    case PRO_M54P_060_S250_R:
+      if(mode == OP_POSITION){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 3);
+      }else if(mode == OP_VELOCITY){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 1);
+      }else if(mode == OP_EXTENDED_POSITION){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 4);
+      }else if(mode == OP_CURRENT){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 0);
+      }else if(mode == OP_PWM){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 16);
+      }
+      break;
+
+
 
     default:
       break;
@@ -659,6 +802,7 @@ bool Dynamixel2Arduino::writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id
 
 /* Const structure & Static Function */
 
+/* AX series, XL320 (DX,RX,EX) */
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_0_common[] PROGMEM = {
 #if (ENABLE_ACTUATOR_AX \
  || ENABLE_ACTUATOR_DX \
@@ -682,6 +826,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ex[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
+/* MX(1.0) series */
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_1_common[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX12W \
  || ENABLE_ACTUATOR_MX28 \
@@ -713,6 +858,8 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_mx106[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
+
+/* MX2.0, X series(without XL320) */
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
@@ -721,7 +868,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGM
   || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
   || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -1048575, 1048575, 0.088},
-  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.088},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.088},
 
   {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
   {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},  
@@ -781,13 +928,190 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540[] PROGMEM = {
 };
 
 
-const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_pro_model[] PROGMEM = {
-#if (0) //PRO
-  {SET_ID, ID, UNIT_RAW, 0, 253, 1},
-  {SET_BAUD_RATE, BAUD_RATE, UNIT_RAW, 0, 3, 1},
+/* PRO R series */
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m42_10[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_R)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00136785},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00136785},
 
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -8000, 8000, 0.00389076},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -8000, 8000, 0.00389076},
+
+  {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -900, 900, 4.02832},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -900, 900, 4.02832},
 #endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m54_40[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_R)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00143188},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00143188},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -8000, 8000, 0.00397746},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -8000, 8000, 0.00397746},  
+
+  {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -360, 360, 16.11328},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -360, 360, 16.11328},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m54_60[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_R)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00143188},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647,  0.00143188},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -8000, 8000, 0.00397746},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -8000, 8000, 0.00397746},  
+
+  {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -540, 540, 16.11328},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -540, 540, 16.11328},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h42_20[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_R)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00118518},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00118518},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -10300, 10300, 0.00329218},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -10300, 10300, 0.00329218},  
+
+  {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -1395, 1395, 4.02832},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1395, 1395, 4.02832},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h54_100[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_R)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00071724},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00071724},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -17000, 17000, 0.00199234},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -17000, 17000, 0.00199234},  
+
+  {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -930, 930, 16.11328},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -930, 930, 16.11328},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h54_200[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_R)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00071724},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00071724},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -17000, 17000, 0.00199234},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -17000, 17000, 0.00199234},  
+
+  {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -1860, 1860, 16.11328},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1860, 1860, 16.11328},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+
+/* PRO RA, PRO PLUS series */
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_pro_ra_pro_plus_model[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA \
+ || ENABLE_ACTUATOR_PRO_PLUS)
+  {SET_PWM, GOAL_PWM, UNIT_RAW, -2009, 2009, 1},
+  {GET_PWM, PRESENT_PWM, UNIT_RAW, -2009, 2009, 1},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m42_10[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA \
+ || ENABLE_ACTUATOR_PRO_PLUS)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00068392},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00068392},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2600, 2600, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2600, 2600, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1461, 1461, 1.0},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1461, 1461, 1.0},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m54_40[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA \
+ || ENABLE_ACTUATOR_PRO_PLUS)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00071594},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00071594},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2840, 2840, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2840, 2840, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -4470, 4470, 1.0},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -4470, 4470, 1.0},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m54_60[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA \
+ || ENABLE_ACTUATOR_PRO_PLUS)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00071594},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00071594},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2830, 2830, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2830, 2830, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -7980, 7980, 1.0},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -7980, 7980, 1.0},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h42_20[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA \
+ || ENABLE_ACTUATOR_PRO_PLUS)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00059259},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00059259},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2920, 2920, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2920, 2920, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -4500, 4500, 1.0},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -4500, 4500, 1.0},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_100[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA \
+ || ENABLE_ACTUATOR_PRO_PLUS)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00035862},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00035862},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2920, 2920, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2920, 2920, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -15900, 15900, 1.0},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -15900, 15900, 1.0},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_200[] PROGMEM = {
+#if (ENABLE_ACTUATOR_PRO_RA \
+ || ENABLE_ACTUATOR_PRO_PLUS)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483647, 2147483647, 0.00035862},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.00035862},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2900, 2900, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2900, 2900, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -22740, 22740, 1.0},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -22740, 22740, 1.0},
+#endif
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 
@@ -873,6 +1197,60 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       p_dep_ctable = dependency_xm540_xh540;
       break;            
 
+    // case PRO_L42_10_S300_R:
+    // case PRO_L54_30_S400_R:
+    // case PRO_L54_30_S500_R:
+    // case PRO_L54_50_S290_R:
+    // case PRO_L54_50_S500_R:
+    case PRO_M42_10_S260_R:
+      p_common_ctable = dependency_pro_r_m42_10;
+      break;    
+    case PRO_M54_40_S250_R:
+      p_common_ctable = dependency_pro_r_m54_40;
+      break;    
+    case PRO_M54_60_S250_R:
+      p_common_ctable = dependency_pro_r_m54_60;
+      break;    
+    case PRO_H42_20_S300_R:
+      p_common_ctable = dependency_pro_r_h42_20;
+      break;    
+    case PRO_H54_100_S500_R:
+      p_common_ctable = dependency_pro_r_h54_100;
+      break;    
+    case PRO_H54_200_S500_R:
+      p_common_ctable = dependency_pro_r_h54_200;
+      break;
+    
+    case PRO_M42_10_S260_RA:    
+    case PRO_H42P_020_S300_R:
+      p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
+      p_dep_ctable = dependency_pro_ra_plus_m42_10;
+      break;
+    case PRO_M54_40_S250_RA:
+    case PRO_H54P_100_S500_R:
+      p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
+      p_dep_ctable = dependency_pro_ra_plus_m54_40;
+      break;
+    case PRO_M54_60_S250_RA:
+    case PRO_H54P_200_S500_R:
+      p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
+      p_dep_ctable = dependency_pro_ra_plus_m54_60;
+      break;
+    case PRO_H42_20_S300_RA:
+    case PRO_M42P_010_S260_R:
+      p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
+      p_dep_ctable = dependency_pro_ra_plus_h42_20;
+      break;
+    case PRO_H54_100_S500_RA:  
+    case PRO_M54P_040_S250_R:
+      p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
+      p_dep_ctable = dependency_pro_ra_plus_h54_100;
+      break;
+    case PRO_H54_200_S500_RA:
+    case PRO_M54P_060_S250_R:
+      p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
+      p_dep_ctable = dependency_pro_ra_plus_h54_200;
+      break;
     default:
       break;
   }
