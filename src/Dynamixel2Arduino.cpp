@@ -431,7 +431,43 @@ bool Dynamixel2Arduino::ledOff(uint8_t id)
 
 bool Dynamixel2Arduino::setLedState(uint8_t id, bool state)
 {
-  return writeControlTableItem(ControlTableItem::LED, id, state);
+  bool ret = false;
+  uint16_t model_num = getModelNumberFromTable(id);
+
+  switch(model_num)
+  {
+    // case PRO_L42_10_S300_R:
+    // case PRO_L54_30_S400_R:
+    // case PRO_L54_30_S500_R:
+    // case PRO_L54_50_S290_R:
+    // case PRO_L54_50_S500_R:
+    case PRO_M42_10_S260_R:
+    case PRO_M54_40_S250_R:
+    case PRO_M54_60_S250_R:
+    case PRO_H42_20_S300_R:
+    case PRO_H54_100_S500_R:
+    case PRO_H54_200_S500_R:
+    case PRO_M42_10_S260_RA:
+    case PRO_M54_40_S250_RA:
+    case PRO_M54_60_S250_RA:
+    case PRO_H42_20_S300_RA:
+    case PRO_H54_100_S500_RA:
+    case PRO_H54_200_S500_RA:
+    case PRO_H42P_020_S300_R:
+    case PRO_H54P_100_S500_R:
+    case PRO_H54P_200_S500_R:
+    case PRO_M42P_010_S260_R:
+    case PRO_M54P_040_S250_R:
+    case PRO_M54P_060_S250_R:
+      ret = writeControlTableItem(ControlTableItem::LED_RED, id, state);
+      break;
+
+    default:
+      ret = writeControlTableItem(ControlTableItem::LED, id, state);
+      break;
+  }
+
+  return ret;
 }
 
 
@@ -1284,7 +1320,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       item_info.min_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].min_value);
       item_info.max_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].max_value);
       item_info.unit_type = pgm_read_byte(&p_dep_ctable[i].unit_type);
-      item_info.unit_value = pgm_read_float(&p_common_ctable[i].unit_value);
+      item_info.unit_value = pgm_read_float(&p_dep_ctable[i].unit_value);
       break;
     }
     i++;
