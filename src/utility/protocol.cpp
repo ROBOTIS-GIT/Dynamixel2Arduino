@@ -527,10 +527,10 @@ lib_err_code_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in)
       p_packet->rx.index         = 0;
       p_packet->rx.check_sum    += data_in;
 
-      if (p_packet->rx.packet_length > DXL_MAX_BUFFER-4)
+      if (p_packet->rx.packet_length > DXL_BUF_LENGTH-4)
       {
         p_packet->rx_state = PACKET_1_0_STATE_IDLE;
-        ret = DXL_LIB_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
       }
       if (p_packet->rx.packet_length < 2)
       {
@@ -596,8 +596,7 @@ lib_err_code_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
   lib_err_code_t ret = DXL_LIB_PROCEEDING;
   uint16_t stuff_length;
 
-  //-- time out
-  //
+  // time out
   if( (micros() - p_packet->prev_time) > p_packet->rx_timeout )
   {
     p_packet->rx_state   = PACKET_2_0_STATE_IDLE;
@@ -642,7 +641,7 @@ lib_err_code_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
       if( data_in == 0xFD )
       {
         p_packet->rx_state  = PACKET_2_0_STATE_IDLE;
-        ret = DXL_LIB_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_WRONG_PACKET;
       }
       else
       {
@@ -670,10 +669,10 @@ lib_err_code_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
       p_packet->rx.index          = 0;
       dxlUpdateCrc(&p_packet->rx.crc, data_in);
 
-      if (p_packet->rx.packet_length > DXL_MAX_BUFFER)
+      if (p_packet->rx.packet_length > DXL_BUF_LENGTH)
       {
         p_packet->rx_state = PACKET_2_0_STATE_IDLE;
-        ret = DXL_LIB_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
       }
       if (p_packet->rx.packet_length < 3)
       {
@@ -847,12 +846,10 @@ lib_err_code_t dxlMakePacketStatus1_0(dxl_t *p_packet, uint8_t id, uint8_t error
   uint8_t  check_sum;
 
 
-  if (length > DXL_MAX_BUFFER-6)
-  {
-    return DXL_LIB_ERROR_LENGTH;
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
-  if (length > 255)
-  {
+  if(length > 0xFF){
     return DXL_LIB_ERROR_LENGTH;
   }
 
@@ -889,9 +886,8 @@ lib_err_code_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error
   uint16_t crc;
 
 
-  if (length > DXL_MAX_BUFFER-7)
-  {
-    return DXL_LIB_ERROR_LENGTH;
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
 
   packet_length = length + 4; // param_length + Instruction + Error + CRC_L + CRC_H
@@ -904,21 +900,17 @@ lib_err_code_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error
   p_packet->tx.data[PKT_INST_IDX]  = INST_STATUS;
   p_packet->tx.data[PKT_ERROR_IDX] = error;
 
-
   for (i=0; i<length; i++)
   {
     p_packet->tx.data[PKT_STATUS_PARAM_IDX + i] = p_data[i];
   }
 
-  // stuff 추가
   stuff_length = dxlAddStuffing(p_packet, &p_packet->tx.data[PKT_INST_IDX], length + 2); // + instruction + error
   packet_length += stuff_length;
 
   p_packet->tx.data[PKT_LEN_L_IDX] = packet_length >> 0;
   p_packet->tx.data[PKT_LEN_H_IDX] = packet_length >> 8;
 
-
-  // crc 계산
   crc = 0;
   for (i=0; i<packet_length+7-2; i++)
   {
@@ -958,15 +950,12 @@ lib_err_code_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd,
   uint8_t  check_sum;
 
 
-  if (length > DXL_MAX_BUFFER-6)
-  {
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
+  }
+  if(length > 0xFF){
     return DXL_LIB_ERROR_LENGTH;
   }
-  if (length > 255)
-  {
-    return DXL_LIB_ERROR_LENGTH;
-  }
-
 
   check_sum = 0;
   packet_length = length + 2; // param_length + Instruction + CheckSum
@@ -989,7 +978,6 @@ lib_err_code_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd,
   p_packet->tx.data[PKT_1_0_LEN_IDX] = packet_length;
   p_packet->tx.data[PKT_1_0_INST_IDX + packet_length - 1] = ~(check_sum);
 
-  // 데이터 전송
   dxlTxWrite(p_packet->tx.data, packet_length + 4);
 
   return ret;
@@ -1003,12 +991,9 @@ lib_err_code_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd,
   uint16_t stuff_length;
   uint16_t crc;
 
-
-  if (length > DXL_MAX_BUFFER-7)
-  {
-    return DXL_LIB_ERROR_LENGTH;
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
-
 
   packet_length = length + 3; // param_length + Instruction + CRC_L + CRC_H
 
@@ -1024,27 +1009,21 @@ lib_err_code_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd,
     p_packet->tx.data[PKT_INST_PARAM_IDX + i] = p_data[i];
   }
 
-  // stuff 추가
   stuff_length = dxlAddStuffing(p_packet, &p_packet->tx.data[PKT_INST_IDX], length + 1);  // + instruction
   packet_length += stuff_length;
 
   p_packet->tx.data[PKT_LEN_L_IDX] = packet_length >> 0;
   p_packet->tx.data[PKT_LEN_H_IDX] = packet_length >> 8;
 
-
-  // crc 계산
   crc = 0;
   for (i=0; i<packet_length+7-2; i++)
   {
     dxlUpdateCrc(&crc, p_packet->tx.data[i]);
   }
 
-
   p_packet->tx.data[PKT_INST_IDX + packet_length - 2] = crc >> 0;
   p_packet->tx.data[PKT_INST_IDX + packet_length - 1] = crc >> 8;
 
-
-  // 데이터 전송
   dxlTxWrite(p_packet->tx.data, packet_length + 7);
 
   return ret;
@@ -1056,13 +1035,9 @@ lib_err_code_t dxlInstPing(dxl_t *p_dxl)
 {
   lib_err_code_t ret = DXL_LIB_OK;
 
-
-  if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
-  {
+  if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 ){
     ret = dxlInstPing1_0(p_dxl);
-  }
-  else
-  {
+  }else{
     ret = dxlInstPing2_0(p_dxl);
   }
 
@@ -1072,27 +1047,21 @@ lib_err_code_t dxlInstPing(dxl_t *p_dxl)
 lib_err_code_t dxlInstPing1_0(dxl_t *p_dxl)
 {
   lib_err_code_t ret = DXL_LIB_OK;
-  uint8_t  data[DXL_MAX_BUFFER];
   uint16_t length = 0;
 
 
-  if (p_dxl->process_func.processPing != nullptr)
-  {
-    (*p_dxl->process_func.processPing)(data, &length);
+  if (p_dxl->process_func.processPing != nullptr){
+    (*p_dxl->process_func.processPing)(p_dxl->tx.data, &length);
   }
 
-  if (p_dxl->rx.id == DXL_BROADCAST_ID)
-  {
-    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  if (p_dxl->rx.id == DXL_BROADCAST_ID){
+    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
 
-    if (ret == DXL_LIB_OK)
-    {
+    if (ret == DXL_LIB_OK){
       ret = DXL_RET_PROCESS_BROAD_PING;
     }
-  }
-  else
-  {
-    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  }else{
+    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
   }
 
 
@@ -1102,27 +1071,20 @@ lib_err_code_t dxlInstPing1_0(dxl_t *p_dxl)
 lib_err_code_t dxlInstPing2_0(dxl_t *p_dxl)
 {
   lib_err_code_t ret = DXL_LIB_OK;
-  uint8_t  data[DXL_MAX_BUFFER];
   uint16_t length = 0;
 
-
-  if (p_dxl->process_func.processPing != nullptr)
-  {
-    (*p_dxl->process_func.processPing)(data, &length);
+  if (p_dxl->process_func.processPing != nullptr){
+    (*p_dxl->process_func.processPing)(p_dxl->tx.data, &length);
   }
 
-  if (p_dxl->rx.id == DXL_BROADCAST_ID)
-  {
-    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  if (p_dxl->rx.id == DXL_BROADCAST_ID){
+    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
 
-    if (ret == DXL_LIB_OK)
-    {
+    if (ret == DXL_LIB_OK) {
       ret = DXL_RET_PROCESS_BROAD_PING;
     }
-  }
-  else
-  {
-    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  }else{
+    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
   }
 
 
@@ -1133,16 +1095,11 @@ lib_err_code_t dxlInstFactoryReset(dxl_t *p_dxl)
 {
   lib_err_code_t ret = DXL_LIB_OK;
 
-
-
-  if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
+  if (p_dxl->rx.id != DXL_BROADCAST_ID) {
     ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, nullptr, 0);
   }
 
-
-  if (p_dxl->process_func.processFactoryReset != nullptr)
-  {
+  if (p_dxl->process_func.processFactoryReset != nullptr) {
     delay(100);
     (*p_dxl->process_func.processFactoryReset)(p_dxl->rx.p_param[0]);
   }
@@ -1154,16 +1111,12 @@ lib_err_code_t dxlInstReboot(dxl_t *p_dxl)
 {
   lib_err_code_t ret = DXL_LIB_OK;
 
-
-
-  if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
+  if (p_dxl->rx.id != DXL_BROADCAST_ID){
     ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, nullptr, 0);
   }
 
 
-  if (p_dxl->process_func.processReboot != nullptr)
-  {
+  if (p_dxl->process_func.processReboot != nullptr) {
     delay(100);
     (*p_dxl->process_func.processReboot)();
   }
@@ -1193,8 +1146,6 @@ lib_err_code_t dxlInstRead1_0(dxl_t *p_dxl)
   lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length = 0;
-  uint8_t  data[DXL_MAX_BUFFER];
-
   uint8_t process_ret = 0;
 
   if (p_dxl->rx.id == DXL_BROADCAST_ID)
@@ -1206,16 +1157,16 @@ lib_err_code_t dxlInstRead1_0(dxl_t *p_dxl)
   addr   = p_dxl->rx.p_param[0];
   length = p_dxl->rx.p_param[1];
 
-  if( length > 255 - 2 ){
+  if( length > 0xFF - 2 ){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
     return DXL_LIB_ERROR_LENGTH;
   }
 
   if (p_dxl->process_func.processRead != nullptr){
-    process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
+    process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
   }
 
-  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
+  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
 
   return ret;
 }
@@ -1225,7 +1176,6 @@ lib_err_code_t dxlInstRead2_0(dxl_t *p_dxl)
   lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length = 0;
-  uint8_t  data[DXL_MAX_BUFFER];
 
   uint8_t process_ret = 0;
 
@@ -1238,16 +1188,16 @@ lib_err_code_t dxlInstRead2_0(dxl_t *p_dxl)
   addr   = (p_dxl->rx.p_param[1]<<8) | p_dxl->rx.p_param[0];
   length = (p_dxl->rx.p_param[3]<<8) | p_dxl->rx.p_param[2];
 
-  if( length > DXL_MAX_BUFFER - 10 ){
+  if(length > DXL_BUF_LENGTH){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_LIB_ERROR_LENGTH;
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
 
   if (p_dxl->process_func.processRead != nullptr){
-    process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
+    process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
   }
 
-  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
+  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
 
   return ret;
 }
@@ -1285,7 +1235,7 @@ lib_err_code_t dxlInstWrite1_0(dxl_t *p_dxl)
     return DXL_LIB_ERROR_LENGTH;
   }
 
-  if( length > 255 - 2 ){
+  if( length > 0xFF - 2 ){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
     return DXL_LIB_ERROR_LENGTH;
   }
@@ -1321,9 +1271,9 @@ lib_err_code_t dxlInstWrite2_0(dxl_t *p_dxl)
     return DXL_LIB_ERROR_LENGTH;
   }
   
-  if( length > DXL_MAX_BUFFER - 10 ){
+  if(length > DXL_BUF_LENGTH){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_LIB_ERROR_LENGTH;
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
 
   // TODO : Write address validation required before sending Write response
@@ -1344,7 +1294,6 @@ lib_err_code_t dxlInstSyncRead(dxl_t *p_dxl)
   uint8_t  *p_data;
   uint16_t i;
   uint16_t rx_id_cnt;
-  uint8_t data[DXL_MAX_BUFFER];
   uint8_t process_ret = DXL_ERR_NONE;
 
 
@@ -1353,7 +1302,7 @@ lib_err_code_t dxlInstSyncRead(dxl_t *p_dxl)
 
   rx_id_cnt = p_dxl->rx.param_length - 4;
 
-  if (p_dxl->rx.param_length < (5) || rx_id_cnt > 255)
+  if (p_dxl->rx.param_length < (5) || rx_id_cnt > 0xFF)
     return DXL_LIB_ERROR_LENGTH;
 
   addr      = (p_dxl->rx.p_param[1]<<8) | p_dxl->rx.p_param[0];
@@ -1373,16 +1322,15 @@ lib_err_code_t dxlInstSyncRead(dxl_t *p_dxl)
     p_dxl->pre_id = p_data[i];
   }
 
-
   if (p_dxl->present_id == p_dxl->id){
     if (p_dxl->process_func.processRead != nullptr){
-      process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
+      process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
     }
 
     if (p_dxl->pre_id == 0xFF){
-      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
+      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
     }else{
-      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
+      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
       if (ret == DXL_LIB_OK) {
         ret = DXL_RET_PROCESS_BROAD_READ;
       }
@@ -1510,7 +1458,6 @@ lib_err_code_t dxlInstBulkRead(dxl_t *p_dxl)
   uint8_t  *p_data;
   uint16_t i;
   uint16_t rx_id_cnt;
-  uint8_t data[DXL_MAX_BUFFER];
   uint8_t process_ret = DXL_ERR_NONE;
 
 
@@ -1550,16 +1497,16 @@ lib_err_code_t dxlInstBulkRead(dxl_t *p_dxl)
   {
     if (p_dxl->process_func.processRead != nullptr)
     {
-      process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
+      process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
     }
 
     if (p_dxl->pre_id == 0xFF)
     {
-      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
+      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
     }
     else
     {
-      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
+      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
       if (ret == DXL_LIB_OK)
       {
         ret = DXL_RET_PROCESS_BROAD_READ;

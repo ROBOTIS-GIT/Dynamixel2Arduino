@@ -36,8 +36,6 @@
 #define DXL_ALL_ID              DXL_BROADCAST_ID
 #define DXL_NONE_ID             0xFF
 
-#define DXL_MAX_BUFFER          DXL_BUF_LENGTH
-
 
 #define UNREGISTERED_MODEL  (uint16_t)0xFFFF
 #define COMMON_MODEL_NUMBER_ADDR         0
@@ -121,9 +119,11 @@ namespace DYNAMIXEL{
     DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST,
     DXL_LIB_ERROR_NULLPTR,
     DXL_LIB_ERROR_LENGTH,
+    DXL_LIB_ERROR_INVAILD_ADDR,
     DXL_LIB_ERROR_ADDR_LENGTH,
     DXL_LIB_ERROR_BUFFER_OVERFLOW,
     DXL_LIB_ERROR_PORT_NOT_OPEN,
+    DXL_LIB_ERROR_WRONG_PACKET,
     DXL_LIB_ERROR_CHECK_SUM,
     DXL_LIB_ERROR_CRC
   } lib_err_code_t;
@@ -145,7 +145,7 @@ namespace DYNAMIXEL{
     uint8_t   check_sum_received;
     uint8_t   *p_param;
     uint32_t  dummy;
-    uint8_t   data[DXL_MAX_BUFFER];
+    uint8_t   data[DXL_BUF_LENGTH];
   } dxl_packet_t;
 
   typedef lib_err_code_t (*dxlInstFunc_t)(void *);

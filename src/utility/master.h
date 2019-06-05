@@ -21,10 +21,6 @@
 #include "packet_handler.h"
 #include "protocol.h"
 
-#define DXLCMD_MAX_NODE               DXL_MAX_NODE
-#define DXLCMD_MAX_NODE_BUFFER_SIZE   DXL_MAX_NODE_BUFFER_SIZE
-#define DXLCMD_MAX_BUFFER             DXL_BUF_LENGTH
-
 namespace DYNAMIXEL {
 
 typedef struct
@@ -40,54 +36,52 @@ typedef struct
   uint8_t  id;
   uint8_t  error;
   uint16_t length;
-  uint8_t  *p_data;
+  uint8_t  data[DXL_MAX_NODE_BUFFER_SIZE];
 } read_node_t;
 
 typedef struct
 {
   uint8_t        id_count;
-  read_node_t   *p_node[DXLCMD_MAX_NODE];
-  uint32_t       mem[DXLCMD_MAX_BUFFER/4];
+  read_node_t    node[DXL_MAX_NODE];
 } status_read_t;
 
 typedef struct
 {
   uint8_t        id_count;
-  ping_node_t   *p_node[DXLCMD_MAX_NODE];
-  uint32_t       mem[DXLCMD_MAX_BUFFER/4];
+  ping_node_t    node[DXL_MAX_NODE];
 } status_ping_t;
 
 //-- SyncRead
 typedef struct
 {
   uint8_t   id_count;
-  uint8_t   id_tbl[DXLCMD_MAX_NODE];
+  uint8_t   id_tbl[DXL_MAX_NODE];
   uint16_t  addr;
-  uint8_t   length;
+  uint16_t  length;
 } param_sync_read_t;
 
 //-- BulkRead
 typedef struct
 {
   uint8_t   id_count;
-  uint8_t   id_tbl[DXLCMD_MAX_NODE];
-  uint16_t  addr  [DXLCMD_MAX_NODE];
-  uint8_t   length[DXLCMD_MAX_NODE];
+  uint8_t   id_tbl[DXL_MAX_NODE];
+  uint16_t  addr  [DXL_MAX_NODE];
+  uint16_t  length[DXL_MAX_NODE];
 } param_bulk_read_t;
 
 //-- SyncWrite
 typedef struct
 {
   uint8_t  id;
-  uint8_t  data[DXLCMD_MAX_NODE_BUFFER_SIZE];
+  uint8_t  data[DXL_MAX_NODE_BUFFER_SIZE];
 } sync_write_node_t;
 
 typedef struct
 {
   uint8_t  id_count;
   uint16_t addr;
-  uint8_t  length;
-  sync_write_node_t node[DXLCMD_MAX_NODE];
+  uint16_t length;
+  sync_write_node_t node[DXL_MAX_NODE];
 } param_sync_write_t;
 
 //-- BulkWrite
@@ -95,14 +89,14 @@ typedef struct
 {
   uint8_t  id;
   uint16_t addr;
-  uint8_t  length;
-  uint8_t  data[DXLCMD_MAX_NODE_BUFFER_SIZE];
+  uint16_t length;
+  uint8_t  data[DXL_MAX_NODE_BUFFER_SIZE];
 } bulk_write_node_t;
 
 typedef struct
 {
   uint8_t   id_count;
-  bulk_write_node_t node[DXLCMD_MAX_NODE];
+  bulk_write_node_t node[DXL_MAX_NODE];
 } param_bulk_write_t;
 
 typedef union

@@ -104,15 +104,15 @@ bool Dynamixel2Arduino::ping(uint8_t id)
   if (id == DXL_BROADCAST_ID){
     registered_dxl_cnt_ = 0;
 
-    if(Master::ping(DXL_BROADCAST_ID, &resp_.ping, 3*254)){
+    if(Master::ping(DXL_BROADCAST_ID, &resp_.ping, 3*253)){
       dxl_cnt = resp_.ping.id_count;
 
-      for (i=0; i<dxl_cnt && registered_dxl_cnt_<DXLCMD_MAX_NODE; i++){
-        id_i = resp_.ping.p_node[i]->id;
+      for (i=0; i<dxl_cnt && registered_dxl_cnt_<DXL_MAX_NODE; i++){
+        id_i = resp_.ping.node[i].id;
 
         registered_dxl_[registered_dxl_cnt_].id  = id_i;
         if(getPortProtocolVersion() == 2.0){
-          registered_dxl_[registered_dxl_cnt_].model_num = resp_.ping.p_node[i]->model_number;
+          registered_dxl_[registered_dxl_cnt_].model_num = resp_.ping.node[i].model_number;
         }else{
           registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id_i);
         }
@@ -126,7 +126,7 @@ bool Dynamixel2Arduino::ping(uint8_t id)
   }else{
     if(Master::ping(id, &resp_.ping, 20)){
       if (resp_.ping.id_count > 0){        
-        if (registered_dxl_cnt_ < DXLCMD_MAX_NODE){
+        if (registered_dxl_cnt_ < DXL_MAX_NODE){
           for (i=0; i<registered_dxl_cnt_; i++){
             if (registered_dxl_[i].id == id){
               ret = true;
@@ -136,7 +136,7 @@ bool Dynamixel2Arduino::ping(uint8_t id)
           if (i == registered_dxl_cnt_){
             registered_dxl_[i].id = id;
             if(getPortProtocolVersion() == 2.0){
-              registered_dxl_[i].model_num = resp_.ping.p_node[0]->model_number;
+              registered_dxl_[i].model_num = resp_.ping.node[0].model_number;
             }else{
               registered_dxl_[i].model_num = getModelNumber(id);
             }
@@ -770,7 +770,7 @@ uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
   uint16_t model_num = UNREGISTERED_MODEL;
   uint32_t i;
 
-  for(i = 0; i < DXLCMD_MAX_NODE; i++)
+  for(i = 0; i < DXL_MAX_NODE; i++)
   {
     if(registered_dxl_[i].id == id){
       model_num = registered_dxl_[i].model_num;
@@ -778,9 +778,9 @@ uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
     }
   }
 
-  if(i == DXLCMD_MAX_NODE && registered_dxl_cnt_ < DXLCMD_MAX_NODE){
+  if(i == DXL_MAX_NODE && registered_dxl_cnt_ < DXL_MAX_NODE){
     if(ping(id) == true){
-      for(i = 0; i < DXLCMD_MAX_NODE; i++)
+      for(i = 0; i < DXL_MAX_NODE; i++)
       {
         if(registered_dxl_[i].id == id){
           model_num = registered_dxl_[i].model_num;
