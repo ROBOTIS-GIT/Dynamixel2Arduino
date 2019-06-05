@@ -63,10 +63,15 @@ typedef struct
 //-- BulkRead
 typedef struct
 {
+  uint8_t  id;
+  uint16_t addr;
+  uint16_t length;
+} bulk_read_node_t;
+
+typedef struct
+{
   uint8_t   id_count;
-  uint8_t   id_tbl[DXL_MAX_NODE];
-  uint16_t  addr  [DXL_MAX_NODE];
-  uint16_t  length[DXL_MAX_NODE];
+  bulk_read_node_t node[DXL_MAX_NODE];
 } param_bulk_read_t;
 
 //-- SyncWrite

@@ -673,9 +673,9 @@ bool Master::bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp, uint32_
     p_tx_data[tx_length++] = 0x00;
     for( i=0; i<p_param->id_count; i++)
     {
-      p_tx_data[tx_length++] = p_param->length[i];
-      p_tx_data[tx_length++] = p_param->id_tbl[i];
-      p_tx_data[tx_length++] = p_param->addr[i];
+      p_tx_data[tx_length++] = p_param->node[i].length;
+      p_tx_data[tx_length++] = p_param->node[i].id;
+      p_tx_data[tx_length++] = p_param->node[i].addr;
     }
   }else{
     if(p_param->id_count > DXL_MAX_NODE
@@ -686,11 +686,11 @@ bool Master::bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp, uint32_
     p_tx_data = &packet_.tx.data[PKT_INST_PARAM_IDX];
     for( i=0; i<p_param->id_count; i++)
     {
-      p_tx_data[tx_length++] = p_param->id_tbl[i];
-      p_tx_data[tx_length++] = p_param->addr[i] >> 0;
-      p_tx_data[tx_length++] = p_param->addr[i] >> 8;
-      p_tx_data[tx_length++] = p_param->length[i] >> 0;
-      p_tx_data[tx_length++] = p_param->length[i] >> 8;
+      p_tx_data[tx_length++] = p_param->node[i].id;
+      p_tx_data[tx_length++] = p_param->node[i].addr >> 0;
+      p_tx_data[tx_length++] = p_param->node[i].addr >> 8;
+      p_tx_data[tx_length++] = p_param->node[i].length >> 0;
+      p_tx_data[tx_length++] = p_param->node[i].length >> 8;
     }
   }
 
