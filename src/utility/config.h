@@ -1,6 +1,8 @@
 #ifndef DYNAMIXEL_CONFIG_H_
 #define DYNAMIXEL_CONFIG_H_
 
+//TODO: move to Slave class. // DO NOT USE THIS FUNCTION YET.
+#define USE_SLAVE_FUNC 0
 
 
 #define DXL_MAX_NODE                   16

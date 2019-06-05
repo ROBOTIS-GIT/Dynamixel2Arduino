@@ -4,14 +4,14 @@
 using namespace DYNAMIXEL;
 
 Master::Master(PortHandler &port, float protocol_ver)
-  : last_status_error_(0), last_dxl_return_(DXL_RET_OK)
+  : last_status_packet_error_(0), last_lib_err_code_(DXL_LIB_OK)
 {
   setPort(port);
   dxlInit(&packet_, protocol_ver);
 }
 
 Master::Master(float protocol_ver)
-  : last_status_error_(0), last_dxl_return_(DXL_RET_OK)
+  : last_status_packet_error_(0), last_lib_err_code_(DXL_LIB_OK)
 {
   dxlInit(&packet_, protocol_ver);
 }
@@ -35,9 +35,9 @@ bool Master::setPort(PortHandler &port)
   return ret;
 }
 
-dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
+bool Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  bool ret = false;
   uint32_t pre_time_ms;
   uint32_t pre_time_us;
   uint32_t mem_addr;
@@ -46,58 +46,59 @@ dxl_return_t Master::ping(uint8_t id, status_ping_t *p_resp, uint32_t timeout)
   p_resp->id_count = 0;
   p_resp->p_node[0] = (ping_node_t *)&p_mem[0];
 
-  if (p_port_->getOpenState() == true) {
-    pre_time_us = micros();
+  if (p_port_->getOpenState() != true) {
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return false;
+  }
+  
+  pre_time_us = micros();
 
-    ret = dxlTxPacketInst(&packet_, id, INST_PING, NULL, 0);
-    packet_.tx_time = micros() - pre_time_us;
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, INST_PING, NULL, 0);
+  packet_.tx_time = micros() - pre_time_us;
 
-    mem_addr = 0;
-    pre_time_ms = millis();
-    pre_time_us = micros();
-    while(1)
-    {
-      ret = dxlRxPacket(&packet_);
-      if (ret == DXL_RET_RX_STATUS && p_resp->id_count < DXLCMD_MAX_NODE) {
-        packet_.rx_time = micros() - pre_time_us;
-        pre_time_ms     = millis();
+  mem_addr = 0;
+  pre_time_ms = millis();
+  pre_time_us = micros();
+  while(1)
+  {
+    last_lib_err_code_ = dxlRxPacket(&packet_);
+    if (last_lib_err_code_ == DXL_LIB_OK 
+        && packet_.rx.type == RX_PACKET_TYPE_STATUS 
+        && p_resp->id_count < DXLCMD_MAX_NODE) {
+      pre_time_ms = millis();
+      packet_.rx_time = micros() - pre_time_us;
+      pre_time_ms     = millis();
+      p_resp->p_node[p_resp->id_count]->id = packet_.rx.id;
 
-        p_resp->p_node[p_resp->id_count]->id = packet_.rx.id;
-        if(getPortProtocolVersion() == 2.0) {
-          p_resp->p_node[p_resp->id_count]->model_number     = packet_.rx.p_param[0]<<0;
-          p_resp->p_node[p_resp->id_count]->model_number    |= packet_.rx.p_param[1]<<8;
-          p_resp->p_node[p_resp->id_count]->firmware_version = packet_.rx.p_param[2];
-        }
-
-        p_resp->id_count++;
-
-        // Arranges addresses in 4 bytes (for direct use of struct type conversion)
-        mem_addr += sizeof(ping_node_t);
-        if (mem_addr%4) {
-          mem_addr += 4 - (mem_addr%4);
-        }
-
-        p_resp->p_node[p_resp->id_count] = (ping_node_t *)&p_mem[mem_addr];
-
-        if (id != DXL_BROADCAST_ID) {
-          ret = DXL_RET_RX_RESP;
-          break;
-        }
+      if(getPortProtocolVersion() == 2.0) {
+        p_resp->p_node[p_resp->id_count]->model_number     = packet_.rx.p_param[0]<<0;
+        p_resp->p_node[p_resp->id_count]->model_number    |= packet_.rx.p_param[1]<<8;
+        p_resp->p_node[p_resp->id_count]->firmware_version = packet_.rx.p_param[2];
       }
 
-      if (millis()-pre_time_ms >= timeout) {
-        if (p_resp->id_count > 0) {
-          ret = DXL_RET_RX_RESP;
-        } else {
-          ret = DXL_RET_ERROR_TIMEOUT;
-        } 
+      p_resp->id_count++;
+
+      // Arranges addresses in 4 bytes (for direct use of struct type conversion)
+      mem_addr += sizeof(ping_node_t);
+      if (mem_addr%4) {
+        mem_addr += 4 - (mem_addr%4);
+      }
+
+      p_resp->p_node[p_resp->id_count] = (ping_node_t *)&p_mem[mem_addr];
+
+      if (id != DXL_BROADCAST_ID) {
+        last_lib_err_code_ = DXL_LIB_OK;
+        ret = true;
         break;
       }
     }
-  }
-  else
-  {
-    ret = DXL_RET_NOT_OPEN;
+
+    if (millis()-pre_time_ms >= timeout) {
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
+      if (p_resp->id_count > 0)
+        ret = true;
+      break;
+    }
   }
 
   return ret;
@@ -111,18 +112,18 @@ int32_t Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
   uint8_t tx_param[4];
 
   if (id == DXL_BROADCAST_ID) {
-    last_dxl_return_ = DXL_RET_ERROR_NOT_SUPPORT_BROADCAST;
-    return recv_param_len;
+    last_lib_err_code_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return -1;
   }
 
   if(addr_length == 0) {
-    last_dxl_return_ = DXL_RET_ERROR_ADDR_LENGTH;
-    return recv_param_len;
+    last_lib_err_code_ = DXL_LIB_ERROR_ADDR_LENGTH;
+    return -1;
   }
     
   if (p_port_->getOpenState() != true) {
-    last_dxl_return_ = DXL_RET_NOT_OPEN;
-    return recv_param_len;
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return -1;
   }
     
   // Send Read Instruction 
@@ -137,7 +138,7 @@ int32_t Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
   }
 
   pre_time_us = micros();
-  last_dxl_return_ = dxlTxPacketInst(&packet_, id, INST_READ, tx_param, 4);
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, INST_READ, tx_param, 4);
   packet_.tx_time = micros() - pre_time_us;
 
   pre_time_ms = millis();
@@ -145,12 +146,11 @@ int32_t Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
 
   // Receive Status Packet  
   while(1) {
-    last_dxl_return_ = dxlRxPacket(&packet_);
+    last_lib_err_code_ = dxlRxPacket(&packet_);
 
-    if (last_dxl_return_ == DXL_RET_RX_STATUS){
+    if (last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_STATUS) {
       pre_time_ms = millis();
       packet_.rx_time = micros() - pre_time_us;
-
       recv_param_len = packet_.rx.param_length;
       if(recv_param_len > recv_buf_length) {
         recv_param_len = recv_buf_length;
@@ -160,15 +160,15 @@ int32_t Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
       {
         p_recv_buf[i] = packet_.rx.p_param[i];
       }
-      last_status_error_ = packet_.rx.error;
+      last_status_packet_error_ = packet_.rx.error;
 
       break;
-    }else if (last_dxl_return_ != DXL_RET_EMPTY){
+    }else if (last_lib_err_code_ != DXL_LIB_PROCEEDING){
       break;
     }
 
     if (millis()-pre_time_ms >= timeout) {
-      last_status_error_ = DXL_RET_ERROR_TIMEOUT;
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
       break;
     }
   }
@@ -189,23 +189,20 @@ bool Master::write(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len
   pre_time_us = micros();
   while(1)
   {
-    last_dxl_return_ = dxlRxPacket(&packet_);
-    if (last_dxl_return_ == DXL_RET_RX_STATUS) {
+    last_lib_err_code_ = dxlRxPacket(&packet_);
+    if (last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_STATUS) {
       pre_time_ms = millis();
       packet_.rx_time = micros() - pre_time_us;
-
-      last_status_error_ = packet_.rx.error;
-
-      last_dxl_return_ = DXL_RET_RX_RESP;
+      last_status_packet_error_ = packet_.rx.error;
       ret = true;
       break;
-    } else if (last_dxl_return_ != DXL_RET_EMPTY) {
+    } else if (last_lib_err_code_ != DXL_LIB_PROCEEDING) {
       break;
     }
 
     if (millis()-pre_time_ms >= timeout)
     {
-      last_status_error_ = DXL_RET_ERROR_TIMEOUT;
+      last_status_packet_error_ = DXL_LIB_ERROR_TIMEOUT;
       break;
     }
   }
@@ -222,23 +219,23 @@ bool Master::writeNoResp(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t da
   uint32_t i;
 
   if (id == DXL_BROADCAST_ID) {
-    last_dxl_return_ = DXL_RET_ERROR_NOT_SUPPORT_BROADCAST;
+    last_lib_err_code_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
     return ret;
   }
 
   if(data_length == 0) {
-    last_dxl_return_ = DXL_RET_ERROR_ADDR_LENGTH;
+    last_lib_err_code_ = DXL_LIB_ERROR_ADDR_LENGTH;
     return ret;
   }
 
   if (data_length > DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE){
-    last_dxl_return_ = DXL_RET_ERROR_LENGTH;
+    last_lib_err_code_ = DXL_LIB_ERROR_LENGTH;
     return ret;
   }
 
   if (p_port_->getOpenState() != true)
   {
-    last_dxl_return_ = DXL_RET_NOT_OPEN;
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
     return ret;
   }  
 
@@ -265,204 +262,102 @@ bool Master::writeNoResp(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t da
   }
 
   pre_time_us = micros();
-  last_dxl_return_ = dxlTxPacketInst(&packet_, id, INST_WRITE, tx_param, tx_length);
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, INST_WRITE, tx_param, tx_length);
   packet_.tx_time = micros() - pre_time_us;
 
   return ret;
 }
 
-dxl_return_t Master::factoryReset(uint8_t id, uint8_t option, uint32_t timeout)
+bool Master::factoryReset(uint8_t id, uint8_t option, uint32_t timeout)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  bool ret = false;
   uint32_t pre_time_us;
   uint32_t pre_time_ms;
   uint8_t tx_param[1];
 
-  if (p_port_->getOpenState() == true)
-  {
-    tx_param[0] = option;
-
-    pre_time_us = micros();
-    ret = dxlTxPacketInst(&packet_, id, INST_RESET, tx_param, 1);
-    packet_.tx_time = micros() - pre_time_us;
-
-    if (id == DXL_BROADCAST_ID)
-    {
-      return ret;
-    }
-
-    pre_time_ms = millis();
-    pre_time_us = micros();
-    while(1)
-    {
-      ret = dxlRxPacket(&packet_);
-      if (ret == DXL_RET_RX_STATUS)
-      {
-        pre_time_ms = millis();
-        packet_.rx_time = micros() - pre_time_us;
-
-        last_status_error_ = packet_.rx.error;
-
-        ret = DXL_RET_RX_RESP;
-        break;
-      }
-      else if (ret != DXL_RET_EMPTY)
-      {
-        break;
-      }
-
-
-      if (millis()-pre_time_ms >= timeout)
-      {
-        break;
-      }
-    }
-  }
-  else
-  {
-    ret = DXL_RET_NOT_OPEN;
+  if (id == DXL_BROADCAST_ID){
+    last_lib_err_code_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
   }
 
+  if (p_port_->getOpenState() != true){
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return false;
+  }
+  
+  tx_param[0] = option;
+
+  pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, INST_RESET, tx_param, 1);
+  packet_.tx_time = micros() - pre_time_us;
+
+  pre_time_ms = millis();
+  pre_time_us = micros();
+  while(1)
+  {
+    last_lib_err_code_ = dxlRxPacket(&packet_);
+    if (last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_STATUS) {
+      pre_time_ms = millis();
+      packet_.rx_time = micros() - pre_time_us;
+      last_status_packet_error_ = packet_.rx.error;
+      ret = true;
+      break;
+    }else if (last_lib_err_code_ != DXL_LIB_PROCEEDING){
+      break;
+    }
+
+    if (millis()-pre_time_ms >= timeout){
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
+      break;
+    }
+  }
   return ret;
 }
 
-dxl_return_t Master::reboot(uint8_t id, uint32_t timeout)
-{
-  dxl_return_t ret = DXL_RET_OK;
+bool Master::reboot(uint8_t id, uint32_t timeout)
+{ 
+  bool ret = false;
   uint32_t pre_time_us;
   uint32_t pre_time_ms;
+  uint8_t tx_param[1];
 
-  if (p_port_->getOpenState() == true)
-  {
-    pre_time_us = micros();
-    ret = dxlTxPacketInst(&packet_, id, INST_REBOOT, NULL, 0);
-    packet_.tx_time = micros() - pre_time_us;
-
-    if (id == DXL_BROADCAST_ID)
-    {
-      return ret;
-    }
-
-    pre_time_ms = millis();
-    pre_time_us = micros();
-    while(1)
-    {
-      ret = dxlRxPacket(&packet_);
-      if (ret == DXL_RET_RX_STATUS)
-      {
-        pre_time_ms = millis();
-        packet_.rx_time = micros() - pre_time_us;
-
-        last_status_error_ = packet_.rx.error;
-
-        ret = DXL_RET_RX_RESP;
-        break;
-      }
-      else if (ret != DXL_RET_EMPTY)
-      {
-        break;
-      }
-
-
-      if (millis()-pre_time_ms >= timeout)
-      {
-        break;
-      }
-    }
-  }
-  else
-  {
-    ret = DXL_RET_NOT_OPEN;
+  if (id == DXL_BROADCAST_ID){
+    last_lib_err_code_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
   }
 
+  if (p_port_->getOpenState() != true){
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return false;
+  }
+
+  pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, INST_REBOOT, tx_param, 1);
+  packet_.tx_time = micros() - pre_time_us;
+
+  pre_time_ms = millis();
+  pre_time_us = micros();
+  while(1)
+  {
+    last_lib_err_code_ = dxlRxPacket(&packet_);
+    if (last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_STATUS) {
+      pre_time_ms = millis();
+      packet_.rx_time = micros() - pre_time_us;
+      last_status_packet_error_ = packet_.rx.error;
+      ret = true;
+      break;
+    }else if (last_lib_err_code_ != DXL_LIB_PROCEEDING){
+      break;
+    }
+
+    if (millis()-pre_time_ms >= timeout){
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
+      break;
+    }
+  }
   return ret;
 }
 
-dxl_return_t Master::syncRead(param_sync_read_t *p_param, status_read_t *p_resp, uint32_t timeout)
-{
-  dxl_return_t ret = DXL_RET_OK;
-  uint32_t pre_time_us;
-  uint32_t pre_time_ms;
-
-  uint8_t tx_param[4 + DXLCMD_MAX_NODE];
-  uint32_t mem_addr;
-  uint8_t  *p_mem = (uint8_t *)p_resp->mem;
-  uint32_t i;
-
-
-  p_resp->id_count = 0;
-  p_resp->p_node[0] = (read_node_t *)&p_mem[0];
-
-
-  if (p_port_->getOpenState() == true)
-  {
-    tx_param[0] = p_param->addr >> 0;
-    tx_param[1] = p_param->addr >> 8;
-    tx_param[2] = p_param->length >> 0;
-    tx_param[3] = p_param->length >> 8;
-
-    for( i=0; i<p_param->id_count; i++)
-    {
-      tx_param[4+i] = p_param->id_tbl[i];
-    }
-
-    pre_time_us = micros();
-    ret = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_SYNC_READ, tx_param, 4 + p_param->id_count);
-    packet_.tx_time = micros() - pre_time_us;
-
-    mem_addr = 0;
-    pre_time_ms = millis();
-    pre_time_us = micros();
-    while(1)
-    {
-      ret = dxlRxPacket(&packet_);
-      if (ret == DXL_RET_RX_STATUS)
-      {
-        pre_time_ms = millis();
-        packet_.rx_time = micros() - pre_time_us;
-
-        // Arranges addresses in 4 bytes (for direct use of struct type conversion)
-        mem_addr += sizeof(read_node_t);
-        if (mem_addr%4)
-        {
-          mem_addr += 4 - (mem_addr%4);
-        }
-        p_resp->p_node[p_resp->id_count]->p_data = &p_mem[mem_addr];
-
-        p_resp->p_node[p_resp->id_count]->id     = packet_.rx.id;
-        p_resp->p_node[p_resp->id_count]->error  = packet_.rx.error;
-        p_resp->p_node[p_resp->id_count]->length = packet_.rx.param_length;
-
-        for (i=0; i<packet_.rx.param_length; i++)
-        {
-          p_resp->p_node[p_resp->id_count]->p_data[i] = packet_.rx.p_param[i];
-        }
-
-        p_resp->id_count++;
-
-        mem_addr += packet_.rx.param_length;
-        p_resp->p_node[p_resp->id_count] = (read_node_t *)&p_mem[mem_addr];
-
-        if (p_resp->id_count >= p_param->id_count)
-        {
-          ret = DXL_RET_RX_RESP;
-          break;
-        }
-      }
-
-      if (millis()-pre_time_ms >= timeout)
-      {
-        break;
-      }
-    }
-  }
-  else
-  {
-    ret = DXL_RET_NOT_OPEN;
-  }
-
-  return ret;
-}
 
 
 int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
@@ -473,12 +368,12 @@ int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
     return -1;
 
   if (packet_.packet_ver == DXL_PACKET_VER_1_0 ){
-    last_dxl_return_ = DXL_RET_ERROR_NOT_INSTRUCTION;
+    last_lib_err_code_ = DXL_LIB_ERROR_NOT_SUPPORTED;
     return -1;
   }
 
   if (p_port_->getOpenState() != true){
-    last_dxl_return_ = DXL_RET_NOT_OPEN;
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
     return -1;
   }
 
@@ -488,7 +383,7 @@ int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
   uint8_t tx_param[4 + DXLCMD_MAX_NODE];
 
   if(id_cnt > DXLCMD_MAX_NODE){
-    last_dxl_return_ = DXL_RET_ERROR_RX_BUFFER_SIZE;
+    last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
     id_cnt = DXLCMD_MAX_NODE;
   }
 
@@ -503,20 +398,18 @@ int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
   }
 
   pre_time_us = micros();
-  last_dxl_return_ = dxlTxPacketInst(&packet_, 
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, 
     DXL_BROADCAST_ID, INST_SYNC_READ, tx_param, 4 + id_cnt);
-  packet_.tx_time = micros() - pre_time_us;
-
-  if(last_dxl_return_ != DXL_RET_OK)
+  if(last_lib_err_code_ != DXL_LIB_OK)
     return false;
+  packet_.tx_time = micros() - pre_time_us;    
 
   pre_time_ms = millis();
   pre_time_us = micros();
   while(1)
   {
-    last_dxl_return_ = dxlRxPacket(&packet_);
-    if (last_dxl_return_ == DXL_RET_RX_STATUS)
-    {
+    last_lib_err_code_ = dxlRxPacket(&packet_);
+    if (last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_STATUS) {
       pre_time_ms = millis();
       packet_.rx_time = micros() - pre_time_us;
 
@@ -541,13 +434,12 @@ int32_t Master::syncRead(uint16_t addr, uint16_t addr_len,
       recv_len += packet_.rx.param_length;
 
       if(id_idx >= id_cnt){
-        last_dxl_return_ = DXL_RET_RX_RESP;
         break;
       }
     }
 
     if (millis()-pre_time_ms >= timeout){
-      last_dxl_return_ = DXL_RET_ERROR_TIMEOUT;
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
       return -1;
     }
   }
@@ -564,17 +456,17 @@ bool Master::syncWrite(uint16_t addr, uint16_t addr_len,
     return false;
 
   if (addr_len*id_cnt > DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE){
-    last_dxl_return_ = DXL_RET_ERROR_LENGTH;
+    last_lib_err_code_ = DXL_LIB_ERROR_LENGTH;
     return false;
   }
 
   if(addr_len*id_cnt > data_list_size){
-    last_dxl_return_ = DXL_RET_ERROR_TX_BUFFER_SIZE;
+    last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
     return false;
   }
 
   if (p_port_->getOpenState() != true){
-    last_dxl_return_ = DXL_RET_NOT_OPEN;
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
     return false;
   }
 
@@ -608,19 +500,107 @@ bool Master::syncWrite(uint16_t addr, uint16_t addr_len,
   }
 
   pre_time_us = micros();
-  last_dxl_return_ = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_SYNC_WRITE, tx_param, data_index);
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_SYNC_WRITE, tx_param, data_index);
   packet_.tx_time = micros() - pre_time_us;
 
-  if(last_dxl_return_ == DXL_RET_OK)
+  if(last_lib_err_code_ == DXL_LIB_OK)
     ret = true;
 
   return ret;
 }
 
 
-dxl_return_t Master::syncWrite(param_sync_write_t *p_param)
+
+#if 1
+bool Master::syncRead(param_sync_read_t *p_param, status_read_t *p_resp, uint32_t timeout)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  bool ret = false;
+  uint32_t pre_time_us;
+  uint32_t pre_time_ms;
+
+  uint8_t tx_param[4 + DXLCMD_MAX_NODE];
+  uint32_t mem_addr;
+  uint8_t  *p_mem = (uint8_t *)p_resp->mem;
+  uint32_t i;
+
+
+  if (packet_.packet_ver == DXL_PACKET_VER_1_0 ){
+    last_lib_err_code_ = DXL_LIB_ERROR_NOT_SUPPORTED;
+    return false;
+  }
+
+  if (p_port_->getOpenState() != true){
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return false;
+  }
+
+  p_resp->id_count = 0;
+  p_resp->p_node[0] = (read_node_t *)&p_mem[0];
+
+  tx_param[0] = p_param->addr >> 0;
+  tx_param[1] = p_param->addr >> 8;
+  tx_param[2] = p_param->length >> 0;
+  tx_param[3] = p_param->length >> 8;
+
+  for( i=0; i<p_param->id_count; i++)
+  {
+    tx_param[4+i] = p_param->id_tbl[i];
+  }
+
+  pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_SYNC_READ, tx_param, 4 + p_param->id_count);
+  packet_.tx_time = micros() - pre_time_us;
+
+  mem_addr = 0;
+  pre_time_ms = millis();
+  pre_time_us = micros();
+  while(1)
+  {
+    last_lib_err_code_ = dxlRxPacket(&packet_);
+    if (last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_STATUS) {
+      pre_time_ms = millis();
+      packet_.rx_time = micros() - pre_time_us;
+
+      // Arranges addresses in 4 bytes (for direct use of struct type conversion)
+      mem_addr += sizeof(read_node_t);
+      if (mem_addr%4){
+        mem_addr += 4 - (mem_addr%4);
+      }
+      p_resp->p_node[p_resp->id_count]->p_data = &p_mem[mem_addr];
+
+      p_resp->p_node[p_resp->id_count]->id     = packet_.rx.id;
+      p_resp->p_node[p_resp->id_count]->error  = packet_.rx.error;
+      p_resp->p_node[p_resp->id_count]->length = packet_.rx.param_length;
+
+      for (i=0; i<packet_.rx.param_length; i++)
+      {
+        p_resp->p_node[p_resp->id_count]->p_data[i] = packet_.rx.p_param[i];
+      }
+
+      p_resp->id_count++;
+
+      mem_addr += packet_.rx.param_length;
+      p_resp->p_node[p_resp->id_count] = (read_node_t *)&p_mem[mem_addr];
+
+      if (p_resp->id_count >= p_param->id_count){
+        ret = true;
+        break;
+      }
+    }
+
+    if (millis()-pre_time_ms >= timeout){
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
+      return false;
+    }
+  }
+  
+  return ret;
+}
+
+
+bool Master::syncWrite(param_sync_write_t *p_param)
+{
+  bool ret = false;
   uint32_t pre_time_us;
 
   uint8_t tx_param[4 + DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE];
@@ -628,62 +608,51 @@ dxl_return_t Master::syncWrite(param_sync_write_t *p_param)
   uint32_t j;
   uint32_t data_index;
 
-  if (p_port_->getOpenState() == true)
-  {
-
-    if (p_param->length > DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE)
-    {
-      return DXL_RET_ERROR_LENGTH;
-    }
-
-    if (packet_.packet_ver == DXL_PACKET_VER_1_0 )
-    {
-      tx_param[0] = p_param->addr;
-      tx_param[1] = p_param->length;
-
-      data_index = 2;
-      for( i=0; i<p_param->id_count; i++)
-      {
-        tx_param[data_index++] = p_param->node[i].id;
-        for (j=0; j<p_param->length; j++)
-        {
-          tx_param[data_index++] = p_param->node[i].data[j];
-        }
-      }
-    }
-    else
-    {
-      tx_param[0] = p_param->addr >> 0;
-      tx_param[1] = p_param->addr >> 8;
-      tx_param[2] = p_param->length >> 0;
-      tx_param[3] = p_param->length >> 8;
-
-      data_index = 4;
-      for( i=0; i<p_param->id_count; i++)
-      {
-        tx_param[data_index++] = p_param->node[i].id;
-        for (j=0; j<p_param->length; j++)
-        {
-          tx_param[data_index++] = p_param->node[i].data[j];
-        }
-      }
-    }
-
-    pre_time_us = micros();
-    ret = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_SYNC_WRITE, tx_param, data_index);
-    packet_.tx_time = micros() - pre_time_us;
+  if (p_port_->getOpenState() != true){
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return false;
   }
-  else
-  {
-    ret = DXL_RET_NOT_OPEN;
+
+  if (p_param->length > DXLCMD_MAX_NODE * DXLCMD_MAX_NODE_BUFFER_SIZE){
+    last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
+    return false;
   }
+
+  if (packet_.packet_ver == DXL_PACKET_VER_1_0 ){
+    tx_param[0] = p_param->addr;
+    tx_param[1] = p_param->length;
+
+    data_index = 2;
+  }else{
+    tx_param[0] = p_param->addr >> 0;
+    tx_param[1] = p_param->addr >> 8;
+    tx_param[2] = p_param->length >> 0;
+    tx_param[3] = p_param->length >> 8;
+
+    data_index = 4;
+  }
+
+  for( i=0; i<p_param->id_count; i++)
+  {
+    tx_param[data_index++] = p_param->node[i].id;
+    for (j=0; j<p_param->length; j++)
+    {
+      tx_param[data_index++] = p_param->node[i].data[j];
+    }
+  }
+
+  pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_SYNC_WRITE, tx_param, data_index);
+  if(last_lib_err_code_ != DXL_LIB_OK)
+    return false;
+  packet_.tx_time = micros() - pre_time_us;
 
   return ret;
 }
 
-dxl_return_t Master::bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp, uint32_t timeout)
+bool Master::bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp, uint32_t timeout)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  bool ret = false;
   uint32_t pre_time_us;
   uint32_t pre_time_ms;
 
@@ -696,84 +665,77 @@ dxl_return_t Master::bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp,
   p_resp->id_count = 0;
   p_resp->p_node[0] = (read_node_t *)&p_mem[0];
 
+  if (p_port_->getOpenState() != true){
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return false;
+  }
 
-  if (p_port_->getOpenState() == true)
+  tx_length = 0;
+  for( i=0; i<p_param->id_count; i++)
   {
-    tx_length = 0;
-    for( i=0; i<p_param->id_count; i++)
-    {
-      tx_param[tx_length+0] = p_param->id_tbl[i];
-      tx_param[tx_length+1] = p_param->addr[i] >> 0;
-      tx_param[tx_length+2] = p_param->addr[i] >> 8;
-      tx_param[tx_length+3] = p_param->length[i] >> 0;
-      tx_param[tx_length+4] = p_param->length[i] >> 8;
-      tx_length += 5;
-    }
+    tx_param[tx_length+0] = p_param->id_tbl[i];
+    tx_param[tx_length+1] = p_param->addr[i] >> 0;
+    tx_param[tx_length+2] = p_param->addr[i] >> 8;
+    tx_param[tx_length+3] = p_param->length[i] >> 0;
+    tx_param[tx_length+4] = p_param->length[i] >> 8;
+    tx_length += 5;
+  }
 
-    pre_time_us = micros();
-    ret = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_BULK_READ, tx_param, tx_length);
-    packet_.tx_time = micros() - pre_time_us;
+  pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_BULK_READ, tx_param, tx_length);
+  packet_.tx_time = micros() - pre_time_us;
 
-    mem_addr = 0;
-    pre_time_ms = millis();
-    pre_time_us = micros();
-    while(1)
-    {
-      ret = dxlRxPacket(&packet_);
-      if (ret == DXL_RET_RX_STATUS)
+  mem_addr = 0;
+  pre_time_ms = millis();
+  pre_time_us = micros();
+  while(1)
+  {
+    last_lib_err_code_ = dxlRxPacket(&packet_);
+    if (last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_STATUS) {
+      pre_time_ms = millis();
+      packet_.rx_time = micros() - pre_time_us;
+
+      mem_addr += sizeof(read_node_t);
+      p_resp->p_node[p_resp->id_count]->p_data = &p_mem[mem_addr];
+
+      p_resp->p_node[p_resp->id_count]->id     = packet_.rx.id;
+      p_resp->p_node[p_resp->id_count]->error  = packet_.rx.error;
+      p_resp->p_node[p_resp->id_count]->length = packet_.rx.param_length;
+
+      for (i=0; i<packet_.rx.param_length; i++)
       {
-        pre_time_ms = millis();
-        packet_.rx_time = micros() - pre_time_us;
-
-        mem_addr += sizeof(read_node_t);
-        p_resp->p_node[p_resp->id_count]->p_data = &p_mem[mem_addr];
-
-        p_resp->p_node[p_resp->id_count]->id     = packet_.rx.id;
-        p_resp->p_node[p_resp->id_count]->error  = packet_.rx.error;
-        p_resp->p_node[p_resp->id_count]->length = packet_.rx.param_length;
-
-        for (i=0; i<packet_.rx.param_length; i++)
-        {
-          p_resp->p_node[p_resp->id_count]->p_data[i] = packet_.rx.p_param[i];
-        }
-
-        p_resp->id_count++;
-
-        mem_addr += packet_.rx.param_length;
-
-        // Arranges addresses in 4 bytes (for direct use of struct type conversion)
-        mem_addr += sizeof(read_node_t);
-        if (mem_addr%4)
-        {
-          mem_addr += 4 - (mem_addr%4);
-        }
-
-        p_resp->p_node[p_resp->id_count] = (read_node_t *)&p_mem[mem_addr];
-
-        if (p_resp->id_count >= p_param->id_count)
-        {
-          ret = DXL_RET_RX_RESP;
-          break;
-        }
+        p_resp->p_node[p_resp->id_count]->p_data[i] = packet_.rx.p_param[i];
       }
 
-      if (millis()-pre_time_ms >= timeout)
-      {
+      p_resp->id_count++;
+
+      mem_addr += packet_.rx.param_length;
+
+      // Arranges addresses in 4 bytes (for direct use of struct type conversion)
+      mem_addr += sizeof(read_node_t);
+      if (mem_addr%4){
+        mem_addr += 4 - (mem_addr%4);
+      }
+
+      p_resp->p_node[p_resp->id_count] = (read_node_t *)&p_mem[mem_addr];
+
+      if (p_resp->id_count >= p_param->id_count){
+        ret = true;
         break;
       }
     }
-  }
-  else
-  {
-    ret = DXL_RET_NOT_OPEN;
-  }
-
+      
+    if (millis()-pre_time_ms >= timeout){
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
+      return false;
+    }
+  } 
   return ret;
 }
 
-dxl_return_t Master::bulkWrite(param_bulk_write_t *p_param)
+bool Master::bulkWrite(param_bulk_write_t *p_param)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  bool ret = false;
   uint32_t pre_time_us;
 
   uint8_t tx_param[(5 + DXLCMD_MAX_NODE_BUFFER_SIZE) * DXLCMD_MAX_NODE];
@@ -782,50 +744,51 @@ dxl_return_t Master::bulkWrite(param_bulk_write_t *p_param)
   uint32_t data_index;
   uint32_t tx_buf_length;
 
-
-  if (p_port_->getOpenState() == true)
-  {
-    tx_buf_length = sizeof(tx_param);
+  if (p_port_->getOpenState() != true){
+    last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
+    return false;
+  }
+    
+  tx_buf_length = sizeof(tx_param);
     data_index = 0;
 
-    for( i=0; i<p_param->id_count; i++)
+  for( i=0; i<p_param->id_count; i++)
+  {
+    tx_param[data_index++] = p_param->node[i].id;
+    tx_param[data_index++] = p_param->node[i].addr >> 0;
+    tx_param[data_index++] = p_param->node[i].addr >> 8;
+    tx_param[data_index++] = p_param->node[i].length >> 0;
+    tx_param[data_index++] = p_param->node[i].length >> 8;
+    for (j=0; j<p_param->node[i].length; j++)
     {
-      tx_param[data_index++] = p_param->node[i].id;
-      tx_param[data_index++] = p_param->node[i].addr >> 0;
-      tx_param[data_index++] = p_param->node[i].addr >> 8;
-      tx_param[data_index++] = p_param->node[i].length >> 0;
-      tx_param[data_index++] = p_param->node[i].length >> 8;
-      for (j=0; j<p_param->node[i].length; j++)
-      {
-        tx_param[data_index++] = p_param->node[i].data[j];
-      }
-
-      if (data_index > tx_buf_length)
-      {
-        return DXL_RET_ERROR_LENGTH;
-      }
+      tx_param[data_index++] = p_param->node[i].data[j];
     }
 
-    pre_time_us = micros();
-    ret = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_BULK_WRITE, tx_param, data_index);
-    packet_.tx_time = micros() - pre_time_us;
+    if (data_index > tx_buf_length){
+      last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
+      return false;
+    }
   }
-  else
-  {
-    ret = DXL_RET_NOT_OPEN;
-  }
+
+  pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, DXL_BROADCAST_ID, INST_BULK_WRITE, tx_param, data_index);
+  if(last_lib_err_code_ != DXL_LIB_OK)
+    return false;
+  packet_.tx_time = micros() - pre_time_us;  
 
   return ret;
 }
 
+#endif
 
-uint8_t Master::getLastStatusError() const
+
+uint8_t Master::getLastStatusPacketError() const
 {
-  return last_status_error_;
+  return last_status_packet_error_;
 }
 
-dxl_return_t Master::getLastDxlReturn() const
+lib_err_code_t Master::getLastLibErrCode() const
 {
-  return last_dxl_return_;
+  return last_lib_err_code_;
 }
 
