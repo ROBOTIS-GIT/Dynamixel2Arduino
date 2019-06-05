@@ -139,7 +139,7 @@ class Master
 
     bool setPort(PortHandler &port);
 
-    dxl_return_t ping(uint8_t id,
+    bool ping(uint8_t id,
      status_ping_t *p_resp, uint32_t timeout);
     //bool pingBroadcast();
           
@@ -152,12 +152,12 @@ class Master
     bool writeNoResp(uint8_t id, uint16_t addr, 
       uint8_t *p_data, uint16_t data_length);
 
-    //TODO: dxl_return_t regWrite();
-    //TODO: dxl_return_t action();
-    dxl_return_t factoryReset(uint8_t id, uint8_t option, uint32_t timeout = 100);
-    dxl_return_t reboot(uint8_t id, uint32_t timeout);
+    //TODO: bool regWrite();
+    //TODO: bool action();
+    bool factoryReset(uint8_t id, uint8_t option, uint32_t timeout = 100);
+    bool reboot(uint8_t id, uint32_t timeout);
 
-    //TODO: dxl_return_t clear();
+    //TODO: bool clear();
     bool syncWrite(uint16_t addr, uint16_t addr_len,
       uint8_t *id_list, uint8_t id_cnt, 
       uint8_t *data_list, uint16_t data_list_size);
@@ -166,23 +166,25 @@ class Master
       uint8_t *id_list, uint8_t id_cnt, 
       uint8_t *recv_buf, uint16_t recv_buf_size, uint32_t timeout = 100);
 
+#if 1 //TODO
+    bool syncRead(param_sync_read_t *p_param, status_read_t *p_resp, uint32_t timeout = 100);
+    bool syncWrite(param_sync_write_t *p_param);
 
-    dxl_return_t syncRead(param_sync_read_t *p_param,
-      status_read_t *p_resp, uint32_t timeout = 100);
-    dxl_return_t syncWrite(param_sync_write_t *p_param);
-    dxl_return_t bulkRead(param_bulk_read_t *p_param,
-      status_read_t *p_resp, uint32_t timeout = 100);
-    dxl_return_t bulkWrite(param_bulk_write_t *p_param);
+    bool bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp, uint32_t timeout = 100);
+    bool bulkWrite(param_bulk_write_t *p_param);
+#endif
 
-    uint8_t getLastStatusError() const;
-    dxl_return_t getLastDxlReturn() const;
+    uint8_t getLastStatusPacketError() const;
+    lib_err_code_t getLastLibErrCode() const;
+
+    void setLastLibErrCode(lib_err_code_t err_code);
 
   private:
     PortHandler *p_port_;
     //PacketHandler packet_handler_;
     dxl_t packet_;
-    uint8_t last_status_error_; 
-    dxl_return_t last_dxl_return_;
+    uint8_t last_status_packet_error_; 
+    lib_err_code_t last_lib_err_code_;
   };
 }
 

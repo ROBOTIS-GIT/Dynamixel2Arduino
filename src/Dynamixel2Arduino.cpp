@@ -97,7 +97,6 @@ bool Dynamixel2Arduino::scan()
 bool Dynamixel2Arduino::ping(uint8_t id)
 {
   bool ret = false;
-  dxl_return_t dxl_ret = DXL_RET_OK;    
   uint8_t i;
   uint8_t id_i;
   uint8_t dxl_cnt;
@@ -105,52 +104,51 @@ bool Dynamixel2Arduino::ping(uint8_t id)
   if (id == DXL_BROADCAST_ID){
     registered_dxl_cnt_ = 0;
 
-    dxl_ret = Master::ping(DXL_BROADCAST_ID, &resp_.ping, 3*254);  
-    dxl_cnt = resp_.ping.id_count;
+    if(Master::ping(DXL_BROADCAST_ID, &resp_.ping, 3*254)){
+      dxl_cnt = resp_.ping.id_count;
 
-    for (i=0; i<dxl_cnt && registered_dxl_cnt_<DXLCMD_MAX_NODE; i++){
-      id_i = resp_.ping.p_node[i]->id;
+      for (i=0; i<dxl_cnt && registered_dxl_cnt_<DXLCMD_MAX_NODE; i++){
+        id_i = resp_.ping.p_node[i]->id;
 
-      registered_dxl_[registered_dxl_cnt_].id  = id_i;
-      if(getPortProtocolVersion() == 2.0){
-        registered_dxl_[registered_dxl_cnt_].model_num = resp_.ping.p_node[i]->model_number;
-      }else{
-        registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id_i);
+        registered_dxl_[registered_dxl_cnt_].id  = id_i;
+        if(getPortProtocolVersion() == 2.0){
+          registered_dxl_[registered_dxl_cnt_].model_num = resp_.ping.p_node[i]->model_number;
+        }else{
+          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id_i);
+        }
+        registered_dxl_cnt_++;
       }
-      registered_dxl_cnt_++;
-    }
 
-    if (registered_dxl_cnt_ != 0){
-      ret = true;
-    }
+      if (registered_dxl_cnt_ != 0){
+        ret = true;
+      }
+    }  
   }else{
-    dxl_ret = Master::ping(id, &resp_.ping, 20);
-
-    if (dxl_ret == DXL_RET_RX_RESP && resp_.ping.id_count > 0){        
-      if (registered_dxl_cnt_ < DXLCMD_MAX_NODE){
-        for (i=0; i<registered_dxl_cnt_; i++){
-          if (registered_dxl_[i].id == id){
-            ret = true;
-            break;
-          }  
-        }
-        if (i == registered_dxl_cnt_){
-          registered_dxl_[i].id = id;
-          if(getPortProtocolVersion() == 2.0){
-            registered_dxl_[i].model_num = resp_.ping.p_node[0]->model_number;
-          }else{
-            registered_dxl_[i].model_num = getModelNumber(id);
+    if(Master::ping(id, &resp_.ping, 20)){
+      if (resp_.ping.id_count > 0){        
+        if (registered_dxl_cnt_ < DXLCMD_MAX_NODE){
+          for (i=0; i<registered_dxl_cnt_; i++){
+            if (registered_dxl_[i].id == id){
+              ret = true;
+              break;
+            }  
           }
-          registered_dxl_cnt_++;      
-          ret = true;
+          if (i == registered_dxl_cnt_){
+            registered_dxl_[i].id = id;
+            if(getPortProtocolVersion() == 2.0){
+              registered_dxl_[i].model_num = resp_.ping.p_node[0]->model_number;
+            }else{
+              registered_dxl_[i].model_num = getModelNumber(id);
+            }
+            registered_dxl_cnt_++;      
+            ret = true;
+          }
         }
+        else
+        {
+          return false;
+        }     
       }
-      else
-      {
-        err_code_ = 0xFF; //DXL 노드 최대 수 초과
-      }
-      
-      err_code_ = 0;     
     }
   }
 
@@ -171,7 +169,6 @@ bool Dynamixel2Arduino::setID(uint8_t id, uint8_t new_id)
 {
   return writeControlTableItem(ControlTableItem::ID, id, new_id);
 }
-
 
 bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
 {
@@ -637,9 +634,7 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 16);
       }
       break;
-
-
-
+      
     default:
       break;
   }
