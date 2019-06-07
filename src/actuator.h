@@ -31,7 +31,13 @@
 
 #define XL320               (uint16_t)350
 
+#define XC430_W150          (uint16_t)1070
+#define XC430_W240          (uint16_t)1080
+#define XXC430_W250         (uint16_t)1160
+
 #define XL430_W250          (uint16_t)1060
+
+#define XXL430_W250         (uint16_t)1090
 
 #define XM430_W210          (uint16_t)1030
 #define XM430_W350          (uint16_t)1020
@@ -176,9 +182,6 @@ enum ControlTableItem{
   LAST_DUMMY_ITEM = 0xFF
 };
 
-
-
-
 namespace DYNAMIXEL{
 
 typedef struct ControlTableItemInfo{
@@ -186,9 +189,7 @@ typedef struct ControlTableItemInfo{
   uint8_t addr_length;
 } ControlTableItemInfo_t;
 
-
 ControlTableItemInfo_t getControlTableItemInfo(uint16_t model_num, uint8_t control_item);
-
 
 } // namespace DYNAMIXEL
 
