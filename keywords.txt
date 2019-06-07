@@ -14,6 +14,7 @@ SerialPortHandler	KEYWORD1
 # Methods and Functions (KEYWORD2)
 ###########################################
 
+# Dynamxiel2Arduino Class
 begin	KEYWORD2
 getPortBaud	KEYWORD2
 ping	KEYWORD2
@@ -38,9 +39,11 @@ getPresentCurrent	KEYWORD2
 readControlTableItem	KEYWORD2
 writeControlTableItem	KEYWORD2
 
+# Master Class
 setPortProtocolVersion	KEYWORD2
 getPortProtocolVersion	KEYWORD2
 setPort	KEYWORD2
+ping	KEYWORD2
 read	KEYWORD2
 write	KEYWORD2
 writeNoResp	KEYWORD2
@@ -49,10 +52,25 @@ reboot	KEYWORD2
 syncWrite	KEYWORD2
 syncRead	KEYWORD2
 
+# Slave Class (TODO)
+
+###########################################
+# Structures (KEYWORD3)
+###########################################
+
+# Master Class
+ParamForSyncReadInst_t	KEYWORD3
+ParamForSyncWriteInst_t	KEYWORD3
+ParamForBulkReadInst_t	KEYWORD3
+ParamForBulkWriteInst_t	KEYWORD3
+RecvInfoFromPing_t	KEYWORD3
+RecvInfoFromStatusInst_t	KEYWORD3
+
 ###########################################
 # Constants (LITERAL1)
 ###########################################
 
+# Dynamixel2Arduino Class
 OP_POSITION	LITERAL1
 OP_EXTENDED_POSITION	LITERAL1
 OP_CURRENT_BASED_POSITION	LITERAL1
@@ -60,12 +78,14 @@ OP_VELOCITY	LITERAL1
 OP_PWM	LITERAL1
 OP_CURRENT	LITERAL1
 
+# Dynamixel2Arduino Class
 UNIT_RAW	LITERAL1
 UNIT_PERCENT	LITERAL1
 UNIT_RPM	LITERAL1
 UNIT_DEGREE	LITERAL1
 UNIT_MILLI_AMPERE	LITERAL1
 
+# Actuator.h
 MODEL_NUMBER	LITERAL1
 MODEL_INFORMATION	LITERAL1
 FIRMWARE_VERSION	LITERAL1

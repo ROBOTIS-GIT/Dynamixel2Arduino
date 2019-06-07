@@ -98,56 +98,46 @@ bool Dynamixel2Arduino::ping(uint8_t id)
 {
   bool ret = false;
   uint8_t i;
-  uint8_t id_i;
-  uint8_t dxl_cnt;
 
   if (id == DXL_BROADCAST_ID){
+    RecvInfoFromPing_t recv_info;
     registered_dxl_cnt_ = 0;
 
-    if(Master::ping(DXL_BROADCAST_ID, &resp_.ping, 3*253)){
-      dxl_cnt = resp_.ping.id_count;
+    if(Master::ping(DXL_BROADCAST_ID, recv_info, 3*253) == true){
+      for (i=0; i<recv_info.id_count && registered_dxl_cnt_<DXL_MAX_NODE; i++){
 
-      for (i=0; i<dxl_cnt && registered_dxl_cnt_<DXL_MAX_NODE; i++){
-        id_i = resp_.ping.node[i].id;
-
-        registered_dxl_[registered_dxl_cnt_].id  = id_i;
+        registered_dxl_[registered_dxl_cnt_].id  = recv_info.xel[i].id;
         if(getPortProtocolVersion() == 2.0){
-          registered_dxl_[registered_dxl_cnt_].model_num = resp_.ping.node[i].model_number;
+          registered_dxl_[registered_dxl_cnt_].model_num = recv_info.xel[i].model_number;
         }else{
-          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id_i);
+          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(recv_info.xel[i].id);
         }
         registered_dxl_cnt_++;
       }
-
-      if (registered_dxl_cnt_ != 0){
-        ret = true;
-      }
+      ret = true;
     }  
   }else{
-    if(Master::ping(id, &resp_.ping, 20)){
-      if (resp_.ping.id_count > 0){        
-        if (registered_dxl_cnt_ < DXL_MAX_NODE){
-          for (i=0; i<registered_dxl_cnt_; i++){
-            if (registered_dxl_[i].id == id){
-              ret = true;
-              break;
-            }  
-          }
-          if (i == registered_dxl_cnt_){
-            registered_dxl_[i].id = id;
-            if(getPortProtocolVersion() == 2.0){
-              registered_dxl_[i].model_num = resp_.ping.node[0].model_number;
-            }else{
-              registered_dxl_[i].model_num = getModelNumber(id);
-            }
-            registered_dxl_cnt_++;      
-            ret = true;
-          }
+    XelInfoFromPing_t recv_info;
+    if(Master::ping(id, &recv_info, 1, 20) > 0){
+      if(recv_info.id != id)
+        return false;
+      for (i=0; i<registered_dxl_cnt_; i++){
+        if (registered_dxl_[i].id == id)
+          return true;
+      }
+
+      if (registered_dxl_cnt_ < DXL_MAX_NODE){
+        registered_dxl_[registered_dxl_cnt_].id = id;
+        if(getPortProtocolVersion() == 2.0){
+          registered_dxl_[registered_dxl_cnt_].model_num = recv_info.model_number;
+        }else{
+          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id);
         }
-        else
-        {
-          return false;
-        }     
+        registered_dxl_cnt_++;      
+        ret = true;
+      }
+      else{
+        ret = false;
       }
     }
   }

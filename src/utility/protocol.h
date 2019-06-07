@@ -128,7 +128,7 @@ namespace DYNAMIXEL{
     DXL_LIB_ERROR_CRC
   } lib_err_code_t;
 
-  typedef struct
+  typedef struct DxlPacket
   {
     uint8_t   header[3];
     uint8_t   reserved;
@@ -205,16 +205,6 @@ namespace DYNAMIXEL{
     dxl_packet_t    rx;
     dxl_packet_t    tx;
   } dxl_t;
-
-  typedef struct
-  {
-    bool     use;
-    uint8_t  ch;
-    uint8_t  id;
-    uint32_t baud;
-    uint32_t rx_timeout;
-    dxl_t    node;
-  } dxl_node_t;
 
   bool setDxlPort(PortHandler *port);
   bool dxlInit(dxl_t *p_packet, float protocol_ver);

@@ -21,135 +21,118 @@
 #include "packet_handler.h"
 #include "protocol.h"
 
+typedef struct InfoFromPing {
+  uint8_t id;
+  uint8_t firmware_version;
+  uint16_t model_number;
+} XelInfoFromPing_t;
+
+typedef struct XelsInfoFromPing {
+  uint8_t id_count;
+  XelInfoFromPing_t xel[DXL_MAX_NODE];
+} RecvInfoFromPing_t;
+
+typedef struct XelInfoForStatusInst{
+  uint8_t id;
+  uint16_t length;
+  uint8_t error;
+  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
+} XelInfoForStatusInst_t;
+
+typedef struct RecvInfoFromStatusInst{
+  uint8_t id_count;
+  XelInfoForStatusInst_t xel[DXL_MAX_NODE];
+} RecvInfoFromStatusInst_t;
+
+typedef struct InfoForSyncReadParam{
+  uint8_t id;
+} InfoForSyncReadParam_t;
+
+typedef struct ParamForSyncReadInst{
+  uint16_t addr;
+  uint16_t length;
+  uint8_t id_count;
+  InfoForSyncReadParam_t xel[DXL_MAX_NODE];
+} ParamForSyncReadInst_t;
+
+typedef struct XelInfoForSyncWriteParam{
+  uint8_t id;
+  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
+} XelInfoForSyncWriteParam_t;
+
+typedef struct ParamForSyncWriteInst{
+  uint16_t addr;
+  uint16_t length;
+  uint8_t id_count;
+  XelInfoForSyncWriteParam_t xel[DXL_MAX_NODE];
+} ParamForSyncWriteInst_t;
+
+typedef struct XelInfoForBulkReadParam{
+  uint8_t id;
+  uint16_t addr;
+  uint16_t length;
+} XelInfoForBulkReadParam_t;
+
+typedef struct ParamForBulkReadInst{
+  uint8_t id_count;
+  XelInfoForBulkReadParam_t xel[DXL_MAX_NODE];
+} ParamForBulkReadInst_t;
+
+typedef struct XelInfoForBulkWriteParam{
+  uint8_t id;
+  uint16_t addr;
+  uint16_t length;
+  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
+} XelInfoForBulkWriteParam_t;
+
+typedef struct ParamForBulkWriteInst{
+  uint8_t id_count;
+  XelInfoForBulkWriteParam_t xel[DXL_MAX_NODE];
+} ParamForBulkWriteInst_t;
+
+typedef union
+{
+  ParamForSyncReadInst_t sync_read;
+  ParamForSyncWriteInst_t sync_write;
+  ParamForBulkReadInst_t bulk_read;
+  ParamForBulkWriteInst_t bulk_write;
+} send_param_t;
+
+typedef union
+{
+  RecvInfoFromPing_t ping;
+  RecvInfoFromStatusInst_t read;
+  RecvInfoFromStatusInst_t sync_read;
+  RecvInfoFromStatusInst_t bulk_read;
+} recv_info_t;
+
+
 namespace DYNAMIXEL {
-
-typedef struct
-{
-  uint8_t   id;
-  uint8_t   error;
-  uint16_t  model_number;
-  uint8_t   firmware_version;
-} ping_node_t;
-
-typedef struct
-{
-  uint8_t  id;
-  uint8_t  error;
-  uint16_t length;
-  uint8_t  data[DXL_MAX_NODE_BUFFER_SIZE];
-} read_node_t;
-
-typedef struct
-{
-  uint8_t        id_count;
-  read_node_t    node[DXL_MAX_NODE];
-} status_read_t;
-
-typedef struct
-{
-  uint8_t        id_count;
-  ping_node_t    node[DXL_MAX_NODE];
-} status_ping_t;
-
-//-- SyncRead
-typedef struct
-{
-  uint8_t   id_count;
-  uint8_t   id_tbl[DXL_MAX_NODE];
-  uint16_t  addr;
-  uint16_t  length;
-} param_sync_read_t;
-
-//-- BulkRead
-typedef struct
-{
-  uint8_t  id;
-  uint16_t addr;
-  uint16_t length;
-} bulk_read_node_t;
-
-typedef struct
-{
-  uint8_t   id_count;
-  bulk_read_node_t node[DXL_MAX_NODE];
-} param_bulk_read_t;
-
-//-- SyncWrite
-typedef struct
-{
-  uint8_t  id;
-  uint8_t  data[DXL_MAX_NODE_BUFFER_SIZE];
-} sync_write_node_t;
-
-typedef struct
-{
-  uint8_t  id_count;
-  uint16_t addr;
-  uint16_t length;
-  sync_write_node_t node[DXL_MAX_NODE];
-} param_sync_write_t;
-
-//-- BulkWrite
-typedef struct
-{
-  uint8_t  id;
-  uint16_t addr;
-  uint16_t length;
-  uint8_t  data[DXL_MAX_NODE_BUFFER_SIZE];
-} bulk_write_node_t;
-
-typedef struct
-{
-  uint8_t   id_count;
-  bulk_write_node_t node[DXL_MAX_NODE];
-} param_bulk_write_t;
-
-typedef union
-{
-  param_sync_read_t  sync_read;
-  param_bulk_read_t  bulk_read;
-  param_sync_write_t sync_write;
-  param_bulk_write_t bulk_write;
-} param_t;
-
-typedef union
-{
-  status_ping_t    ping;
-  status_read_t    read;
-  status_read_t    sync_read;
-  status_read_t    bulk_read;
-} status_t;
-
-typedef union
-{
-  param_t  param;
-  status_t   resp;
-} param_resp_t;
-
 
 class Master
 {
   public:
-    Master(PortHandler &port, float protocol_ver = 2.0);
-    Master(float protocol_ver = 2.0);
+    Master(PortHandler &port, float protocol_ver = DXL_PACKET_VER_2_0);
+    Master(float protocol_ver = DXL_PACKET_VER_2_0);
 
     bool setPortProtocolVersion(float version);
     float getPortProtocolVersion();
 
     bool setPort(PortHandler &port);
 
+    uint8_t ping(uint8_t id, 
+      XelInfoFromPing_t *recv_info_array, uint8_t recv_array_cnt, uint32_t timeout = 100);
     bool ping(uint8_t id,
-     status_ping_t *p_resp, uint32_t timeout);
-    //bool pingBroadcast();
+      RecvInfoFromPing_t &recv_info, uint32_t timeout = 100);
           
     int32_t read(uint8_t id, uint16_t addr, uint16_t addr_length,
       uint8_t *p_recv_buf, uint16_t recv_buf_length, uint32_t timeout);
 
     bool write(uint8_t id, uint16_t addr, 
-      uint8_t *p_data, uint16_t data_length, uint32_t timeout = 100);
+      const uint8_t *p_data, uint16_t data_length, uint32_t timeout = 100);
 
     bool writeNoResp(uint8_t id, uint16_t addr, 
-      uint8_t *p_data, uint16_t data_length);
+      const uint8_t *p_data, uint16_t data_length);
 
     //TODO: bool regWrite();
     //TODO: bool action();
@@ -157,21 +140,12 @@ class Master
     bool reboot(uint8_t id, uint32_t timeout);
 
     //TODO: bool clear();
-    bool syncWrite(uint16_t addr, uint16_t addr_len,
-      uint8_t *id_list, uint8_t id_cnt, 
-      uint8_t *data_list, uint16_t data_list_size);
 
-    int32_t syncRead(uint16_t addr, uint16_t addr_len,
-      uint8_t *id_list, uint8_t id_cnt, 
-      uint8_t *recv_buf, uint16_t recv_buf_size, uint32_t timeout = 100);
+    bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
+    bool syncWrite(const ParamForSyncWriteInst_t &param_info);
 
-#if 1 //TODO
-    bool syncRead(param_sync_read_t *p_param, status_read_t *p_resp, uint32_t timeout = 100);
-    bool syncWrite(param_sync_write_t *p_param);
-
-    bool bulkRead(param_bulk_read_t *p_param, status_read_t *p_resp, uint32_t timeout = 100);
-    bool bulkWrite(param_bulk_write_t *p_param);
-#endif
+    bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
+    bool bulkWrite(const ParamForBulkWriteInst_t &param_info);
 
     uint8_t getLastStatusPacketError() const;
     lib_err_code_t getLastLibErrCode() const;
@@ -180,7 +154,6 @@ class Master
 
   private:
     PortHandler *p_port_;
-    //PacketHandler packet_handler_;
     dxl_t packet_;
     uint8_t last_status_packet_error_; 
     lib_err_code_t last_lib_err_code_;
