@@ -36,7 +36,7 @@
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
 #endif
 
-/*
+/* ParamForSyncReadInst_t
   A structure that contains the information needed for the parameters of the 'syncRead packet'.
 
   typedef struct ParamForSyncReadInst{
@@ -50,9 +50,8 @@
     uint8_t id;
   } InfoForSyncReadParam_t;
 */
-ParamForSyncReadInst_t sync_read_param;
 
-/*
+/* ParamForSyncWriteInst_t
   A structure that contains the information needed for the parameters of the 'syncWrite packet'.
 
   typedef struct ParamForSyncWriteInst{
@@ -67,9 +66,8 @@ ParamForSyncReadInst_t sync_read_param;
     uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
   } XelInfoForSyncWriteParam_t;
 */
-ParamForSyncWriteInst_t sync_write_param;
 
-/*
+/* ParamForBulkReadInst_t
   A structure that contains the information needed for the parameters of the 'bulkRead packet'.
 
   typedef struct ParamForBulkReadInst{
@@ -83,9 +81,8 @@ ParamForSyncWriteInst_t sync_write_param;
     uint16_t length;
   } XelInfoForBulkReadParam_t;
 */
-ParamForBulkReadInst_t bulk_read_param;
 
-/*
+/* ParamForBulkWriteInst_t
   A structure that contains the information needed for the parameters of the 'bulkWrite packet'.
 
   typedef struct ParamForBulkWriteInst{
@@ -100,9 +97,8 @@ ParamForBulkReadInst_t bulk_read_param;
     uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
   } XelInfoForBulkWriteParam_t;
 */
-ParamForBulkWriteInst_t bulk_write_param;
 
-/*
+/* RecvInfoFromStatusInst_t
   A structure used to receive data from multiple XELs.
 
   typedef struct RecvInfoFromStatusInst{
@@ -117,6 +113,11 @@ ParamForBulkWriteInst_t bulk_write_param;
     uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
   } XelInfoForStatusInst_t;
 */
+
+ParamForSyncReadInst_t sync_read_param;
+ParamForSyncWriteInst_t sync_write_param;
+ParamForBulkReadInst_t bulk_read_param;
+ParamForBulkWriteInst_t bulk_write_param;
 RecvInfoFromStatusInst_t read_result;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);

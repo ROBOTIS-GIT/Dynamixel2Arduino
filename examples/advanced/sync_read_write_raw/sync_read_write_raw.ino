@@ -36,7 +36,7 @@
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
 #endif
 
-/*
+/* ParamForSyncReadInst_t
   A structure that contains the information needed for the parameters of the 'syncRead packet'.
 
   typedef struct ParamForSyncReadInst{
@@ -50,9 +50,8 @@
     uint8_t id;
   } InfoForSyncReadParam_t;
 */
-ParamForSyncReadInst_t sync_read_param;
 
-/*
+/* ParamForSyncWriteInst_t
   A structure that contains the information needed for the parameters of the 'syncWrite packet'.
 
   typedef struct ParamForSyncWriteInst{
@@ -67,9 +66,8 @@ ParamForSyncReadInst_t sync_read_param;
     uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
   } XelInfoForSyncWriteParam_t;
 */
-ParamForSyncWriteInst_t sync_write_param;
 
-/*
+/* RecvInfoFromStatusInst_t
   A structure used to receive data from multiple XELs.
 
   typedef struct RecvInfoFromStatusInst{
@@ -84,6 +82,9 @@ ParamForSyncWriteInst_t sync_write_param;
     uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
   } XelInfoForStatusInst_t;
 */
+
+ParamForSyncReadInst_t sync_read_param;
+ParamForSyncWriteInst_t sync_write_param;
 RecvInfoFromStatusInst_t read_result;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);
@@ -109,23 +110,23 @@ void setup() {
   sync_read_param.id_count = 2;
   
   dxl.torqueOff(1);
-  dxl.setOperatingMode(1, OP_POSITION);
+  dxl.setOperatingMode(1, OP_VELOCITY);
   dxl.torqueOn(1);
 
   dxl.torqueOff(3);
-  dxl.setOperatingMode(3, OP_POSITION);
+  dxl.setOperatingMode(3, OP_VELOCITY);
   dxl.torqueOn(3);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  static int32_t position = 0;
-  int32_t recv_position[2];
+  static int32_t velocity = 0;
+  int32_t recv_velocity[2];
 
   // set value to data buffer for syncWrite
-  position = position >= 4095 ? 0 : position+409;
-  memcpy(sync_write_param.xel[0].data, &position, sizeof(position));
-  memcpy(sync_write_param.xel[1].data, &position, sizeof(position));
+  velocity = velocity >= 200 ? -200 : velocity+10;
+  memcpy(sync_write_param.xel[0].data, &velocity, sizeof(velocity));
+  memcpy(sync_write_param.xel[1].data, &velocity, sizeof(velocity));
 
   // send command using syncWrite
   dxl.syncWrite(sync_write_param);
@@ -134,15 +135,15 @@ void loop() {
   // Print the read data using SyncRead
   dxl.syncRead(sync_read_param, read_result);
   DEBUG_SERIAL.println("======= Sync Read =======");
-  memcpy(&recv_position[0], read_result.xel[0].data, read_result.xel[0].length);
-  memcpy(&recv_position[1], read_result.xel[1].data, read_result.xel[1].length);
+  memcpy(&recv_velocity[0], read_result.xel[0].data, read_result.xel[0].length);
+  memcpy(&recv_velocity[1], read_result.xel[1].data, read_result.xel[1].length);
   DEBUG_SERIAL.print("ID: ");DEBUG_SERIAL.print(read_result.xel[0].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Present Velocity: ");DEBUG_SERIAL.print(recv_position[0]);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(", Present Velocity: ");DEBUG_SERIAL.print(recv_velocity[0]);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.print(", Packet Error: ");DEBUG_SERIAL.print(read_result.xel[0].error);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.print(", Param Length: ");DEBUG_SERIAL.print(read_result.xel[0].length);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.println();
   DEBUG_SERIAL.print("ID: ");DEBUG_SERIAL.print(read_result.xel[1].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Present Velocity: ");DEBUG_SERIAL.print(recv_position[1]);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(", Present Velocity: ");DEBUG_SERIAL.print(recv_velocity[1]);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.print(", Packet Error: ");DEBUG_SERIAL.print(read_result.xel[1].error);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.print(", Param Length: ");DEBUG_SERIAL.print(read_result.xel[1].length);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.println();
