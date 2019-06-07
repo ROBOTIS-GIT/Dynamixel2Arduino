@@ -885,6 +885,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGM
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
+  || ENABLE_ACTUATOR_XC430 \
   || ENABLE_ACTUATOR_XL430 \
   || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
   || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
@@ -1182,7 +1183,11 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       break;              
 
     case MX28_2:
+    case XC430_W150:
+    case XC430_W240:
+    case XXC430_W250:
     case XL430_W250:
+    case XXL430_W250:
       p_common_ctable = dependency_ctable_2_0_common;
       break;
     case MX64_2:
