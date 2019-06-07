@@ -34,7 +34,7 @@
 #define DXL_MAX_NODE                   16
 #define DXL_MAX_NODE_BUFFER_SIZE        8
 #elif defined(OpenCR)
-#define DXL_MAX_NODE                  253 // Max node number on DYNAMIXEL protocol
+#define DXL_MAX_NODE                  253 // Max number of XEL on DYNAMIXEL protocol
 #define DXL_MAX_NODE_BUFFER_SIZE       32
 #else
 #define DXL_MAX_NODE                   16
