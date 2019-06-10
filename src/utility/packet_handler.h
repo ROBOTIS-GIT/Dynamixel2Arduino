@@ -22,17 +22,14 @@
 
 namespace DYNAMIXEL{
 
+class PacketHandler
+{
+  public:
 
+  private:
 
+};
 
-  class PacketHandler
-  {
-
-    public:
-
-    private:
-
-  };
-}
+} //namespace DYNAMIXEL
 
 #endif /* DYNAMIXEL_PACKET_HANDLER_H_ */

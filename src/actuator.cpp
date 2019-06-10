@@ -174,6 +174,7 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
  || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
  || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
  || ENABLE_ACTUATOR_XL430 \
+ || ENABLE_ACTUATOR_XC430 \
  || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
  || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
   {ControlTableItem::MODEL_NUMBER,             0, 2},
@@ -248,8 +249,9 @@ const ModelControlTableInfo_t mx64_106_2_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelControlTableInfo_t xl430_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XL430)
+const ModelControlTableInfo_t xc430_xl430_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XL430 \
+ || ENABLE_ACTUATOR_XC430)
   {ControlTableItem::PRESENT_LOAD,           126, 2},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
@@ -464,9 +466,13 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
       p_common_ctable = xl320_control_table;
       break;   
 
+    case XC430_W150:
+    case XC430_W240:
+    case XXC430_W250:
     case XL430_W250:
+    case XXL430_W250:
       p_common_ctable = control_table_2_0;
-      p_dep_ctable = xl430_control_table;
+      p_dep_ctable = xc430_xl430_control_table;
       break;
 
     case XM430_W210:

@@ -97,60 +97,48 @@ bool Dynamixel2Arduino::scan()
 bool Dynamixel2Arduino::ping(uint8_t id)
 {
   bool ret = false;
-  dxl_return_t dxl_ret = DXL_RET_OK;    
   uint8_t i;
-  uint8_t id_i;
-  uint8_t dxl_cnt;
 
   if (id == DXL_BROADCAST_ID){
+    RecvInfoFromPing_t recv_info;
     registered_dxl_cnt_ = 0;
 
-    dxl_ret = Master::ping(DXL_BROADCAST_ID, &resp_.ping, 3*254);  
-    dxl_cnt = resp_.ping.id_count;
+    if(Master::ping(DXL_BROADCAST_ID, recv_info, 3*253) == true){
+      for (i=0; i<recv_info.id_count && registered_dxl_cnt_<DXL_MAX_NODE; i++){
 
-    for (i=0; i<dxl_cnt && registered_dxl_cnt_<DXLCMD_MAX_NODE; i++){
-      id_i = resp_.ping.p_node[i]->id;
-
-      registered_dxl_[registered_dxl_cnt_].id  = id_i;
-      if(getPortProtocolVersion() == 2.0){
-        registered_dxl_[registered_dxl_cnt_].model_num = resp_.ping.p_node[i]->model_number;
-      }else{
-        registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id_i);
+        registered_dxl_[registered_dxl_cnt_].id  = recv_info.xel[i].id;
+        if(getPortProtocolVersion() == 2.0){
+          registered_dxl_[registered_dxl_cnt_].model_num = recv_info.xel[i].model_number;
+        }else{
+          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(recv_info.xel[i].id);
+        }
+        registered_dxl_cnt_++;
       }
-      registered_dxl_cnt_++;
-    }
-
-    if (registered_dxl_cnt_ != 0){
       ret = true;
-    }
+    }  
   }else{
-    dxl_ret = Master::ping(id, &resp_.ping, 20);
+    XelInfoFromPing_t recv_info;
+    if(Master::ping(id, &recv_info, 1, 20) > 0){
+      if(recv_info.id != id)
+        return false;
+      for (i=0; i<registered_dxl_cnt_; i++){
+        if (registered_dxl_[i].id == id)
+          return true;
+      }
 
-    if (dxl_ret == DXL_RET_RX_RESP && resp_.ping.id_count > 0){        
-      if (registered_dxl_cnt_ < DXLCMD_MAX_NODE){
-        for (i=0; i<registered_dxl_cnt_; i++){
-          if (registered_dxl_[i].id == id){
-            ret = true;
-            break;
-          }  
+      if (registered_dxl_cnt_ < DXL_MAX_NODE){
+        registered_dxl_[registered_dxl_cnt_].id = id;
+        if(getPortProtocolVersion() == 2.0){
+          registered_dxl_[registered_dxl_cnt_].model_num = recv_info.model_number;
+        }else{
+          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id);
         }
-        if (i == registered_dxl_cnt_){
-          registered_dxl_[i].id = id;
-          if(getPortProtocolVersion() == 2.0){
-            registered_dxl_[i].model_num = resp_.ping.p_node[0]->model_number;
-          }else{
-            registered_dxl_[i].model_num = getModelNumber(id);
-          }
-          registered_dxl_cnt_++;      
-          ret = true;
-        }
+        registered_dxl_cnt_++;      
+        ret = true;
       }
-      else
-      {
-        err_code_ = 0xFF; //DXL 노드 최대 수 초과
+      else{
+        ret = false;
       }
-      
-      err_code_ = 0;     
     }
   }
 
@@ -171,7 +159,6 @@ bool Dynamixel2Arduino::setID(uint8_t id, uint8_t new_id)
 {
   return writeControlTableItem(ControlTableItem::ID, id, new_id);
 }
-
 
 bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
 {
@@ -431,7 +418,43 @@ bool Dynamixel2Arduino::ledOff(uint8_t id)
 
 bool Dynamixel2Arduino::setLedState(uint8_t id, bool state)
 {
-  return writeControlTableItem(ControlTableItem::LED, id, state);
+  bool ret = false;
+  uint16_t model_num = getModelNumberFromTable(id);
+
+  switch(model_num)
+  {
+    // case PRO_L42_10_S300_R:
+    // case PRO_L54_30_S400_R:
+    // case PRO_L54_30_S500_R:
+    // case PRO_L54_50_S290_R:
+    // case PRO_L54_50_S500_R:
+    case PRO_M42_10_S260_R:
+    case PRO_M54_40_S250_R:
+    case PRO_M54_60_S250_R:
+    case PRO_H42_20_S300_R:
+    case PRO_H54_100_S500_R:
+    case PRO_H54_200_S500_R:
+    case PRO_M42_10_S260_RA:
+    case PRO_M54_40_S250_RA:
+    case PRO_M54_60_S250_RA:
+    case PRO_H42_20_S300_RA:
+    case PRO_H54_100_S500_RA:
+    case PRO_H54_200_S500_RA:
+    case PRO_H42P_020_S300_R:
+    case PRO_H54P_100_S500_R:
+    case PRO_H54P_200_S500_R:
+    case PRO_M42P_010_S260_R:
+    case PRO_M54P_040_S250_R:
+    case PRO_M54P_060_S250_R:
+      ret = writeControlTableItem(ControlTableItem::LED_RED, id, state);
+      break;
+
+    default:
+      ret = writeControlTableItem(ControlTableItem::LED, id, state);
+      break;
+  }
+
+  return ret;
 }
 
 
@@ -601,9 +624,7 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 16);
       }
       break;
-
-
-
+      
     default:
       break;
   }
@@ -739,7 +760,7 @@ uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
   uint16_t model_num = UNREGISTERED_MODEL;
   uint32_t i;
 
-  for(i = 0; i < DXLCMD_MAX_NODE; i++)
+  for(i = 0; i < DXL_MAX_NODE; i++)
   {
     if(registered_dxl_[i].id == id){
       model_num = registered_dxl_[i].model_num;
@@ -747,9 +768,9 @@ uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
     }
   }
 
-  if(i == DXLCMD_MAX_NODE && registered_dxl_cnt_ < DXLCMD_MAX_NODE){
+  if(i == DXL_MAX_NODE && registered_dxl_cnt_ < DXL_MAX_NODE){
     if(ping(id) == true){
-      for(i = 0; i < DXLCMD_MAX_NODE; i++)
+      for(i = 0; i < DXL_MAX_NODE; i++)
       {
         if(registered_dxl_[i].id == id){
           model_num = registered_dxl_[i].model_num;
@@ -864,6 +885,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGM
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
+  || ENABLE_ACTUATOR_XC430 \
   || ENABLE_ACTUATOR_XL430 \
   || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
   || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
@@ -1161,7 +1183,11 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       break;              
 
     case MX28_2:
+    case XC430_W150:
+    case XC430_W240:
+    case XXC430_W250:
     case XL430_W250:
+    case XXL430_W250:
       p_common_ctable = dependency_ctable_2_0_common;
       break;
     case MX64_2:
@@ -1284,7 +1310,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       item_info.min_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].min_value);
       item_info.max_value = (int32_t)pgm_read_dword(&p_dep_ctable[i].max_value);
       item_info.unit_type = pgm_read_byte(&p_dep_ctable[i].unit_type);
-      item_info.unit_value = pgm_read_float(&p_common_ctable[i].unit_value);
+      item_info.unit_value = pgm_read_float(&p_dep_ctable[i].unit_value);
       break;
     }
     i++;

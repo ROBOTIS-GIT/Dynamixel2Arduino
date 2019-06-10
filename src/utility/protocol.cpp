@@ -28,45 +28,46 @@ using namespace DYNAMIXEL;
 //-- Internal Variables
 //
 
-
 //-- External Variables
 //
 
 
 //-- Internal Functions
 //
-static dxl_return_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in);
-static dxl_return_t dxlMakePacketStatus1_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
-static dxl_return_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length );
+static lib_err_code_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in);
+static lib_err_code_t dxlMakePacketStatus1_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
+static lib_err_code_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length );
 
-static dxl_return_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in);
-static dxl_return_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length );
-static dxl_return_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
+static lib_err_code_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in);
+static lib_err_code_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length );
+static lib_err_code_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
 
 static uint16_t dxlAddStuffing(dxl_t *p_packet, uint8_t *p_data, uint16_t length);
 static uint16_t dxlRemoveStuffing(uint8_t *p_data, uint16_t length);
 
-static dxl_return_t dxlInstPing(dxl_t *p_dxl);
-static dxl_return_t dxlInstFactoryReset(dxl_t *p_dxl);
-static dxl_return_t dxlInstReboot(dxl_t *p_dxl);
-static dxl_return_t dxlInstRead(dxl_t *p_dxl);
-static dxl_return_t dxlInstWrite(dxl_t *p_dxl);
-static dxl_return_t dxlInstSyncRead(dxl_t *p_dxl);
-static dxl_return_t dxlInstSyncWrite(dxl_t *p_dxl);
-static dxl_return_t dxlInstBulkRead(dxl_t *p_dxl);
-static dxl_return_t dxlInstBulkWrite(dxl_t *p_dxl);
+#if (USE_SLAVE_FUNC)
+static lib_err_code_t dxlInstPing(dxl_t *p_dxl);
+static lib_err_code_t dxlInstFactoryReset(dxl_t *p_dxl);
+static lib_err_code_t dxlInstReboot(dxl_t *p_dxl);
+static lib_err_code_t dxlInstRead(dxl_t *p_dxl);
+static lib_err_code_t dxlInstWrite(dxl_t *p_dxl);
+static lib_err_code_t dxlInstSyncRead(dxl_t *p_dxl);
+static lib_err_code_t dxlInstSyncWrite(dxl_t *p_dxl);
+static lib_err_code_t dxlInstBulkRead(dxl_t *p_dxl);
+static lib_err_code_t dxlInstBulkWrite(dxl_t *p_dxl);
 
-static dxl_return_t dxlInstPing1_0(dxl_t *p_dxl);
-static dxl_return_t dxlInstPing2_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstPing1_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstPing2_0(dxl_t *p_dxl);
 
-static dxl_return_t dxlInstRead1_0(dxl_t *p_dxl);
-static dxl_return_t dxlInstRead2_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstRead1_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstRead2_0(dxl_t *p_dxl);
 
-static dxl_return_t dxlInstWrite1_0(dxl_t *p_dxl);
-static dxl_return_t dxlInstWrite2_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstWrite1_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstWrite2_0(dxl_t *p_dxl);
 
-static dxl_return_t dxlInstSyncWrite1_0(dxl_t *p_dxl);
-static dxl_return_t dxlInstSyncWrite2_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstSyncWrite1_0(dxl_t *p_dxl);
+static lib_err_code_t dxlInstSyncWrite2_0(dxl_t *p_dxl);
+#endif
 
 static void dxlUpdateCrc(uint16_t *p_crc_cur, uint8_t data_in);
 
@@ -100,36 +101,32 @@ bool DYNAMIXEL::dxlInit(dxl_t *p_packet, float protocol_ver)
   p_packet->rx_timeout = (uint32_t)500*(uint32_t)1000;
   p_packet->tx_timeout = (uint32_t)500*(uint32_t)1000;
 
-  p_packet->return_delay_time   = 0;
-  p_packet->status_return_level = 2;
-
   p_packet->rx.header[0] = 0;
   p_packet->rx.header[1] = 0;
   p_packet->rx.header[2] = 0;
 
-  p_packet->inst_func.ping          = (dxl_return_t (*)(void *))dxlInstPing;
-  p_packet->inst_func.read          = (dxl_return_t (*)(void *))dxlInstRead;
-  p_packet->inst_func.write         = (dxl_return_t (*)(void *))dxlInstWrite;
+#if (USE_SLAVE_FUNC)
+  p_packet->inst_func.ping          = (dxlInstFunc_t)dxlInstPing;
+  p_packet->inst_func.read          = (dxlInstFunc_t)dxlInstRead;
+  p_packet->inst_func.write         = (dxlInstFunc_t)dxlInstWrite;
   p_packet->inst_func.reg_write     = nullptr;
   p_packet->inst_func.action        = nullptr;
-  p_packet->inst_func.factory_reset = (dxl_return_t (*)(void *))dxlInstFactoryReset;
-  p_packet->inst_func.reboot        = (dxl_return_t (*)(void *))dxlInstReboot;
+  p_packet->inst_func.factory_reset = (dxlInstFunc_t)dxlInstFactoryReset;
+  p_packet->inst_func.reboot        = (dxlInstFunc_t)dxlInstReboot;
   p_packet->inst_func.status        = nullptr;
-  p_packet->inst_func.sync_read     = (dxl_return_t (*)(void *))dxlInstSyncRead;
-  p_packet->inst_func.sync_write    = (dxl_return_t (*)(void *))dxlInstSyncWrite;
-  p_packet->inst_func.bulk_read     = (dxl_return_t (*)(void *))dxlInstBulkRead;
-  p_packet->inst_func.bulk_write    = (dxl_return_t (*)(void *))dxlInstBulkWrite;
+  p_packet->inst_func.sync_read     = (dxlInstFunc_t)dxlInstSyncRead;
+  p_packet->inst_func.sync_write    = (dxlInstFunc_t)dxlInstSyncWrite;
+  p_packet->inst_func.bulk_read     = (dxlInstFunc_t)dxlInstBulkRead;
+  p_packet->inst_func.bulk_write    = (dxlInstFunc_t)dxlInstBulkWrite;
 
   p_packet->process_func.processPing          = nullptr;
   p_packet->process_func.processReboot        = nullptr;
   p_packet->process_func.processFactoryReset  = nullptr;
   p_packet->process_func.processRead          = nullptr;
   p_packet->process_func.processWrite         = nullptr;
+#endif
 
   p_packet->read_hook_func = nullptr;
-
-  p_packet->bypass_enable = false;
-  p_packet->bypass_mode = DXL_BYPASS_NONE;
 
   return true;
 }
@@ -166,56 +163,57 @@ float DYNAMIXEL::dxlGetProtocolVersion(dxl_t *p_packet)
   return p_packet->packet_ver;
 }
 
-void DYNAMIXEL::dxlAddInstFunc(dxl_t *p_packet, uint8_t inst, dxl_return_t (*func)(dxl_t *p_dxl))
+#if (USE_SLAVE_FUNC)
+void DYNAMIXEL::dxlAddInstFunc(dxl_t *p_packet, uint8_t inst, dxlInstFunc_t func)
 {
   switch(inst)
   {
     case INST_PING:
-      p_packet->inst_func.ping = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.ping = (dxlInstFunc_t)func;
       break;
 
     case INST_READ:
-      p_packet->inst_func.read = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.read = (dxlInstFunc_t)func;
       break;
 
     case INST_WRITE:
-      p_packet->inst_func.write = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.write = (dxlInstFunc_t)func;
       break;
 
     case INST_REG_WRITE:
-      p_packet->inst_func.reg_write = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.reg_write = (dxlInstFunc_t)func;
       break;
 
     case INST_ACTION:
-      p_packet->inst_func.action = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.action = (dxlInstFunc_t)func;
       break;
 
     case INST_RESET:
-      p_packet->inst_func.factory_reset = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.factory_reset = (dxlInstFunc_t)func;
       break;
 
     case INST_REBOOT:
-      p_packet->inst_func.reboot = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.reboot = (dxlInstFunc_t)func;
       break;
 
     case INST_STATUS:
-      p_packet->inst_func.status = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.status = (dxlInstFunc_t)func;
       break;
 
     case INST_SYNC_READ:
-      p_packet->inst_func.sync_read = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.sync_read = (dxlInstFunc_t)func;
       break;
 
     case INST_SYNC_WRITE:
-      p_packet->inst_func.sync_write = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.sync_write = (dxlInstFunc_t)func;
       break;
 
     case INST_BULK_READ:
-      p_packet->inst_func.bulk_read = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.bulk_read = (dxlInstFunc_t)func;
       break;
 
     case INST_BULK_WRITE:
-      p_packet->inst_func.bulk_write = (dxl_return_t (*)(void *))func;
+      p_packet->inst_func.bulk_write = (dxlInstFunc_t)func;
       break;
   }
 }
@@ -248,7 +246,7 @@ void DYNAMIXEL::dxlAddProcessWriteFunc(dxl_t *p_packet, uint8_t (*func)(uint16_t
 
 uint8_t dxlProcessPacket(dxl_t *p_packet)
 {
-  dxl_return_t dxl_ret;
+  lib_err_code_t lib_err;
 
 
   p_packet->dxl_mode = DXL_MODE_SLAVE;
@@ -258,21 +256,21 @@ uint8_t dxlProcessPacket(dxl_t *p_packet)
     //-- INST
     //
     case DXL_PROCESS_INST:
-      dxl_ret = dxlRxPacket(p_packet);
+      lib_err = dxlRxPacket(p_packet);
 
-      if (dxl_ret == DXL_RET_RX_INST)
+      if (p_packet->rx.type == RX_PACKET_TYPE_INST)
       {
 
-        dxl_ret = dxlProcessInst(p_packet);
+        lib_err = dxlProcessInst(p_packet);
 
-        if (dxl_ret == DXL_RET_PROCESS_BROAD_PING)
+        if (lib_err == DXL_RET_PROCESS_BROAD_PING)
         {
-          p_packet->current_id = 1;
+          p_packet->present_id = 1;
           p_packet->process_pre_time = micros();
           p_packet->process_state = DXL_PROCESS_BROAD_PING;
         }
 
-        if (dxl_ret == DXL_RET_PROCESS_BROAD_READ)
+        if (lib_err == DXL_RET_PROCESS_BROAD_READ)
         {
           p_packet->process_pre_time = micros();
           p_packet->process_state = DXL_PROCESS_BROAD_READ;
@@ -284,22 +282,22 @@ uint8_t dxlProcessPacket(dxl_t *p_packet)
     //-- BROAD_PING
     //
     case DXL_PROCESS_BROAD_PING:
-      dxl_ret = dxlRxPacket(p_packet);
+      lib_err = dxlRxPacket(p_packet);
 
-      if (dxl_ret == DXL_RET_RX_STATUS)
+      if (p_packet->rx.type == RX_PACKET_TYPE_STATUS)
       {
-        p_packet->current_id = p_packet->rx.id + 1;
+        p_packet->present_id = p_packet->rx.id + 1;
       }
       else
       {
         if (micros()-p_packet->process_pre_time >= 3000)
         {
           p_packet->process_pre_time = micros();
-          p_packet->current_id++;
+          p_packet->present_id++;
         }
       }
 
-      if (p_packet->current_id == p_packet->id)
+      if (p_packet->present_id == p_packet->id)
       {
         dxlTxPacket(p_packet);
         p_packet->process_state = DXL_PROCESS_INST;
@@ -310,9 +308,9 @@ uint8_t dxlProcessPacket(dxl_t *p_packet)
     //-- BROAD_READ
     //
     case DXL_PROCESS_BROAD_READ:
-      dxl_ret = dxlRxPacket(p_packet);
+      lib_err = dxlRxPacket(p_packet);
 
-      if (dxl_ret == DXL_RET_RX_STATUS)
+      if (p_packet->rx.type == RX_PACKET_TYPE_STATUS)
       {
         p_packet->process_pre_time = micros();
         if (p_packet->pre_id == p_packet->rx.id)
@@ -341,12 +339,11 @@ uint8_t dxlProcessPacket(dxl_t *p_packet)
   return p_packet->process_state;
 }
 
-dxl_return_t DYNAMIXEL::dxlProcessInst(dxl_t *p_packet)
+lib_err_code_t DYNAMIXEL::dxlProcessInst(dxl_t *p_packet)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint8_t inst;
-  dxl_return_t (*func)(dxl_t *p_dxl);
-
+  dxlInstFunc_t func;
 
   inst = p_packet->rx.cmd;
   func = nullptr;
@@ -354,51 +351,51 @@ dxl_return_t DYNAMIXEL::dxlProcessInst(dxl_t *p_packet)
   switch(inst)
   {
     case INST_PING:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.ping;
+      func = p_packet->inst_func.ping;
       break;
 
     case INST_READ:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.read;
+      func = p_packet->inst_func.read;
       break;
 
     case INST_WRITE:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.write;
+      func = p_packet->inst_func.write;
       break;
 
     case INST_REG_WRITE:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.reg_write;
+      func = p_packet->inst_func.reg_write;
       break;
 
     case INST_ACTION:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.action;
+      func = p_packet->inst_func.action;
       break;
 
     case INST_RESET:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.factory_reset;
+      func = p_packet->inst_func.factory_reset;
       break;
 
     case INST_REBOOT:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.reboot;
+      func = p_packet->inst_func.reboot;
       break;
 
     case INST_STATUS:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.status;
+      func = p_packet->inst_func.status;
       break;
 
     case INST_SYNC_READ:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.sync_read;
+      func = p_packet->inst_func.sync_read;
       break;
 
     case INST_SYNC_WRITE:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.sync_write;
+      func = p_packet->inst_func.sync_write;
       break;
 
     case INST_BULK_READ:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.bulk_read;
+      func = p_packet->inst_func.bulk_read;
       break;
 
     case INST_BULK_WRITE:
-      func = (dxl_return_t (*)(dxl_t *))p_packet->inst_func.bulk_write;
+      func = p_packet->inst_func.bulk_write;
       break;
   }
 
@@ -406,7 +403,7 @@ dxl_return_t DYNAMIXEL::dxlProcessInst(dxl_t *p_packet)
   {
     if (p_packet->rx.id != dxlGetId(p_packet) && p_packet->rx.id != DXL_BROADCAST_ID)
     {
-      ret = DXL_RET_ERROR_NO_ID;
+      ret = DXL_LIB_ERROR_INVAILD_ID;
     }
     else
     {
@@ -416,6 +413,7 @@ dxl_return_t DYNAMIXEL::dxlProcessInst(dxl_t *p_packet)
 
   return ret;
 }
+#endif
 
 void DYNAMIXEL::dxlSetRxByteISR(dxl_t *p_packet, void (*p_func)(uint8_t data))
 {
@@ -437,10 +435,10 @@ void DYNAMIXEL::dxlTxWrite(uint8_t *p_data, uint32_t length)
   p_port->write(p_data, length);
 }
 
-dxl_return_t DYNAMIXEL::dxlRxPacket(dxl_t *p_packet)
+lib_err_code_t DYNAMIXEL::dxlRxPacket(dxl_t *p_packet)
 {
   uint8_t data;
-  dxl_return_t ret = DXL_RET_EMPTY;
+  lib_err_code_t ret = DXL_LIB_PROCEEDING;
 
   while (dxlRxAvailable())
   {
@@ -455,7 +453,7 @@ dxl_return_t DYNAMIXEL::dxlRxPacket(dxl_t *p_packet)
       }
     }
 
-    if (ret != DXL_RET_EMPTY)
+    if (ret != DXL_LIB_PROCEEDING)
     {
       break;
     }
@@ -464,40 +462,30 @@ dxl_return_t DYNAMIXEL::dxlRxPacket(dxl_t *p_packet)
   return ret;
 }
 
-dxl_return_t DYNAMIXEL::dxlRxPacketDataIn(dxl_t *p_packet, uint8_t data_in)
+lib_err_code_t DYNAMIXEL::dxlRxPacketDataIn(dxl_t *p_packet, uint8_t data_in)
 {
-  dxl_return_t ret = DXL_RET_EMPTY;
+  lib_err_code_t ret = DXL_LIB_PROCEEDING;
 
-
-
-  if (p_packet->packet_ver == DXL_PACKET_VER_1_0)
-  {
+  if (p_packet->packet_ver == DXL_PACKET_VER_1_0){
     ret = dxlRxPacket1_0(p_packet, data_in);
-  }
-  else
-  {
-    ret  = dxlRxPacket2_0(p_packet, data_in);
+  }else{
+    ret = dxlRxPacket2_0(p_packet, data_in);
   }
 
   return ret;
 }
 
-dxl_return_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in)
+lib_err_code_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in)
 {
-  dxl_return_t ret = DXL_RET_EMPTY;
+  lib_err_code_t ret = DXL_LIB_PROCEEDING;
 
-
-
-  //-- time out
-  //
-  if( (micros() - p_packet->prev_time) > p_packet->rx_timeout )
-  {
+  // time out
+  if((micros() - p_packet->prev_time) > p_packet->rx_timeout){
     p_packet->rx_state   = PACKET_1_0_STATE_IDLE;
     p_packet->prev_time  = micros();
     p_packet->header_cnt = 0;
   }
   p_packet->prev_time  = micros();
-
 
   switch(p_packet->rx_state)
   {
@@ -539,15 +527,15 @@ dxl_return_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in)
       p_packet->rx.index         = 0;
       p_packet->rx.check_sum    += data_in;
 
-      if (p_packet->rx.packet_length > DXL_MAX_BUFFER-4)
+      if (p_packet->rx.packet_length > DXL_BUF_LENGTH-4)
       {
         p_packet->rx_state = PACKET_1_0_STATE_IDLE;
-        ret = DXL_RET_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
       }
       if (p_packet->rx.packet_length < 2)
       {
         p_packet->rx_state = PACKET_1_0_STATE_IDLE;
-        ret = DXL_RET_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_LENGTH;
       }
       break;
 
@@ -576,18 +564,20 @@ dxl_return_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in)
         {
           p_packet->rx.p_param      = &p_packet->rx.data[1];
           p_packet->rx.param_length = p_packet->rx.packet_length - 2;
-          ret = DXL_RET_RX_STATUS;
+          p_packet->rx.type = RX_PACKET_TYPE_STATUS;
         }
         else
         {
           p_packet->rx.p_param      = &p_packet->rx.data[1];
           p_packet->rx.param_length = p_packet->rx.packet_length - 2;
-          ret = DXL_RET_RX_INST;
+          p_packet->rx.type = RX_PACKET_TYPE_INST;
         }
+
+        ret = DXL_LIB_OK;
       }
       else
       {
-        ret = DXL_RET_ERROR_CHECK_SUM;
+        ret = DXL_LIB_ERROR_CHECK_SUM;
       }
 
       p_packet->rx_state = PACKET_1_0_STATE_IDLE;
@@ -601,15 +591,12 @@ dxl_return_t dxlRxPacket1_0(dxl_t *p_packet, uint8_t data_in)
   return ret;
 }
 
-dxl_return_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
+lib_err_code_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
 {
-  dxl_return_t ret = DXL_RET_EMPTY;
+  lib_err_code_t ret = DXL_LIB_PROCEEDING;
   uint16_t stuff_length;
 
-
-
-  //-- time out
-  //
+  // time out
   if( (micros() - p_packet->prev_time) > p_packet->rx_timeout )
   {
     p_packet->rx_state   = PACKET_2_0_STATE_IDLE;
@@ -654,7 +641,7 @@ dxl_return_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
       if( data_in == 0xFD )
       {
         p_packet->rx_state  = PACKET_2_0_STATE_IDLE;
-        ret = DXL_RET_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_WRONG_PACKET;
       }
       else
       {
@@ -682,15 +669,15 @@ dxl_return_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
       p_packet->rx.index          = 0;
       dxlUpdateCrc(&p_packet->rx.crc, data_in);
 
-      if (p_packet->rx.packet_length > DXL_MAX_BUFFER)
+      if (p_packet->rx.packet_length > DXL_BUF_LENGTH)
       {
         p_packet->rx_state = PACKET_2_0_STATE_IDLE;
-        ret = DXL_RET_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
       }
       if (p_packet->rx.packet_length < 3)
       {
         p_packet->rx_state = PACKET_2_0_STATE_IDLE;
-        ret = DXL_RET_ERROR_LENGTH;
+        ret = DXL_LIB_ERROR_LENGTH;
       }
       break;
 
@@ -726,18 +713,19 @@ dxl_return_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
         {
           p_packet->rx.p_param      = &p_packet->rx.data[2];
           p_packet->rx.param_length = p_packet->rx.packet_length - 4;
-          ret = DXL_RET_RX_STATUS;
+          p_packet->rx.type = RX_PACKET_TYPE_STATUS;
         }
         else
         {
           p_packet->rx.p_param      = &p_packet->rx.data[1];
           p_packet->rx.param_length = p_packet->rx.packet_length - 3;
-          ret = DXL_RET_RX_INST;
+          p_packet->rx.type = RX_PACKET_TYPE_INST;
         }
+        ret = DXL_LIB_OK;
       }
       else
       {
-        ret = DXL_RET_ERROR_CRC;
+        ret = DXL_LIB_ERROR_CRC;
       }
 
       p_packet->rx_state = PACKET_2_0_STATE_IDLE;
@@ -816,64 +804,54 @@ uint16_t dxlAddStuffing(dxl_t *p_packet, uint8_t *p_data, uint16_t length)
   return stuff_length;
 }
 
-dxl_return_t DYNAMIXEL::dxlTxPacket(dxl_t *p_packet)
+lib_err_code_t DYNAMIXEL::dxlTxPacket(dxl_t *p_packet)
 {
-  dxl_return_t ret = DXL_RET_OK;
-
+  lib_err_code_t ret = DXL_LIB_OK;
 
   dxlTxWrite(p_packet->tx.data, p_packet->tx.packet_length);
 
   return ret;
 }
 
-dxl_return_t DYNAMIXEL::dxlTxPacketStatus(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+lib_err_code_t DYNAMIXEL::dxlTxPacketStatus(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
 {
-  dxl_return_t ret = DXL_RET_EMPTY;
-
+  lib_err_code_t ret;
 
   ret = dxlMakePacketStatus(p_packet, id, error, p_data, length);
-  if (ret == DXL_RET_OK)
-  {
+  if (ret == DXL_LIB_OK) {
     dxlTxWrite(p_packet->tx.data, p_packet->tx.packet_length);
   }
 
   return ret;
 }
 
-dxl_return_t DYNAMIXEL::dxlMakePacketStatus(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+lib_err_code_t DYNAMIXEL::dxlMakePacketStatus(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
 {
-  dxl_return_t ret = DXL_RET_EMPTY;
+  lib_err_code_t ret;
 
-
-  if (p_packet->packet_ver == DXL_PACKET_VER_1_0)
-  {
-    ret  = dxlMakePacketStatus1_0(p_packet, id, error, p_data, length);
-  }
-  else
-  {
-    ret  = dxlMakePacketStatus2_0(p_packet, id, error, p_data, length);
+  if (p_packet->packet_ver == DXL_PACKET_VER_1_0){
+    ret = dxlMakePacketStatus1_0(p_packet, id, error, p_data, length);
+  }else{
+    ret = dxlMakePacketStatus2_0(p_packet, id, error, p_data, length);
   }
 
   return ret;
 }
 
-dxl_return_t dxlMakePacketStatus1_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+lib_err_code_t dxlMakePacketStatus1_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t i = 0;
   uint16_t packet_length;
   uint8_t  check_sum;
 
 
-  if (length > DXL_MAX_BUFFER-6)
-  {
-    return DXL_RET_ERROR_LENGTH;
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
-  if (length > 255)
-  {
-    return DXL_RET_ERROR_LENGTH;
+  if(length > 0xFF){
+    return DXL_LIB_ERROR_LENGTH;
   }
-
 
   check_sum = 0;
   packet_length = length + 2; // param_length + Instruction + CheckSum
@@ -899,18 +877,17 @@ dxl_return_t dxlMakePacketStatus1_0(dxl_t *p_packet, uint8_t id, uint8_t error, 
   return ret;
 }
 
-dxl_return_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+lib_err_code_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t i = 0;
   uint16_t packet_length;
   uint16_t stuff_length;
   uint16_t crc;
 
 
-  if (length > DXL_MAX_BUFFER-7)
-  {
-    return DXL_RET_ERROR_LENGTH;
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
 
   packet_length = length + 4; // param_length + Instruction + Error + CRC_L + CRC_H
@@ -923,21 +900,17 @@ dxl_return_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error, 
   p_packet->tx.data[PKT_INST_IDX]  = INST_STATUS;
   p_packet->tx.data[PKT_ERROR_IDX] = error;
 
-
   for (i=0; i<length; i++)
   {
     p_packet->tx.data[PKT_STATUS_PARAM_IDX + i] = p_data[i];
   }
 
-  // stuff 추가
   stuff_length = dxlAddStuffing(p_packet, &p_packet->tx.data[PKT_INST_IDX], length + 2); // + instruction + error
   packet_length += stuff_length;
 
   p_packet->tx.data[PKT_LEN_L_IDX] = packet_length >> 0;
   p_packet->tx.data[PKT_LEN_H_IDX] = packet_length >> 8;
 
-
-  // crc 계산
   crc = 0;
   for (i=0; i<packet_length+7-2; i++)
   {
@@ -953,9 +926,9 @@ dxl_return_t dxlMakePacketStatus2_0(dxl_t *p_packet, uint8_t id, uint8_t error, 
   return ret;
 }
 
-dxl_return_t DYNAMIXEL::dxlTxPacketInst(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length )
+lib_err_code_t DYNAMIXEL::dxlTxPacketInst(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length )
 {
-  dxl_return_t ret = DXL_RET_EMPTY;
+  lib_err_code_t ret = DXL_LIB_PROCEEDING;
 
   if (p_packet->packet_ver == DXL_PACKET_VER_1_0)
   {
@@ -969,23 +942,20 @@ dxl_return_t DYNAMIXEL::dxlTxPacketInst(dxl_t *p_packet, uint8_t id, uint8_t ins
   return ret;
 }
 
-dxl_return_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length )
+lib_err_code_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length )
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t i = 0;
   uint16_t packet_length;
   uint8_t  check_sum;
 
 
-  if (length > DXL_MAX_BUFFER-6)
-  {
-    return DXL_RET_ERROR_LENGTH;
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
-  if (length > 255)
-  {
-    return DXL_RET_ERROR_LENGTH;
+  if(length > 0xFF){
+    return DXL_LIB_ERROR_LENGTH;
   }
-
 
   check_sum = 0;
   packet_length = length + 2; // param_length + Instruction + CheckSum
@@ -1008,26 +978,22 @@ dxl_return_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, u
   p_packet->tx.data[PKT_1_0_LEN_IDX] = packet_length;
   p_packet->tx.data[PKT_1_0_INST_IDX + packet_length - 1] = ~(check_sum);
 
-  // 데이터 전송
   dxlTxWrite(p_packet->tx.data, packet_length + 4);
 
   return ret;
 }
 
-dxl_return_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length )
+lib_err_code_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length )
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t i = 0;
   uint16_t packet_length;
   uint16_t stuff_length;
   uint16_t crc;
 
-
-  if (length > DXL_MAX_BUFFER-7)
-  {
-    return DXL_RET_ERROR_LENGTH;
+  if(length > DXL_BUF_LENGTH){
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
-
 
   packet_length = length + 3; // param_length + Instruction + CRC_L + CRC_H
 
@@ -1043,124 +1009,97 @@ dxl_return_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, u
     p_packet->tx.data[PKT_INST_PARAM_IDX + i] = p_data[i];
   }
 
-  // stuff 추가
   stuff_length = dxlAddStuffing(p_packet, &p_packet->tx.data[PKT_INST_IDX], length + 1);  // + instruction
   packet_length += stuff_length;
 
   p_packet->tx.data[PKT_LEN_L_IDX] = packet_length >> 0;
   p_packet->tx.data[PKT_LEN_H_IDX] = packet_length >> 8;
 
-
-  // crc 계산
   crc = 0;
   for (i=0; i<packet_length+7-2; i++)
   {
     dxlUpdateCrc(&crc, p_packet->tx.data[i]);
   }
 
-
   p_packet->tx.data[PKT_INST_IDX + packet_length - 2] = crc >> 0;
   p_packet->tx.data[PKT_INST_IDX + packet_length - 1] = crc >> 8;
 
-
-  // 데이터 전송
   dxlTxWrite(p_packet->tx.data, packet_length + 7);
 
   return ret;
 }
 
 
-dxl_return_t dxlInstPing(dxl_t *p_dxl)
+#if (USE_SLAVE_FUNC)
+lib_err_code_t dxlInstPing(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
 
-
-  if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
-  {
+  if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 ){
     ret = dxlInstPing1_0(p_dxl);
-  }
-  else
-  {
+  }else{
     ret = dxlInstPing2_0(p_dxl);
   }
 
   return ret;
 }
 
-dxl_return_t dxlInstPing1_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstPing1_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
-  uint8_t  data[DXL_MAX_BUFFER];
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t length = 0;
 
 
-  if (p_dxl->process_func.processPing != nullptr)
-  {
-    (*p_dxl->process_func.processPing)(data, &length);
+  if (p_dxl->process_func.processPing != nullptr){
+    (*p_dxl->process_func.processPing)(p_dxl->tx.data, &length);
   }
 
-  if (p_dxl->rx.id == DXL_BROADCAST_ID)
-  {
-    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  if (p_dxl->rx.id == DXL_BROADCAST_ID){
+    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
 
-    if (ret == DXL_RET_OK)
-    {
+    if (ret == DXL_LIB_OK){
       ret = DXL_RET_PROCESS_BROAD_PING;
     }
-  }
-  else
-  {
-    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  }else{
+    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
   }
 
 
   return ret;
 }
 
-dxl_return_t dxlInstPing2_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstPing2_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
-  uint8_t  data[DXL_MAX_BUFFER];
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t length = 0;
 
-
-  if (p_dxl->process_func.processPing != nullptr)
-  {
-    (*p_dxl->process_func.processPing)(data, &length);
+  if (p_dxl->process_func.processPing != nullptr){
+    (*p_dxl->process_func.processPing)(p_dxl->tx.data, &length);
   }
 
-  if (p_dxl->rx.id == DXL_BROADCAST_ID)
-  {
-    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  if (p_dxl->rx.id == DXL_BROADCAST_ID){
+    ret = dxlMakePacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
 
-    if (ret == DXL_RET_OK)
-    {
+    if (ret == DXL_LIB_OK) {
       ret = DXL_RET_PROCESS_BROAD_PING;
     }
-  }
-  else
-  {
-    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  }else{
+    ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, p_dxl->tx.data, length);
   }
 
 
   return ret;
 }
 
-dxl_return_t dxlInstFactoryReset(dxl_t *p_dxl)
+lib_err_code_t dxlInstFactoryReset(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
 
-
-
-  if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
+  if (p_dxl->rx.id != DXL_BROADCAST_ID) {
     ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, nullptr, 0);
   }
 
-
-  if (p_dxl->process_func.processFactoryReset != nullptr)
-  {
+  if (p_dxl->process_func.processFactoryReset != nullptr) {
     delay(100);
     (*p_dxl->process_func.processFactoryReset)(p_dxl->rx.p_param[0]);
   }
@@ -1168,20 +1107,16 @@ dxl_return_t dxlInstFactoryReset(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstReboot(dxl_t *p_dxl)
+lib_err_code_t dxlInstReboot(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
 
-
-
-  if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
+  if (p_dxl->rx.id != DXL_BROADCAST_ID){
     ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, nullptr, 0);
   }
 
 
-  if (p_dxl->process_func.processReboot != nullptr)
-  {
+  if (p_dxl->process_func.processReboot != nullptr) {
     delay(100);
     (*p_dxl->process_func.processReboot)();
   }
@@ -1189,9 +1124,9 @@ dxl_return_t dxlInstReboot(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstRead(dxl_t *p_dxl)
+lib_err_code_t dxlInstRead(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
 
 
   if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
@@ -1206,255 +1141,197 @@ dxl_return_t dxlInstRead(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstRead1_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstRead1_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length = 0;
-  uint8_t  data[DXL_MAX_BUFFER];
+  uint8_t process_ret = 0;
 
-  uint8_t process_ret;
-
-
-  if (p_dxl->rx.id == DXL_BROADCAST_ID || p_dxl->rx.param_length != 2)
-  {
-    return DXL_RET_EMPTY;
-  }
-
+  if (p_dxl->rx.id == DXL_BROADCAST_ID)
+    return DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+  
+  if( p_dxl->rx.param_length != 2)
+    return DXL_LIB_ERROR_LENGTH;
 
   addr   = p_dxl->rx.p_param[0];
   length = p_dxl->rx.p_param[1];
 
-
-  if( length > 255 - 2 )
-  {
+  if( length > 0xFF - 2 ){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_RET_ERROR_LENGTH;
+    return DXL_LIB_ERROR_LENGTH;
   }
 
-  if (p_dxl->process_func.processRead != nullptr)
-  {
-    process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
-
-    if (process_ret != DXL_ERR_NONE)
-    {
-      dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, nullptr, 0);
-      return DXL_RET_ERROR;
-    }
+  if (p_dxl->process_func.processRead != nullptr){
+    process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
   }
 
-  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
 
   return ret;
 }
 
-dxl_return_t dxlInstRead2_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstRead2_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length = 0;
-  uint8_t  data[DXL_MAX_BUFFER];
 
-  uint8_t process_ret;
+  uint8_t process_ret = 0;
 
-
-  if (p_dxl->rx.id == DXL_BROADCAST_ID || p_dxl->rx.param_length != 4)
-  {
-    return DXL_RET_EMPTY;
-  }
-
+  if (p_dxl->rx.id == DXL_BROADCAST_ID)
+    return DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+  
+  if( p_dxl->rx.param_length != 4)
+    return DXL_LIB_ERROR_LENGTH;
 
   addr   = (p_dxl->rx.p_param[1]<<8) | p_dxl->rx.p_param[0];
   length = (p_dxl->rx.p_param[3]<<8) | p_dxl->rx.p_param[2];
 
-
-  if( length > DXL_MAX_BUFFER - 10 )
-  {
+  if(length > DXL_BUF_LENGTH){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_RET_ERROR_LENGTH;
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
 
-  if (p_dxl->process_func.processRead != nullptr)
-  {
-    process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
-
-    if (process_ret != DXL_ERR_NONE)
-    {
-      dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, nullptr, 0);
-      return DXL_RET_ERROR;
-    }
+  if (p_dxl->process_func.processRead != nullptr){
+    process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
   }
 
-  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, 0, data, length);
+  ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
 
   return ret;
 }
 
-dxl_return_t dxlInstWrite(dxl_t *p_dxl)
+lib_err_code_t dxlInstWrite(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
 
-
-  if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
-  {
+  if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 ){
     ret = dxlInstWrite1_0(p_dxl);
-  }
-  else
-  {
+  }else{
     ret = dxlInstWrite2_0(p_dxl);
   }
 
   return ret;
 }
 
-dxl_return_t dxlInstWrite1_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstWrite1_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length = 0;
   uint8_t  *p_data;
 
-
   if (p_dxl->rx.id == DXL_BROADCAST_ID)
-  {
-    return DXL_RET_EMPTY;
-  }
+    return DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
 
   addr   =  p_dxl->rx.p_param[0];
   p_data = &p_dxl->rx.p_param[1];
 
-  if (p_dxl->rx.param_length > 1 )
-  {
+  if (p_dxl->rx.param_length > 1 ){
     length = p_dxl->rx.param_length - 1;
-  }
-  else
-  {
+  }else{
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_RET_ERROR_LENGTH;
+    return DXL_LIB_ERROR_LENGTH;
   }
 
-  if( length > 255 - 2 )
-  {
+  if( length > 0xFF - 2 ){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_RET_ERROR_LENGTH;
+    return DXL_LIB_ERROR_LENGTH;
   }
 
-
-  // TODO : Write 응답을 보내기 전에 Write 주소 유효성 검증 추가 필요
+  // TODO : Write address validation required before sending Write response
   dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_NONE, nullptr, 0);
 
-  if (p_dxl->process_func.processWrite != nullptr)
-  {
+  if (p_dxl->process_func.processWrite != nullptr){
     (*p_dxl->process_func.processWrite)(addr, p_data, length);
   }
 
   return ret;
 }
 
-dxl_return_t dxlInstWrite2_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstWrite2_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length = 0;
   uint8_t  *p_data;
   //uint8_t process_ret;
 
-
   if (p_dxl->rx.id == DXL_BROADCAST_ID)
-  {
-    return DXL_RET_EMPTY;
-  }
+    return DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
 
   addr   = (p_dxl->rx.p_param[1]<<8) | p_dxl->rx.p_param[0];
   p_data = &p_dxl->rx.p_param[2];
 
-  if (p_dxl->rx.param_length > 2 )
-  {
+  if (p_dxl->rx.param_length > 2 ){
     length = p_dxl->rx.param_length - 2;
-  }
-  else
-  {
+  }else{
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_RET_ERROR_LENGTH;
+    return DXL_LIB_ERROR_LENGTH;
   }
-
-  if( length > DXL_MAX_BUFFER - 10 )
-  {
+  
+  if(length > DXL_BUF_LENGTH){
     dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_DATA_LENGTH, nullptr, 0);
-    return DXL_RET_ERROR_LENGTH;
+    return DXL_LIB_ERROR_BUFFER_OVERFLOW;
   }
 
-
-  // TODO : Write 응답을 보내기 전에 Write 주소 유효성 검증 추가 필요
+  // TODO : Write address validation required before sending Write response
   dxlTxPacketStatus(p_dxl, p_dxl->id, DXL_ERR_NONE, nullptr, 0);
 
-  if (p_dxl->process_func.processWrite != nullptr)
-  {
+  if (p_dxl->process_func.processWrite != nullptr){
     (*p_dxl->process_func.processWrite)(addr, p_data, length);
   }
 
   return ret;
 }
 
-dxl_return_t dxlInstSyncRead(dxl_t *p_dxl)
+lib_err_code_t dxlInstSyncRead(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length;
   uint8_t  *p_data;
   uint16_t i;
   uint16_t rx_id_cnt;
-  uint8_t data[DXL_MAX_BUFFER];
   uint8_t process_ret = DXL_ERR_NONE;
 
 
   if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
-    return DXL_RET_EMPTY;
-  }
+    return DXL_LIB_ERROR_INVAILD_ID;
+
+  rx_id_cnt = p_dxl->rx.param_length - 4;
+
+  if (p_dxl->rx.param_length < (5) || rx_id_cnt > 0xFF)
+    return DXL_LIB_ERROR_LENGTH;
 
   addr      = (p_dxl->rx.p_param[1]<<8) | p_dxl->rx.p_param[0];
   length    = (p_dxl->rx.p_param[3]<<8) | p_dxl->rx.p_param[2];
   p_data    = &p_dxl->rx.p_param[4];
-  rx_id_cnt = p_dxl->rx.param_length - 4;
-
-
-  if (p_dxl->rx.param_length < (5) || rx_id_cnt > 255)
-  {
-    return DXL_RET_ERROR_LENGTH;
-  }
 
   p_dxl->pre_id     = 0xFF;
-  p_dxl->current_id = 0xFF;
+  p_dxl->present_id = 0xFF;
 
   for (i=0; i<rx_id_cnt; i++)
   {
-    if (p_data[i] == p_dxl->id)
-    {
-      p_dxl->current_id = p_dxl->id;
+    if (p_data[i] == p_dxl->id) {
+      p_dxl->present_id = p_dxl->id;
       break;
     }
 
     p_dxl->pre_id = p_data[i];
   }
 
-
-  if (p_dxl->current_id == p_dxl->id)
-  {
-    if (p_dxl->process_func.processRead != nullptr)
-    {
-      process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
+  if (p_dxl->present_id == p_dxl->id){
+    if (p_dxl->process_func.processRead != nullptr){
+      process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
     }
 
-    if (p_dxl->pre_id == 0xFF)
-    {
-      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
-    }
-    else
-    {
-      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
-      if (ret == DXL_RET_OK)
-      {
+    if (p_dxl->pre_id == 0xFF){
+      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
+    }else{
+      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
+      if (ret == DXL_LIB_OK) {
         ret = DXL_RET_PROCESS_BROAD_READ;
       }
     }
@@ -1463,9 +1340,9 @@ dxl_return_t dxlInstSyncRead(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstSyncWrite(dxl_t *p_dxl)
+lib_err_code_t dxlInstSyncWrite(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
 
 
   if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
@@ -1480,9 +1357,9 @@ dxl_return_t dxlInstSyncWrite(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstSyncWrite1_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstSyncWrite1_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length;
   uint8_t  *p_data;
@@ -1490,19 +1367,13 @@ dxl_return_t dxlInstSyncWrite1_0(dxl_t *p_dxl)
   uint16_t index;
 
   if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
-    return DXL_RET_EMPTY;
-  }
+    return DXL_LIB_ERROR_INVAILD_ID;
 
   addr   = p_dxl->rx.p_param[0];
   length = p_dxl->rx.p_param[1];
 
-
   if (p_dxl->rx.param_length < (2+length+1))
-  {
-    return DXL_RET_ERROR_LENGTH;
-  }
-
+    return DXL_LIB_ERROR_LENGTH;
 
   index = 2;
   while(1)
@@ -1533,9 +1404,9 @@ dxl_return_t dxlInstSyncWrite1_0(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstSyncWrite2_0(dxl_t *p_dxl)
+lib_err_code_t dxlInstSyncWrite2_0(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length;
   uint8_t  *p_data;
@@ -1543,26 +1414,19 @@ dxl_return_t dxlInstSyncWrite2_0(dxl_t *p_dxl)
   uint16_t index;
 
   if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
-    return DXL_RET_EMPTY;
-  }
+    return DXL_LIB_ERROR_INVAILD_ID;
 
   addr   = (p_dxl->rx.p_param[1]<<8) | p_dxl->rx.p_param[0];
   length = (p_dxl->rx.p_param[3]<<8) | p_dxl->rx.p_param[2];
 
-
   if (p_dxl->rx.param_length < (4+length+1))
-  {
-    return DXL_RET_ERROR_LENGTH;
-  }
-
+    return DXL_LIB_ERROR_LENGTH;
 
   index = 4;
   while(1)
   {
     p_data = &p_dxl->rx.p_param[index];
     remain_length = p_dxl->rx.param_length - index;
-
 
     if (remain_length < (length+1))
     {
@@ -1586,39 +1450,30 @@ dxl_return_t dxlInstSyncWrite2_0(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstBulkRead(dxl_t *p_dxl)
+lib_err_code_t dxlInstBulkRead(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length;
   uint8_t  *p_data;
   uint16_t i;
   uint16_t rx_id_cnt;
-  uint8_t data[DXL_MAX_BUFFER];
   uint8_t process_ret = DXL_ERR_NONE;
 
 
   if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
-  {
-    return DXL_RET_ERROR_NOT_INSTRUCTION;
-  }
+    return DXL_LIB_ERROR_NOT_SUPPORTED;
 
   if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
-    return DXL_RET_EMPTY;
-  }
+    return DXL_LIB_ERROR_INVAILD_ID;
 
   rx_id_cnt = p_dxl->rx.param_length / 5;
 
-
   if (p_dxl->rx.param_length < 5 || (p_dxl->rx.param_length%5) != 0)
-  {
-    return DXL_RET_ERROR_LENGTH;
-  }
-
+    return DXL_LIB_ERROR_LENGTH;
 
   p_dxl->pre_id     = 0xFF;
-  p_dxl->current_id = 0xFF;
+  p_dxl->present_id = 0xFF;
 
   addr   = 0;
   length = 0;
@@ -1631,28 +1486,28 @@ dxl_return_t dxlInstBulkRead(dxl_t *p_dxl)
 
     if (p_data[0] == p_dxl->id)
     {
-      p_dxl->current_id = p_dxl->id;
+      p_dxl->present_id = p_dxl->id;
       break;
     }
     p_dxl->pre_id = p_data[0];
   }
 
 
-  if (p_dxl->current_id == p_dxl->id)
+  if (p_dxl->present_id == p_dxl->id)
   {
     if (p_dxl->process_func.processRead != nullptr)
     {
-      process_ret = (*p_dxl->process_func.processRead)(addr, data, length);
+      process_ret = (*p_dxl->process_func.processRead)(addr, p_dxl->tx.data, length);
     }
 
     if (p_dxl->pre_id == 0xFF)
     {
-      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
+      ret = dxlTxPacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
     }
     else
     {
-      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, data, length);
-      if (ret == DXL_RET_OK)
+      ret = dxlMakePacketStatus(p_dxl, p_dxl->id, process_ret, p_dxl->tx.data, length);
+      if (ret == DXL_LIB_OK)
       {
         ret = DXL_RET_PROCESS_BROAD_READ;
       }
@@ -1662,26 +1517,20 @@ dxl_return_t dxlInstBulkRead(dxl_t *p_dxl)
   return ret;
 }
 
-dxl_return_t dxlInstBulkWrite(dxl_t *p_dxl)
+lib_err_code_t dxlInstBulkWrite(dxl_t *p_dxl)
 {
-  dxl_return_t ret = DXL_RET_OK;
+  lib_err_code_t ret = DXL_LIB_OK;
   uint16_t addr;
   uint16_t length;
   uint8_t  *p_data;
   uint16_t index;
   uint8_t  id;
 
-
   if (p_dxl->packet_ver == DXL_PACKET_VER_1_0 )
-  {
-    return DXL_RET_ERROR_NOT_INSTRUCTION;
-  }
+    return DXL_LIB_ERROR_NOT_SUPPORTED;
 
   if (p_dxl->rx.id != DXL_BROADCAST_ID)
-  {
-    return DXL_RET_EMPTY;
-  }
-
+    return DXL_LIB_ERROR_INVAILD_ID;
 
   index = 0;
   while(1)
@@ -1711,6 +1560,7 @@ dxl_return_t dxlInstBulkWrite(dxl_t *p_dxl)
 
   return ret;
 }
+#endif
 
 const unsigned short crc_table[256] PROGMEM  = {0x0000,
   0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
