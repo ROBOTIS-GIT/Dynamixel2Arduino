@@ -127,7 +127,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * Serial.print(dxl.getModelNumber(1));
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
-     * @return It returns the data readed from DXL control table item.
+     * @return It returns the data read from DXL control table item.
      * If the read fails, 0xFFFF is returned.
      */      
     uint16_t getModelNumber(uint8_t id);
@@ -224,7 +224,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @code
      * const int DXL_DIR_PIN = 2;
      * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
-     * dxl.setGoalPosition(1, 512);
+     * dxl.setOperatingMode(1, OP_POSITION);
      * @endcode
      * @param id DYNAMIXEL Actuator's ID.
      * @param mode The operating mode you want.
@@ -259,7 +259,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param id DYNAMIXEL Actuator's ID.
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_DEGREE.
-     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */    
     float getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
@@ -291,7 +291,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param id DYNAMIXEL Actuator's ID.
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_RPM.
-     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */    
     float getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
@@ -323,7 +323,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param id DYNAMIXEL Actuator's ID.
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_PERCENT.
-     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */    
     float getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
@@ -355,7 +355,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param id DYNAMIXEL Actuator's ID.
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_MILLI_AMPERE.
-     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */  
     float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
@@ -373,7 +373,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      *    TODO: add link (It is defined as 'enum ControlTableItem' in actuator.h)
      * @param id DYNAMIXEL Actuator's ID.
      * @param timeout A timeout waiting for a response to a data transfer.
-     * @return It returns the data readed from DXL control table item.(Returns the value appropriate for @unit.)
+     * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
      */  
     int32_t readControlTableItem(uint8_t item_idx, 
