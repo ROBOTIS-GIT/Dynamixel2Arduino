@@ -182,7 +182,7 @@ bool Master::write(uint8_t id, uint16_t addr,
   bool ret = false;
   uint32_t pre_time_us, pre_time_ms;
   
-  if(writeNoResp(id, addr, p_data, data_length) != false){
+  if(writeNoResp(id, addr, p_data, data_length) == false){
     return ret;
   }
     

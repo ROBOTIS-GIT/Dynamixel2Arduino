@@ -42,8 +42,8 @@ enum ParamUnit{
 };
 
 
-class Dynamixel2Arduino : public DYNAMIXEL::Master{
-
+class Dynamixel2Arduino : public DYNAMIXEL::Master
+{
   public:
     /**
      * @brief The constructor.
@@ -54,7 +54,6 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param port The HardwareSerial port you want to use on the board to communicate with DYNAMIXELs.
      *          It is automatically initialized baudrate to 57600 by calling the begin () function.
      * @param dir_pin Directional pins for using half-duplex communication. -1 uses full duplex. (default : -1)
-     * @return It returns true(1) on success, false(0) on failure.
      */   
     Dynamixel2Arduino(HardwareSerial& port, int dir_pin = -1);
     
