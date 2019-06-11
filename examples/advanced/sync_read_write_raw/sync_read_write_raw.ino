@@ -26,10 +26,6 @@
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL Serial1
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
-#elif CommXEL_W
-  #define DXL_SERIAL    Serial2
-  #define DEBUG_SERIAL  Serial
-  const uint8_t RS485_DIR_PIN = 15;
 #else
   #define DXL_SERIAL   Serial1
   #define DEBUG_SERIAL Serial

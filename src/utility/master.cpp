@@ -201,9 +201,8 @@ bool Master::write(uint8_t id, uint16_t addr,
       break;
     }
 
-    if (millis()-pre_time_ms >= timeout)
-    {
-      last_status_packet_error_ = DXL_LIB_ERROR_TIMEOUT;
+    if (millis()-pre_time_ms >= timeout){
+      last_lib_err_code_ = DXL_LIB_ERROR_TIMEOUT;
       break;
     }
   }
