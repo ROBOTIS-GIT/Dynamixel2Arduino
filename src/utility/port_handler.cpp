@@ -64,8 +64,10 @@ int SerialPortHandler::read()
 size_t SerialPortHandler::write(uint8_t c)
 {
   size_t ret = 0;
-  if(dir_pin_ != -1)
+  if(dir_pin_ != -1){
     digitalWrite(dir_pin_, HIGH);
+    while(digitalRead(dir_pin_) != HIGH);
+  }
 
   ret = port_.write(c);
 
@@ -81,8 +83,10 @@ size_t SerialPortHandler::write(uint8_t c)
 size_t SerialPortHandler::write(uint8_t *buf, size_t len)
 {
   size_t ret;
-  if(dir_pin_ != -1)
+  if(dir_pin_ != -1){
     digitalWrite(dir_pin_, HIGH);
+    while(digitalRead(dir_pin_) != HIGH);
+  }
 
   ret = port_.write(buf, len);
 
