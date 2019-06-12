@@ -71,7 +71,6 @@ Dynamixel2Arduino::Dynamixel2Arduino(HardwareSerial& port, int dir_pin)
   : Master(), dxl_port_(port, dir_pin)
 {
   setPort(dxl_port_);
-  begin();
 }
 
 /* For Master configuration */
