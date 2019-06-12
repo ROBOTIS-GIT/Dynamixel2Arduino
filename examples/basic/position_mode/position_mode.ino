@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2016 ROBOTIS CO., LTD.
+* Copyright 2019 ROBOTIS CO., LTD.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #ifdef ARDUINO_AVR_UNO
   #include <SoftwareSerial.h>
-  SoftwareSerial soft_serial(7, 8); //DYNAMIXEL Shield UART RX/TX
+  SoftwareSerial soft_serial(7, 8); //RX,TX
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL soft_serial
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
@@ -39,12 +39,12 @@ Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
-
-  // Use Serial to debug.
+  
+  // Use UART port of DYNAMIXEL Shield to debug.
   DEBUG_SERIAL.begin(115200);
 
-  // Set Port baudrate to 1Mbps. This has to match with DYNAMIXEL baudrate.
-  dxl.begin(1000000);
+  // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
+  dxl.begin(57600);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
   // Get DYNAMIXEL information
@@ -52,33 +52,27 @@ void setup() {
 
   // Turn off torque when configuring items in EEPROM area
   dxl.torqueOff(DXL_ID);
-  dxl.setOperatingMode(DXL_ID, OP_CURRENT);
+  dxl.setOperatingMode(DXL_ID, OP_POSITION);
   dxl.torqueOn(DXL_ID);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-   
+  
   // Please refer to e-Manual(http://emanual.robotis.com/docs/en/parts/interface/dynamixel_shield/) for available range of value. 
-  // Set Goal Current using RAW unit
-  dxl.setGoalCurrent(DXL_ID, 200);
+  // Set Goal Position in RAW value
+  dxl.setGoalPosition(DXL_ID, 512);
   delay(1000);
-  // Print present current
-  DEBUG_SERIAL.print("Present Current(raw) : ");
-  DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID));
-  delay(1000);
-
-  // Set Goal Current using mA unit
-  dxl.setGoalCurrent(DXL_ID, 25.8, UNIT_MILLI_AMPERE);
-  delay(1000);
-  DEBUG_SERIAL.print("Present Current(mA) : ");
-  DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID, UNIT_MILLI_AMPERE));
+  // Print present position in raw value
+  DEBUG_SERIAL.print("Present Position(raw) : ");
+  DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID));
   delay(1000);
 
-  // Set Goal Current using percentage (-100.0 [%] ~ 100.0[%])
-  dxl.setGoalCurrent(DXL_ID, -10.2, UNIT_PERCENT);
+  // Set Goal Position in DEGREE value
+  dxl.setGoalPosition(DXL_ID, 5.7, UNIT_DEGREE);
   delay(1000);
-  DEBUG_SERIAL.print("Present Current(ratio) : ");
-  DEBUG_SERIAL.println(dxl.getPresentCurrent(DXL_ID, UNIT_PERCENT));
+  // Print present position in degree value
+  DEBUG_SERIAL.print("Present Position(degree) : ");
+  DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID, UNIT_DEGREE));
   delay(1000);
 }
