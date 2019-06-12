@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019 ROBOTIS CO., LTD.
+* Copyright 2016 ROBOTIS CO., LTD.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,20 +13,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-
-/**
- * @Dynamixel2Arduino.h
- * @author Kei
- * @date 24 May 2019
- * @brief This file defines a class for controlling the DYNAMIXEL Actuators in Arduino boards.
- *
- * Supported actors are hardcoded, defined in actuator.cpp and Dynamixel2Arduino.cpp, and can be enabled or disabled in config.h.
- * Therefore, in order to support the new Actuator, hard coding must be done.
- * 
- * @see 
- * @see 
- */
-
 
 #ifndef DYNAMIXEL_2_ARDUINO_H_
 #define DYNAMIXEL_2_ARDUINO_H_
@@ -56,8 +42,8 @@ enum ParamUnit{
 };
 
 
-class Dynamixel2Arduino : public DYNAMIXEL::Master{
-
+class Dynamixel2Arduino : public DYNAMIXEL::Master
+{
   public:
     /**
      * @brief The constructor.
@@ -68,7 +54,6 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master{
      * @param port The HardwareSerial port you want to use on the board to communicate with DYNAMIXELs.
      *          It is automatically initialized baudrate to 57600 by calling the begin () function.
      * @param dir_pin Directional pins for using half-duplex communication. -1 uses full duplex. (default : -1)
-     * @return It returns true(1) on success, false(0) on failure.
      */   
     Dynamixel2Arduino(HardwareSerial& port, int dir_pin = -1);
     

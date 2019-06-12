@@ -26,9 +26,6 @@
 #elif ARDUINO_AVR_MEGA2560
   #define DXL_SERIAL   Serial
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
-#elif CommXEL_W
-  #define DXL_SERIAL   Serial2
-  const uint8_t RS485_DIR_PIN = 15;
 #else
   #define DXL_SERIAL   Serial1
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield

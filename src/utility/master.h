@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019 ROBOTIS CO., LTD.
+* Copyright 2016 ROBOTIS CO., LTD.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -112,7 +112,29 @@ namespace DYNAMIXEL {
 class Master
 {
   public:
+    /**
+     * @brief The constructor.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * const float PROTOCOL_VER = 2.0;
+     * DYNAMIXEL::SerialPortHandler dxl_port(Serial1, DXL_DIR_PIN);
+     * DYNAMIXEL::Master dxl_master(dxl_port, PROTOCOL_VER);
+     * @endcode
+     * @param port The PortHandler instance you want to use on the board to communicate with DYNAMIXELs.
+     *             It can be used not only for Serial but also for other communication port handlers like SerialPortHandler class.
+     * @param protocol_ver DYNAMIXEL protocol version used for communications. (default : 2.0)
+     */
     Master(PortHandler &port, float protocol_ver = DXL_PACKET_VER_2_0);
+
+    /**
+     * @brief The constructor.
+     *        This constructor must be added to the PortHanlder instance via the @setPort () function after creation.
+     * @code
+     * const float PROTOCOL_VER = 2.0;
+     * DYNAMIXEL::Master dxl_master(PROTOCOL_VER);
+     * @endcode
+     * @param protocol_ver DYNAMIXEL protocol version used for communications. (default : 2.0)        
+     */    
     Master(float protocol_ver = DXL_PACKET_VER_2_0);
 
     bool setPortProtocolVersion(float version);
@@ -126,7 +148,7 @@ class Master
       RecvInfoFromPing_t &recv_info, uint32_t timeout = 100);
           
     int32_t read(uint8_t id, uint16_t addr, uint16_t addr_length,
-      uint8_t *p_recv_buf, uint16_t recv_buf_length, uint32_t timeout);
+      uint8_t *p_recv_buf, uint16_t recv_buf_length, uint32_t timeout = 100);
 
     bool write(uint8_t id, uint16_t addr, 
       const uint8_t *p_data, uint16_t data_length, uint32_t timeout = 100);
