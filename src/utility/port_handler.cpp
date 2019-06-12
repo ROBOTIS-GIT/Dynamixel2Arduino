@@ -35,7 +35,13 @@ void SerialPortHandler::begin(unsigned long baud)
 {
   baud_ = baud;
   port_.begin(baud_);
-  dir_pin_ != -1 ? pinMode(dir_pin_, OUTPUT), digitalWrite(dir_pin_, LOW):(void)(dir_pin_);
+  
+  if(dir_pin_ != -1){
+    pinMode(dir_pin_, OUTPUT);
+    digitalWrite(dir_pin_, LOW);
+    while(digitalRead(dir_pin_) != LOW);
+  }
+
   setOpenState(true);
 }
 
@@ -58,9 +64,16 @@ int SerialPortHandler::read()
 size_t SerialPortHandler::write(uint8_t c)
 {
   size_t ret = 0;
-  dir_pin_ != -1 ? digitalWrite(dir_pin_, HIGH):(void)(dir_pin_);
+  if(dir_pin_ != -1)
+    digitalWrite(dir_pin_, HIGH);
+
   ret = port_.write(c);
-  dir_pin_ != -1 ? port_.flush(), digitalWrite(dir_pin_, LOW):(void)(dir_pin_);
+
+  if(dir_pin_ != -1){
+    port_.flush();
+    digitalWrite(dir_pin_, LOW);
+    while(digitalRead(dir_pin_) != LOW);
+  }
 
   return ret;
 }
@@ -68,9 +81,16 @@ size_t SerialPortHandler::write(uint8_t c)
 size_t SerialPortHandler::write(uint8_t *buf, size_t len)
 {
   size_t ret;
-  dir_pin_ != -1 ? digitalWrite(dir_pin_, HIGH):(void)(dir_pin_);
+  if(dir_pin_ != -1)
+    digitalWrite(dir_pin_, HIGH);
+
   ret = port_.write(buf, len);
-  dir_pin_ != -1 ? port_.flush(), digitalWrite(dir_pin_, LOW):(void)(dir_pin_);
+
+  if(dir_pin_ != -1){
+    port_.flush();
+    digitalWrite(dir_pin_, LOW);
+    while(digitalRead(dir_pin_) != LOW);
+  }
 
   return ret;      
 }
