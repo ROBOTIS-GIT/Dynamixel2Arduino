@@ -18,7 +18,7 @@
 
 #ifdef ARDUINO_AVR_UNO
   #include <SoftwareSerial.h>
-  SoftwareSerial soft_serial(7, 8); //DYNAMIXEL Shield UART RX/TX
+  SoftwareSerial soft_serial(7, 8); //RX,TX
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL soft_serial
   const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
@@ -39,12 +39,12 @@ Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
-
-  // Use Serial to debug.
+  
+  // Use UART port of DYNAMIXEL Shield to debug.
   DEBUG_SERIAL.begin(115200);
-
-  // Set Port baudrate to 1Mbps. This has to match with DYNAMIXEL baudrate.
-  dxl.begin(1000000);
+  
+  // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
+  dxl.begin(57600);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
   // Get DYNAMIXEL information

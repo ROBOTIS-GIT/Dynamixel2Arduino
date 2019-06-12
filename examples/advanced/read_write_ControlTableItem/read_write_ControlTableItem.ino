@@ -140,7 +140,7 @@ void setup() {
   // put your setup code here, to run once:
   DEBUG_SERIAL.begin(115200);
   dxl.setPortProtocolVersion(2.0);
-  dxl.begin(1000000);
+  dxl.begin(57600);
   dxl.scan();
 
   // Turn on torque
