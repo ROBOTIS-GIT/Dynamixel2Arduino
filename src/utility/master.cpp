@@ -235,7 +235,7 @@ bool Master::writeNoResp(uint8_t id, uint16_t addr, const uint8_t *p_data, uint1
   if (p_port_->getOpenState() != true)
   {
     last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
-    return ret;
+    return false;
   }  
 
   if (packet_.packet_ver == DXL_PACKET_VER_1_0 )
@@ -271,6 +271,7 @@ bool Master::writeNoResp(uint8_t id, uint16_t addr, const uint8_t *p_data, uint1
   if(last_lib_err_code_ != DXL_LIB_OK)
     return false;
   packet_.tx_time = micros() - pre_time_us;
+  ret = true;
 
   return ret;
 }
