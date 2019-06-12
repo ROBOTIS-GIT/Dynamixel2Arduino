@@ -71,6 +71,7 @@ Dynamixel2Arduino::Dynamixel2Arduino(HardwareSerial& port, int dir_pin)
   : Master(), dxl_port_(port, dir_pin)
 {
   setPort(dxl_port_);
+  begin();
 }
 
 /* For Master configuration */
@@ -1247,32 +1248,32 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       break;
     
     case PRO_M42_10_S260_RA:    
-    case PRO_H42P_020_S300_R:
+    case PRO_M42P_010_S260_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_m42_10;
       break;
     case PRO_M54_40_S250_RA:
-    case PRO_H54P_100_S500_R:
+    case PRO_M54P_040_S250_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_m54_40;
       break;
     case PRO_M54_60_S250_RA:
-    case PRO_H54P_200_S500_R:
+    case PRO_M54P_060_S250_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_m54_60;
       break;
     case PRO_H42_20_S300_RA:
-    case PRO_M42P_010_S260_R:
+    case PRO_H42P_020_S300_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_h42_20;
       break;
     case PRO_H54_100_S500_RA:  
-    case PRO_M54P_040_S250_R:
+    case PRO_H54P_100_S500_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_h54_100;
       break;
     case PRO_H54_200_S500_RA:
-    case PRO_M54P_060_S250_R:
+    case PRO_H54P_200_S500_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_h54_200;
       break;
