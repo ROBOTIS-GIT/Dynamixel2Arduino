@@ -793,7 +793,8 @@ float Dynamixel2Arduino::readForRangeDependencyFunc(uint8_t func_idx, uint8_t id
     return false;
 
   ret_data = readControlTableItem(model_num, item_info.item_idx, id);
-  checkAndconvertReadData(ret_data, ret, unit, item_info);
+  if(checkAndconvertReadData(ret_data, ret, unit, item_info) == false)
+    return 0;
 
   return ret;
 }
