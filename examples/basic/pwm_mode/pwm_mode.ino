@@ -27,7 +27,7 @@
   #define DEBUG_SERIAL Serial1
   const uint8_t DXL_DIR_PIN = 2; //DYNAMIXEL Shield
 #elif BOARD_OpenCM904
-  #define DXL_SERIAL   Serial3 //OpenCM9.04 EXP Board's DXL port Serial. (To use the DXL port on the OpenCM 9.04 board, you must use Serial1 for Serial.)
+  #define DXL_SERIAL   Serial3 //OpenCM9.04 EXP Board's DXL port Serial. (To use the DXL port on the OpenCM 9.04 board, you must use Serial1 for Serial. And because of the OpenCM 9.04 driver code, you must call Serial1.setDxlMode(true); before dxl.begin();.)
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 22; //OpenCM9.04 EXP Board's DIR PIN. (To use the DXL port on the OpenCM 9.04 board, you must use 28 for DIR PIN.)  
 #else
