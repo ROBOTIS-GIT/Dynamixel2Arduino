@@ -22,19 +22,22 @@
 
 #ifdef ARDUINO_AVR_UNO
   #define DXL_SERIAL   Serial
-  const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
+  const uint8_t DXL_DIR_PIN = 2; //DYNAMIXEL Shield
 #elif ARDUINO_AVR_MEGA2560
   #define DXL_SERIAL   Serial
-  const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
+  const uint8_t DXL_DIR_PIN = 2; //DYNAMIXEL Shield
+#elif BOARD_OpenCM904
+  #define DXL_SERIAL   Serial3 //OpenCM9.04 EXP Board's DXL port Serial. (To use the DXL port on the OpenCM 9.04 board, you must use Serial1 for Serial.)
+  const uint8_t DXL_DIR_PIN = 22; //OpenCM9.04 EXP Board's DIR PIN. (To use the DXL port on the OpenCM 9.04 board, you must use 28 for DIR PIN.)  
 #else
   #define DXL_SERIAL   Serial1
-  const uint8_t RS485_DIR_PIN = 2; //DYNAMIXEL Shield
+  const uint8_t DXL_DIR_PIN = 2; //DYNAMIXEL Shield
 #endif
 
 const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
-Dynamixel2Arduino dxl(DXL_SERIAL, RS485_DIR_PIN);
+Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
