@@ -828,8 +828,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_0_common[] PROGM
 #if (ENABLE_ACTUATOR_AX \
  || ENABLE_ACTUATOR_DX \
  || ENABLE_ACTUATOR_RX \
- || ENABLE_ACTUATOR_EX \
- || ENABLE_ACTUATOR_XL320)
+ || ENABLE_ACTUATOR_EX)
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, 0, 1023, 0.29},
   {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, 0, 1023, 0.29},
 
@@ -879,6 +878,16 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_mx106[] PROGMEM = {
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xl320[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XL320)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, 0, 1023, 0.29},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, 0, 1023, 0.29},
+
+  {SET_VELOCITY, MOVING_SPEED, UNIT_PERCENT, 0, 2047, 0.1},
+  {GET_VELOCITY, PRESENT_SPEED, UNIT_PERCENT, 0, 2047, 0.1},  
+#endif 
+  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
 
 /* MX2.0, X series(without XL320) */
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGMEM = {
@@ -1158,7 +1167,6 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case RX24F:
     case RX28:
     case RX64:
-    case XL320:
       p_common_ctable = dependency_ctable_1_0_common;
       break;
 
@@ -1182,6 +1190,10 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       p_dep_ctable = dependency_mx64_mx106;
       break;              
 
+    case XL320:
+      p_common_ctable = dependency_xl320;
+      break;
+
     case MX28_2:
     case XC430_W150:
     case XC430_W240:
@@ -1190,29 +1202,35 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case XXL430_W250:
       p_common_ctable = dependency_ctable_2_0_common;
       break;
+
     case MX64_2:
       p_common_ctable = dependency_ctable_2_0_common;
       p_dep_ctable = dependency_mx64_2;
       break;    
+
     case MX106_2:
       p_common_ctable = dependency_ctable_2_0_common;
       p_dep_ctable = dependency_mx106_2;
-      break;        
+      break;     
+
     case XM430_W210:
     case XM430_W350:
       p_common_ctable = dependency_ctable_2_0_common;
       p_dep_ctable = dependency_xm430_w210_w350;
       break;
+
     case XH430_V210:
     case XH430_V350:
       p_common_ctable = dependency_ctable_2_0_common;
       p_dep_ctable = dependency_xh430_v210_v350;
       break;
+
     case XH430_W210:
     case XH430_W350:
       p_common_ctable = dependency_ctable_2_0_common;
       p_dep_ctable = dependency_xh430_w210_w350;
       break;    
+
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
@@ -1231,18 +1249,23 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case PRO_M42_10_S260_R:
       p_common_ctable = dependency_pro_r_m42_10;
       break;    
+
     case PRO_M54_40_S250_R:
       p_common_ctable = dependency_pro_r_m54_40;
-      break;    
+      break;  
+
     case PRO_M54_60_S250_R:
       p_common_ctable = dependency_pro_r_m54_60;
-      break;    
+      break;  
+
     case PRO_H42_20_S300_R:
       p_common_ctable = dependency_pro_r_h42_20;
-      break;    
+      break;   
+
     case PRO_H54_100_S500_R:
       p_common_ctable = dependency_pro_r_h54_100;
       break;    
+
     case PRO_H54_200_S500_R:
       p_common_ctable = dependency_pro_r_h54_200;
       break;
@@ -1252,31 +1275,37 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_m42_10;
       break;
+
     case PRO_M54_40_S250_RA:
     case PRO_M54P_040_S250_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_m54_40;
       break;
+
     case PRO_M54_60_S250_RA:
     case PRO_M54P_060_S250_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_m54_60;
       break;
+
     case PRO_H42_20_S300_RA:
     case PRO_H42P_020_S300_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_h42_20;
       break;
+
     case PRO_H54_100_S500_RA:  
     case PRO_H54P_100_S500_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_h54_100;
       break;
+
     case PRO_H54_200_S500_RA:
     case PRO_H54P_200_S500_R:
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_h54_200;
       break;
+      
     default:
       break;
   }
