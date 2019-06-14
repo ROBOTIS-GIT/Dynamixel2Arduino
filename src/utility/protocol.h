@@ -79,15 +79,6 @@
 #define DXL_ERR_DATA_LIMIT      0x06
 #define DXL_ERR_ACCESS          0x07
 
-#define DXL_PROCESS_INST        0
-#define DXL_PROCESS_BROAD_PING  1
-#define DXL_PROCESS_BROAD_READ  2
-#define DXL_PROCESS_BROAD_WRITE 3
-
-#define DXL_BYPASS_NONE         0
-#define DXL_BYPASS_ENABLE       1
-#define DXL_BYPASS_ONLY         2
-
 #define RX_PACKET_TYPE_STATUS   0
 #define RX_PACKET_TYPE_INST     1
 
@@ -148,33 +139,6 @@ namespace DYNAMIXEL{
     uint8_t   data[DXL_BUF_LENGTH];
   } dxl_packet_t;
 
-  typedef lib_err_code_t (*dxlInstFunc_t)(void *);
-
-  typedef struct
-  {
-    dxlInstFunc_t ping;         
-    dxlInstFunc_t read;         
-    dxlInstFunc_t write;        
-    dxlInstFunc_t reg_write;    
-    dxlInstFunc_t action;       
-    dxlInstFunc_t factory_reset;
-    dxlInstFunc_t reboot;       
-    dxlInstFunc_t status;       
-    dxlInstFunc_t sync_read;    
-    dxlInstFunc_t sync_write;   
-    dxlInstFunc_t bulk_read;   
-    dxlInstFunc_t bulk_write;   
-  } dxl_inst_func_t;
-
-  typedef struct
-  {
-    uint8_t (*processPing         )(uint8_t *p_data, uint16_t *p_length);
-    uint8_t (*processReboot       )(void);
-    uint8_t (*processFactoryReset )(uint8_t mode);
-    uint8_t (*processRead         )(uint16_t addr, uint8_t *p_data, uint16_t length);
-    uint8_t (*processWrite        )(uint16_t addr, uint8_t *p_data, uint16_t length);
-  } dxl_process_func_t;
-
   typedef struct Dxl
   {
     float  packet_ver;
@@ -183,11 +147,6 @@ namespace DYNAMIXEL{
     uint8_t  rx_pakcet_type;
     uint8_t  rx_state;
     uint8_t  id;
-    uint8_t  present_id;
-    uint8_t  pre_id;
-
-    uint8_t  process_state;
-    uint32_t process_pre_time;
 
     uint32_t rx_timeout;
     uint32_t tx_timeout;
@@ -196,33 +155,13 @@ namespace DYNAMIXEL{
     uint32_t rx_time;
     uint8_t  header_cnt;
 
-#if (USE_SLAVE_FUNC)
-    dxl_inst_func_t    inst_func;
-    dxl_process_func_t process_func;
-#endif
-    void (*read_hook_func)(uint8_t data);
-
     dxl_packet_t    rx;
     dxl_packet_t    tx;
   } dxl_t;
 
   bool setDxlPort(PortHandler *port);
   bool dxlInit(dxl_t *p_packet, float protocol_ver);
-  void dxlSetTxDoneISR(dxl_t *p_packet, void (*p_txDoneISR)(void));
-  void dxlSetRxByteISR(dxl_t *p_packet, void (*p_func)(uint8_t data));
-
-  void dxlSetDirPin(dxl_t *p_packet, int8_t dir_pin);
-  void dxlSetSerial(dxl_t *p_packet, HardwareSerial *p_serial);
-
-#if (USE_SLAVE_FUNC)
-  void dxlAddInstFunc(dxl_t *p_packet, uint8_t inst, dxlInstFunc_t func);
-  void dxlAddProcessPingFunc(dxl_t *p_packet, uint8_t (*func)(uint8_t *p_data, uint16_t *p_length));
-  void dxlAddProcessRebootFunc(dxl_t *p_packet, uint8_t (*func)(void));
-  void dxlAddProcessFactoryResetFunc(dxl_t *p_packet, uint8_t (*func)(uint8_t mode));
-  void dxlAddProcessReadFunc(dxl_t *p_packet, uint8_t (*func)(uint16_t addr, uint8_t *p_data, uint16_t length));
-  void dxlAddProcessWriteFunc(dxl_t *p_packet, uint8_t (*func)(uint16_t addr, uint8_t *p_data, uint16_t length));
-#endif
-
+  
   bool    dxlSetId(dxl_t *p_packet, uint8_t id);
   uint8_t dxlGetId(dxl_t *p_packet);
 
@@ -233,20 +172,11 @@ namespace DYNAMIXEL{
   uint8_t  dxlRxRead();
   void     dxlTxWrite(uint8_t *p_data, uint32_t length);
 
-#if (USE_SLAVE_FUNC)
-  uint8_t     dxlProcessPacket(dxl_t *p_packet);
-  lib_err_code_t dxlProcessInst(dxl_t *p_packet);
-#endif
-
   lib_err_code_t dxlRxPacket(dxl_t *p_packet);
   lib_err_code_t dxlRxPacketDataIn(dxl_t *p_packet, uint8_t data_in);
 
   lib_err_code_t dxlTxPacket(dxl_t *p_packet);
   lib_err_code_t dxlTxPacketInst(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length);
-  lib_err_code_t dxlTxPacketStatus(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length);
-
-  lib_err_code_t dxlMakePacketStatus(dxl_t *p_packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
-
 }
 
 #endif /* DYNAMIXEL_PROTOCOL_H_ */

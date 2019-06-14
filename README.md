@@ -7,4 +7,3 @@
 
 ## TODO
  - Separation of protocol codes (protocol, packet handler)
- - Slave class implementation
