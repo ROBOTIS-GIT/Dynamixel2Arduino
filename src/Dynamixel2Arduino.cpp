@@ -243,6 +243,9 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case MX64_2:
     case MX106_2:
     case XL430_W250:
+    case XC430_W150:
+    case XC430_W240:
+    case XXL430_W250:
     case XM430_W210:
     case XM430_W350:
     case XH430_V210:
@@ -537,6 +540,9 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
 
     case MX28_2:
     case XL430_W250:
+    case XC430_W150:
+    case XC430_W240:
+    case XXL430_W250:
       if(mode == OP_POSITION){
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 3);
       }else if(mode == OP_VELOCITY){
@@ -1197,7 +1203,6 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case MX28_2:
     case XC430_W150:
     case XC430_W240:
-    case XXC430_W250:
     case XL430_W250:
     case XXL430_W250:
       p_common_ctable = dependency_ctable_2_0_common;
