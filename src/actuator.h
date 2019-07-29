@@ -33,7 +33,6 @@
 
 #define XC430_W150          (uint16_t)1070
 #define XC430_W240          (uint16_t)1080
-#define XXC430_W250         (uint16_t)1160
 
 #define XL430_W250          (uint16_t)1060
 

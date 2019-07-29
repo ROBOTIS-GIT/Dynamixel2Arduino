@@ -468,7 +468,6 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
 
     case XC430_W150:
     case XC430_W240:
-    case XXC430_W250:
     case XL430_W250:
     case XXL430_W250:
       p_common_ctable = control_table_2_0;
