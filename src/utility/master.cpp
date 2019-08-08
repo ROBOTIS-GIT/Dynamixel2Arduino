@@ -28,7 +28,7 @@ float Master::getPortProtocolVersion()
 
 bool Master::setPort(PortHandler &port)
 {
-  bool ret = setDxlPort(&port);
+  bool ret = setDxlPort(&packet_, &port);
 
   p_port_ = &port;
 

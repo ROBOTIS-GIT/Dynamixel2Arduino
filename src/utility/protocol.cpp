@@ -40,23 +40,17 @@ static lib_err_code_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t in
 static lib_err_code_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in);
 static lib_err_code_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length );
 
-static uint16_t dxlAddStuffing(dxl_t *p_packet, uint8_t *p_data, uint16_t length);
-static uint16_t dxlRemoveStuffing(uint8_t *p_data, uint16_t length);
-
-static void dxlUpdateCrc(uint16_t *p_crc_cur, uint8_t data_in);
 
 //-- External Functions
 //
 
 
-static PortHandler *p_port;
-
-bool DYNAMIXEL::setDxlPort(PortHandler *port)
+bool DYNAMIXEL::setDxlPort(dxl_t *p_packet, PortHandler *port)
 {
   if(port == nullptr)
     return false;
   
-  p_port = port;
+  p_packet->p_port = port;
   return true;
 }
 
@@ -112,19 +106,19 @@ float DYNAMIXEL::dxlGetProtocolVersion(dxl_t *p_packet)
   return p_packet->packet_ver;
 }
 
-uint32_t DYNAMIXEL::dxlRxAvailable()
+uint32_t DYNAMIXEL::dxlRxAvailable(dxl_t *p_packet)
 {
-  return (uint32_t)p_port->available();
+  return (uint32_t)p_packet->p_port->available();
 }
 
-uint8_t DYNAMIXEL::dxlRxRead()
+uint8_t DYNAMIXEL::dxlRxRead(dxl_t *p_packet)
 {
-  return (uint8_t)p_port->read();
+  return (uint8_t)p_packet->p_port->read();
 }
 
-void DYNAMIXEL::dxlTxWrite(uint8_t *p_data, uint32_t length)
+void DYNAMIXEL::dxlTxWrite(dxl_t *p_packet, uint8_t *p_data, uint32_t length)
 {
-  p_port->write(p_data, length);
+  p_packet->p_port->write(p_data, length);
 }
 
 lib_err_code_t DYNAMIXEL::dxlRxPacket(dxl_t *p_packet)
@@ -132,13 +126,12 @@ lib_err_code_t DYNAMIXEL::dxlRxPacket(dxl_t *p_packet)
   uint8_t data;
   lib_err_code_t ret = DXL_LIB_PROCEEDING;
 
-  while (dxlRxAvailable())
+  while (dxlRxAvailable(p_packet) > 0)
   {
-    data = dxlRxRead();
+    data = dxlRxRead(p_packet);
     ret  = dxlRxPacketDataIn(p_packet, data);
 
-    if (ret != DXL_LIB_PROCEEDING)
-    {
+    if (ret != DXL_LIB_PROCEEDING){
       break;
     }
   }
@@ -423,7 +416,7 @@ lib_err_code_t dxlRxPacket2_0(dxl_t *p_packet, uint8_t data_in)
   return ret;
 }
 
-uint16_t dxlRemoveStuffing(uint8_t *p_data, uint16_t length)
+uint16_t DYNAMIXEL::dxlRemoveStuffing(uint8_t *p_data, uint16_t length)
 {
   uint16_t i;
   uint16_t stuff_length;
@@ -447,7 +440,7 @@ uint16_t dxlRemoveStuffing(uint8_t *p_data, uint16_t length)
   return stuff_length;
 }
 
-uint16_t dxlAddStuffing(dxl_t *p_packet, uint8_t *p_data, uint16_t length)
+uint16_t DYNAMIXEL::dxlAddStuffing(dxl_t *p_packet, uint8_t *p_data, uint16_t length)
 {
   uint8_t *stuff_buf;
   uint16_t i;
@@ -492,7 +485,7 @@ lib_err_code_t DYNAMIXEL::dxlTxPacket(dxl_t *p_packet)
 {
   lib_err_code_t ret = DXL_LIB_OK;
 
-  dxlTxWrite(p_packet->tx.data, p_packet->tx.packet_length);
+  dxlTxWrite(p_packet, p_packet->tx.data, p_packet->tx.packet_length);
 
   return ret;
 }
@@ -549,7 +542,7 @@ lib_err_code_t dxlTxPacketInst1_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd,
   p_packet->tx.data[PKT_1_0_LEN_IDX] = packet_length;
   p_packet->tx.data[PKT_1_0_INST_IDX + packet_length - 1] = ~(check_sum);
 
-  dxlTxWrite(p_packet->tx.data, packet_length + 4);
+  dxlTxWrite(p_packet, p_packet->tx.data, packet_length + 4);
 
   return ret;
 }
@@ -595,7 +588,7 @@ lib_err_code_t dxlTxPacketInst2_0(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd,
   p_packet->tx.data[PKT_INST_IDX + packet_length - 2] = crc >> 0;
   p_packet->tx.data[PKT_INST_IDX + packet_length - 1] = crc >> 8;
 
-  dxlTxWrite(p_packet->tx.data, packet_length + 7);
+  dxlTxWrite(p_packet, p_packet->tx.data, packet_length + 7);
 
   return ret;
 }
@@ -641,7 +634,7 @@ const unsigned short crc_table[256] PROGMEM  = {0x0000,
   0x0234, 0x8231, 0x8213, 0x0216, 0x021C, 0x8219, 0x0208,
   0x820D, 0x8207, 0x0202 };
 
-void dxlUpdateCrc(uint16_t *p_crc_cur, uint8_t data_in)
+void DYNAMIXEL::dxlUpdateCrc(uint16_t *p_crc_cur, uint8_t data_in)
 {
   uint16_t crc;
   uint16_t i;
