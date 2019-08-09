@@ -35,6 +35,11 @@ bool Master::setPort(PortHandler &port)
   return ret;
 }
 
+PortHandler* Master::getPort() const
+{
+  return p_port_;
+}
+
 uint8_t Master::ping(uint8_t id, XelInfoFromPing_t *recv_info_array, uint8_t recv_array_cnt, uint32_t timeout)
 {
   uint8_t recv_id_cnt = 0;
