@@ -157,9 +157,11 @@ namespace DYNAMIXEL{
 
     dxl_packet_t    rx;
     dxl_packet_t    tx;
+
+    DYNAMIXEL::PortHandler* p_port;
   } dxl_t;
 
-  bool setDxlPort(PortHandler *port);
+  bool setDxlPort(dxl_t *p_packet, PortHandler *port);
   bool dxlInit(dxl_t *p_packet, float protocol_ver);
   
   bool    dxlSetId(dxl_t *p_packet, uint8_t id);
@@ -168,15 +170,20 @@ namespace DYNAMIXEL{
   bool    dxlSetProtocolVersion(dxl_t *p_packet, float protocol_version);
   float dxlGetProtocolVersion(dxl_t *p_packet);
 
-  uint32_t dxlRxAvailable();
-  uint8_t  dxlRxRead();
-  void     dxlTxWrite(uint8_t *p_data, uint32_t length);
+  uint32_t dxlRxAvailable(dxl_t *p_packet);
+  uint8_t  dxlRxRead(dxl_t *p_packet);
+  void     dxlTxWrite(dxl_t *p_packet, uint8_t *p_data, uint32_t length);
 
   lib_err_code_t dxlRxPacket(dxl_t *p_packet);
   lib_err_code_t dxlRxPacketDataIn(dxl_t *p_packet, uint8_t data_in);
 
   lib_err_code_t dxlTxPacket(dxl_t *p_packet);
   lib_err_code_t dxlTxPacketInst(dxl_t *p_packet, uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length);
+
+  void dxlUpdateCrc(uint16_t *p_crc_cur, uint8_t data_in);
+
+  uint16_t dxlAddStuffing(dxl_t *p_packet, uint8_t *p_data, uint16_t length);
+  uint16_t dxlRemoveStuffing(uint8_t *p_data, uint16_t length);
 }
 
 #endif /* DYNAMIXEL_PROTOCOL_H_ */

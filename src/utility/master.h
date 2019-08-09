@@ -141,6 +141,7 @@ class Master
     float getPortProtocolVersion();
 
     bool setPort(PortHandler &port);
+    PortHandler* getPort() const;
 
     uint8_t ping(uint8_t id, 
       XelInfoFromPing_t *recv_info_array, uint8_t recv_array_cnt, uint32_t timeout = 100);

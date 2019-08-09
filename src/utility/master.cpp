@@ -28,11 +28,16 @@ float Master::getPortProtocolVersion()
 
 bool Master::setPort(PortHandler &port)
 {
-  bool ret = setDxlPort(&port);
+  bool ret = setDxlPort(&packet_, &port);
 
   p_port_ = &port;
 
   return ret;
+}
+
+PortHandler* Master::getPort() const
+{
+  return p_port_;
 }
 
 uint8_t Master::ping(uint8_t id, XelInfoFromPing_t *recv_info_array, uint8_t recv_array_cnt, uint32_t timeout)
