@@ -8,7 +8,9 @@
 
 Dynamixel2Arduino	KEYWORD1
 Master	KEYWORD1
+Slave	KEYWORD1
 SerialPortHandler	KEYWORD1
+USBSerialPortHandler	KEYWORD1
 
 ###########################################
 # Methods and Functions (KEYWORD2)
@@ -51,8 +53,27 @@ factoryReset	KEYWORD2
 reboot	KEYWORD2
 syncWrite	KEYWORD2
 syncRead	KEYWORD2
+bulkWrite	KEYWORD2
+bulkRead	KEYWORD2
+getLastStatusPacketError	KEYWORD2
+getLastLibErrCode	KEYWORD2
+setLastLibErrCode	KEYWORD2
 
-# Slave Class (TODO)
+# Slave Class
+getModelNumber	KEYWORD2
+setID	KEYWORD2
+getID	KEYWORD2
+setFirmwareVersion	KEYWORD2
+getFirmwareVersion	KEYWORD2
+setPort	KEYWORD2
+setPortProtocolVersion	KEYWORD2
+getPortProtocolVersion	KEYWORD2
+setWriteCallbackFunc	KEYWORD2
+setReadCallbackFunc	KEYWORD2
+processPacket	KEYWORD2
+getLastStatusPacketError	KEYWORD2
+getLastLibErrCode	KEYWORD2
+addControlItem	KEYWORD2
 
 ###########################################
 # Structures (KEYWORD3)
