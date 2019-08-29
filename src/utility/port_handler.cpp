@@ -103,3 +103,49 @@ unsigned long SerialPortHandler::getBaud() const
 {
   return baud_;
 }
+
+
+/* USBSerialPortHandler */
+USBSerialPortHandler::USBSerialPortHandler(USB_SERIAL_CLASS& port)
+ : PortHandler(), port_(port)
+{}
+
+void USBSerialPortHandler::begin()
+{
+  port_.begin(1000000);
+  setOpenState(true);
+}
+
+void USBSerialPortHandler::end(void)
+{
+  port_.end();
+  setOpenState(false);
+}
+
+int USBSerialPortHandler::available(void)
+{
+  return port_.available();
+}
+
+int USBSerialPortHandler::read()
+{
+  return port_.read();
+}
+
+size_t USBSerialPortHandler::write(uint8_t c)
+{
+  size_t ret = 0;
+
+  ret = port_.write(c);
+
+  return ret;
+}
+
+size_t USBSerialPortHandler::write(uint8_t *buf, size_t len)
+{
+  size_t ret;
+
+  ret = port_.write(buf, len);
+
+  return ret;      
+}
