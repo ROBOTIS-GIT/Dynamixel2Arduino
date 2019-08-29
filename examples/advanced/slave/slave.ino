@@ -74,7 +74,14 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   // If there is a packet from the master, process it.
-  dxl.processPacket();
+  if(dxl.processPacket() == false){
+    DEBUG_SERIAL.print("Last lib err code: ");
+    DEBUG_SERIAL.print(dxl.getLastLibErrCode());
+    DEBUG_SERIAL.print(", ");
+    DEBUG_SERIAL.print("Last status packet err code: ");
+    DEBUG_SERIAL.println(dxl.getLastStatusPacketError());
+    DEBUG_SERIAL.println();
+  }
 
   // Update or use variables for each control item.
   digitalWrite(LED_BUILTIN, control_item_led);

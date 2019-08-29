@@ -56,7 +56,7 @@ class Slave
     void setWriteCallbackFunc(userCallbackFunc callback_func);
     void setReadCallbackFunc(userCallbackFunc callback_func);
 
-    void processPacket();
+    bool processPacket();
     
     uint8_t getLastStatusPacketError() const;
     lib_err_code_t getLastLibErrCode() const;

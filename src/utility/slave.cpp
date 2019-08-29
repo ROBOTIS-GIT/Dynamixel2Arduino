@@ -109,15 +109,18 @@ uint8_t Slave::getFirmwareVersion() const
   return firmware_ver_;
 }
 
-void Slave::processPacket()
+bool Slave::processPacket()
 {
+  bool ret = false;
   last_lib_err_code_ = dxlRxPacket(&packet_);
 
   if(last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_INST){
     if(packet_.rx.id == id_){
-      processInst(packet_.rx.cmd);
+      ret = processInst(packet_.rx.cmd);
     }
   }
+
+  return ret;
 }
 
 
