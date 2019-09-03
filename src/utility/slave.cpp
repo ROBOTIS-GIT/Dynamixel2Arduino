@@ -124,6 +124,28 @@ bool Slave::processPacket()
 }
 
 
+uint8_t Slave::getNumCanBeRegistered() const
+{
+  return CONTROL_ITEM_MAX-registered_item_cnt_;
+}
+
+bool Slave::isEnoughSpaceInControlTable(uint16_t start_addr, uint16_t length)
+{
+  uint16_t available_start_addr = control_table_[registered_item_cnt_].start_addr + control_table_[registered_item_cnt_].length;
+
+  if(start_addr > CONTROL_ITEM_ADDR_LIMIT){
+    last_lib_err_code_ = DXL_LIB_ERROR_INVAILD_ADDR;
+    return false;
+  }
+
+  if(length == 0 || length > CONTROL_ITEM_ADDR_LIMIT - available_start_addr){
+    last_lib_err_code_ = DXL_LIB_ERROR_ADDR_LENGTH;
+    return false;
+  }
+
+  return true;
+}
+
 
 uint8_t Slave::addControlItem(uint16_t start_addr, uint8_t* p_data, uint16_t length)
 {
@@ -132,18 +154,12 @@ uint8_t Slave::addControlItem(uint16_t start_addr, uint8_t* p_data, uint16_t len
     return last_lib_err_code_;
   }
 
-  if(start_addr + length > CONTROL_ITEM_ADDR_LIMIT){
-    last_lib_err_code_ = DXL_LIB_ERROR_INVAILD_ADDR;
-    return last_lib_err_code_;
-  }
-
-  if(length == 0 || length > CONTROL_ITEM_ADDR_LIMIT){
-    last_lib_err_code_ = DXL_LIB_ERROR_ADDR_LENGTH;
-    return last_lib_err_code_;
-  }
-
   if(p_data == nullptr){
     last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return last_lib_err_code_;
+  }
+
+  if(isEnoughSpaceInControlTable(start_addr, length) == false){
     return last_lib_err_code_;
   }
 
