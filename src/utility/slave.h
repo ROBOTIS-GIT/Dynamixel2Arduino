@@ -61,6 +61,9 @@ class Slave
     uint8_t getLastStatusPacketError() const;
     lib_err_code_t getLastLibErrCode() const;
 
+    uint8_t getNumCanBeRegistered() const;
+    bool isEnoughSpaceInControlTable(uint16_t start_addr, uint16_t length);
+
     uint8_t addControlItem(uint16_t start_addr, uint8_t* p_data, uint16_t length);
     uint8_t addControlItem(uint16_t start_addr, bool &data);
     uint8_t addControlItem(uint16_t start_addr, uint8_t &data);
