@@ -7,16 +7,17 @@ using namespace DYNAMIXEL;
 enum DefaultControlTableItemAddr{
   ADDR_MODEL_NUMBER    = 0,
   ADDR_FIRMWARE_VER    = 6,
-  ADDR_ID              = 7
+  ADDR_ID              = 7,
+  ADDR_PROTOCOL_VER    = 9
 };
 
 static bool isAddrInRange(uint16_t addr, uint16_t length, uint16_t range_addr, uint16_t range_length);
 static bool isAddrInOtherItem(uint16_t start_addr, uint16_t length, uint16_t other_start_addr, uint16_t other_length);
 
-static lib_err_code_t dxlMakePacketStatus1_0(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
-static lib_err_code_t dxlMakePacketStatus2_0(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
-static lib_err_code_t dxlTxPacketStatus(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length);
-static lib_err_code_t dxlMakePacketStatus(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length );
+static lib_err_code_t dxlMakePacketStatus1_0(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length );
+static lib_err_code_t dxlMakePacketStatus2_0(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length );
+static lib_err_code_t dxlTxPacketStatus(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length);
+static lib_err_code_t dxlMakePacketStatus(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length );
 
 
 Slave::Slave(PortHandler &port, const uint16_t model_num, float protocol_ver)
@@ -26,7 +27,11 @@ Slave::Slave(PortHandler &port, const uint16_t model_num, float protocol_ver)
   last_status_packet_error_(0), last_lib_err_code_(DXL_LIB_OK)
 {
   setPort(port);
-  dxlInit(&packet_, protocol_ver);
+  protocol_ver = protocol_ver == 1.0 ? 1.0:2.0;
+  protocol_ver_idx_ = protocol_ver == 1.0 ? 1:2;
+  dxlInit(&packet_, protocol_ver, DXLMode::DXL_MODE_SLAVE);
+  this->setID(id_);
+  memset(&control_table_, 0, sizeof(control_table_));
   this->addDefaultControlItem();
 }
 
@@ -36,18 +41,24 @@ Slave::Slave(const uint16_t model_num, float protocol_ver)
   user_write_callback_(nullptr), user_read_callback_(nullptr),
   last_status_packet_error_(0), last_lib_err_code_(DXL_LIB_OK)
 {
-  dxlInit(&packet_, protocol_ver);
+  protocol_ver = protocol_ver == 1.0 ? 1.0:2.0;
+  protocol_ver_idx_ = protocol_ver == 1.0 ? 1:2;
+  dxlInit(&packet_, protocol_ver, DXLMode::DXL_MODE_SLAVE);
+  this->setID(id_);
+  memset(&control_table_, 0, sizeof(control_table_));
   this->addDefaultControlItem();
 }
 
-void Slave::setWriteCallbackFunc(userCallbackFunc callback_func)
+void Slave::setWriteCallbackFunc(userCallbackFunc callback_func, void* callback_arg)
 {
   user_write_callback_ = callback_func;
+  user_write_callbakc_arg_ = callback_arg;
 }
 
-void Slave::setReadCallbackFunc(userCallbackFunc callback_func)
+void Slave::setReadCallbackFunc(userCallbackFunc callback_func, void* callback_arg)
 {
   user_read_callback_ = callback_func;
+  user_read_callbakc_arg_ = callback_arg;
 }
 
 bool Slave::setPort(PortHandler &port)
@@ -61,12 +72,53 @@ bool Slave::setPort(PortHandler &port)
 
 bool Slave::setPortProtocolVersion(float version)
 {
-  return dxlSetProtocolVersion(&packet_, version);
+  bool ret = false;
+
+  ret = dxlSetProtocolVersion(&packet_, version);
+  if(ret == true){
+    protocol_ver_idx_ = version == 1.0 ? 1:2;
+  }
+
+  return ret;
 }
 
-float Slave::getPortProtocolVersion()
+bool Slave::setPortProtocolVersionUsingIndex(uint8_t version_idx)
 {
-  return dxlGetProtocolVersion(&packet_);
+  bool ret = false;
+  float version_float;
+
+  if(version_idx == 1){
+    version_float = 1.0;
+  }else if(version_idx == 2){
+    version_float = 2.0;
+  }else{
+    return false;
+  }
+
+  ret = dxlSetProtocolVersion(&packet_, version_float);
+  if(ret == true){
+    protocol_ver_idx_ = version_idx;
+  }
+
+  return ret;
+}
+
+float Slave::getPortProtocolVersion() const
+{
+  float version_float = 0.0;
+
+  if(protocol_ver_idx_ == 1){
+    version_float = 1.0;
+  }else if(protocol_ver_idx_ == 2){
+    version_float = 2.0;
+  }
+
+  return version_float;
+}
+
+uint8_t Slave::getPortProtocolVersionIndex() const
+{
+  return protocol_ver_idx_;
 }
 
 uint16_t Slave::getModelNumber() const
@@ -115,9 +167,11 @@ bool Slave::processPacket()
   last_lib_err_code_ = dxlRxPacket(&packet_);
 
   if(last_lib_err_code_ == DXL_LIB_OK && packet_.rx.type == RX_PACKET_TYPE_INST){
-    if(packet_.rx.id == id_){
+    if(packet_.rx.id == packet_.id){
       ret = processInst(packet_.rx.cmd);
     }
+  }else if(last_lib_err_code_ == DXL_LIB_PROCEEDING){
+    ret = true;
   }
 
   return ret;
@@ -270,7 +324,7 @@ bool Slave::processInstPing()
     p_param_data[param_length++] = (uint8_t)firmware_ver_;
   }
 
-  last_lib_err_code_ = dxlTxPacketStatus(packet_, id_, 0, p_param_data, param_length);
+  last_lib_err_code_ = dxlTxPacketStatus(packet_, 0, p_param_data, param_length);
 
   if(last_lib_err_code_ == DXL_LIB_OK)
     ret = true;
@@ -303,7 +357,7 @@ bool Slave::processInstRead()
     length = packet_.rx.p_param[1];
 
     if( length > 0xFF - 2){
-      dxlTxPacketStatus(packet_, id_, DXL_ERR_DATA_LENGTH, nullptr, 0);
+      dxlTxPacketStatus(packet_, DXL_ERR_DATA_LENGTH, nullptr, 0);
       last_lib_err_code_ = DXL_LIB_ERROR_LENGTH;
       return false;
     }
@@ -318,20 +372,30 @@ bool Slave::processInstRead()
   }
 
   if(length > DXL_BUF_LENGTH){
-    dxlTxPacketStatus(packet_, id_, DXL_ERR_DATA_LENGTH, nullptr, 0);
+    dxlTxPacketStatus(packet_, DXL_ERR_DATA_LENGTH, nullptr, 0);
     last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
     return false;
   }
 
+  memset(packet_.tx.data, 0, sizeof(packet_.tx.data));
   p_param_data = &packet_.tx.data[PKT_STATUS_PARAM_IDX];
 
   uint16_t item_start_addr, item_addr_length;
   for(uint8_t i=0; i < registered_item_cnt_; i++){
     item_start_addr = control_table_[i].start_addr;
     item_addr_length = control_table_[i].length;
-    if(isAddrInRange(item_start_addr, item_addr_length, addr, length)==true){
+    if(item_addr_length != 0
+      && control_table_[i].p_data != nullptr
+      && isAddrInRange(item_start_addr, item_addr_length, addr, length)==true){
+      
+      if(item_start_addr == ADDR_ID){
+        setID(dxlGetId(&packet_));
+      }else if(item_start_addr == ADDR_PROTOCOL_VER){         
+        setPortProtocolVersion(dxlGetProtocolVersion(&packet_));
+      }  
+      
       if(user_read_callback_ != nullptr){
-        user_read_callback_(item_start_addr, process_ret);
+        user_read_callback_(item_start_addr, process_ret, user_read_callbakc_arg_);
         if(process_ret != DXL_ERR_NONE){
           break;
         }
@@ -340,7 +404,7 @@ bool Slave::processInstRead()
     }
   }
 
-  last_lib_err_code_ = dxlTxPacketStatus(packet_, id_, process_ret, p_param_data, length);
+  last_lib_err_code_ = dxlTxPacketStatus(packet_, process_ret, p_param_data, length);
   if(last_lib_err_code_ == DXL_LIB_OK){
     ret = true;
   }
@@ -369,13 +433,13 @@ bool Slave::processInstWrite()
     if(packet_.rx.param_length > 1 ){
       length = packet_.rx.param_length - 1;
     }else{
-      dxlTxPacketStatus(packet_, id_, DXL_ERR_DATA_LENGTH, nullptr, 0);
+      dxlTxPacketStatus(packet_, DXL_ERR_DATA_LENGTH, nullptr, 0);
       last_lib_err_code_ = DXL_LIB_ERROR_LENGTH;
       return false;
     }
 
     if( length > 0xFF - 2 ){
-      dxlTxPacketStatus(packet_, id_, DXL_ERR_DATA_LENGTH, nullptr, 0);
+      dxlTxPacketStatus(packet_, DXL_ERR_DATA_LENGTH, nullptr, 0);
       last_lib_err_code_ = DXL_LIB_ERROR_LENGTH;
       return false;
     }
@@ -386,14 +450,14 @@ bool Slave::processInstWrite()
     if(packet_.rx.param_length > 2 ){
       length = packet_.rx.param_length - 2;
     }else{
-      dxlTxPacketStatus(packet_, id_, DXL_ERR_DATA_LENGTH, nullptr, 0);
+      dxlTxPacketStatus(packet_, DXL_ERR_DATA_LENGTH, nullptr, 0);
       last_lib_err_code_ = DXL_LIB_ERROR_LENGTH;
       return false;
     }    
   }
 
   if(length > DXL_BUF_LENGTH){
-    dxlTxPacketStatus(packet_, id_, DXL_ERR_DATA_LENGTH, nullptr, 0);
+    dxlTxPacketStatus(packet_, DXL_ERR_DATA_LENGTH, nullptr, 0);
     last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
     return false;
   }
@@ -402,13 +466,15 @@ bool Slave::processInstWrite()
   for(uint8_t i=0; i < registered_item_cnt_; i++){
     item_start_addr = control_table_[i].start_addr;
     item_addr_length = control_table_[i].length;
-    if(isAddrInRange(item_start_addr, item_addr_length, addr, length)==true){
+    if(item_addr_length != 0
+      && control_table_[i].p_data != nullptr
+      && isAddrInRange(item_start_addr, item_addr_length, addr, length)==true){
       if(item_start_addr != ADDR_MODEL_NUMBER
         && item_start_addr != ADDR_FIRMWARE_VER){
 
         memcpy(control_table_[i].p_data, &p_data[item_start_addr-addr], item_addr_length);
         if(user_write_callback_ != nullptr){
-          user_write_callback_(item_start_addr, process_ret);
+          user_write_callback_(item_start_addr, process_ret, user_write_callbakc_arg_);
           if(process_ret != DXL_ERR_NONE){
             break;
           }
@@ -417,7 +483,7 @@ bool Slave::processInstWrite()
     }
   }
 
-  last_lib_err_code_ = dxlTxPacketStatus(packet_, id_, process_ret, nullptr, 0);
+  last_lib_err_code_ = dxlTxPacketStatus(packet_, process_ret, nullptr, 0);
   if(last_lib_err_code_ == DXL_LIB_OK){
     ret = true;
   }
@@ -429,7 +495,8 @@ bool Slave::addDefaultControlItem()
 {
   if(addControlItem(ADDR_MODEL_NUMBER, (uint16_t&)model_num_) != DXL_LIB_OK
     || addControlItem(ADDR_FIRMWARE_VER, firmware_ver_) != DXL_LIB_OK
-    || addControlItem(ADDR_ID, id_) != DXL_LIB_OK){
+    || addControlItem(ADDR_ID, id_) != DXL_LIB_OK
+    || addControlItem(ADDR_PROTOCOL_VER, protocol_ver_idx_) != DXL_LIB_OK){
     return false;
   }   
 
@@ -495,11 +562,11 @@ static bool isAddrInOtherItem(uint16_t start_addr, uint16_t length,
 
 
 
-static lib_err_code_t dxlTxPacketStatus(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+static lib_err_code_t dxlTxPacketStatus(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length )
 {
   lib_err_code_t ret;
 
-  ret = dxlMakePacketStatus(packet, id, error, p_data, length);
+  ret = dxlMakePacketStatus(packet, error, p_data, length);
   if(ret == DXL_LIB_OK) {
     dxlTxWrite(&packet, packet.tx.data, packet.tx.packet_length);
   }
@@ -507,20 +574,20 @@ static lib_err_code_t dxlTxPacketStatus(dxl_t &packet, uint8_t id, uint8_t error
   return ret;
 }
 
-static lib_err_code_t dxlMakePacketStatus(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+static lib_err_code_t dxlMakePacketStatus(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length )
 {
   lib_err_code_t ret;
 
   if(packet.packet_ver == DXL_PACKET_VER_1_0){
-    ret = dxlMakePacketStatus1_0(packet, id, error, p_data, length);
+    ret = dxlMakePacketStatus1_0(packet, error, p_data, length);
   }else{
-    ret = dxlMakePacketStatus2_0(packet, id, error, p_data, length);
+    ret = dxlMakePacketStatus2_0(packet, error, p_data, length);
   }
 
   return ret;
 }
 
-static lib_err_code_t dxlMakePacketStatus1_0(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+static lib_err_code_t dxlMakePacketStatus1_0(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length )
 {
   lib_err_code_t ret = DXL_LIB_OK;
   uint16_t i = 0;
@@ -541,10 +608,10 @@ static lib_err_code_t dxlMakePacketStatus1_0(dxl_t &packet, uint8_t id, uint8_t 
 
   packet.tx.data[PKT_1_0_HDR_1_IDX] = 0xFF;
   packet.tx.data[PKT_1_0_HDR_2_IDX] = 0xFF;
-  packet.tx.data[PKT_1_0_ID_IDX]    = id;
+  packet.tx.data[PKT_1_0_ID_IDX]    = packet.id;
   packet.tx.data[PKT_1_0_ERROR_IDX] = error;
 
-  check_sum += id;
+  check_sum += packet.id;
   check_sum += packet_length;
   check_sum += error;
 
@@ -560,7 +627,7 @@ static lib_err_code_t dxlMakePacketStatus1_0(dxl_t &packet, uint8_t id, uint8_t 
   return ret;
 }
 
-static lib_err_code_t dxlMakePacketStatus2_0(dxl_t &packet, uint8_t id, uint8_t error, uint8_t *p_data, uint16_t length )
+static lib_err_code_t dxlMakePacketStatus2_0(dxl_t &packet, uint8_t error, uint8_t *p_data, uint16_t length )
 {
   lib_err_code_t ret = DXL_LIB_OK;
   uint16_t i = 0;
@@ -578,7 +645,7 @@ static lib_err_code_t dxlMakePacketStatus2_0(dxl_t &packet, uint8_t id, uint8_t 
   packet.tx.data[PKT_HDR_2_IDX] = 0xFF;
   packet.tx.data[PKT_HDR_3_IDX] = 0xFD;
   packet.tx.data[PKT_RSV_IDX]   = 0x00;
-  packet.tx.data[PKT_ID_IDX]    = id;
+  packet.tx.data[PKT_ID_IDX]    = packet.id;
   packet.tx.data[PKT_INST_IDX]  = INST_STATUS;
   packet.tx.data[PKT_ERROR_IDX] = error;
 

@@ -138,6 +138,7 @@ class Master
     Master(float protocol_ver = DXL_PACKET_VER_2_0);
 
     bool setPortProtocolVersion(float version);
+    bool setPortProtocolVersionUsingIndex(uint8_t version_idx);
     float getPortProtocolVersion();
 
     bool setPort(PortHandler &port);

@@ -54,11 +54,11 @@ bool DYNAMIXEL::setDxlPort(dxl_t *p_packet, PortHandler *port)
   return true;
 }
 
-bool DYNAMIXEL::dxlInit(dxl_t *p_packet, float protocol_ver)
+bool DYNAMIXEL::dxlInit(dxl_t *p_packet, float protocol_ver, uint8_t mode)
 {
   p_packet->header_cnt = 0;
   p_packet->packet_ver = protocol_ver;
-  p_packet->dxl_mode   = DXL_MODE_MASTER;
+  p_packet->dxl_mode   = mode;
 
   p_packet->rx_state   = PACKET_2_0_STATE_IDLE;
 
@@ -67,9 +67,8 @@ bool DYNAMIXEL::dxlInit(dxl_t *p_packet, float protocol_ver)
   p_packet->rx_timeout = (uint32_t)500*(uint32_t)1000;
   p_packet->tx_timeout = (uint32_t)500*(uint32_t)1000;
 
-  p_packet->rx.header[0] = 0;
-  p_packet->rx.header[1] = 0;
-  p_packet->rx.header[2] = 0;
+  memset(&p_packet->rx, 0, sizeof(p_packet->rx));
+  memset(&p_packet->rx, 0, sizeof(p_packet->tx));
 
   return true;
 }

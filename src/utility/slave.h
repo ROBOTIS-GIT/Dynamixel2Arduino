@@ -26,7 +26,7 @@
 
 namespace DYNAMIXEL{
 
-typedef void (*userCallbackFunc)(uint16_t addr, uint8_t &dxl_err_code);
+typedef void (*userCallbackFunc)(uint16_t addr, uint8_t &dxl_err_code, void* arg);
 
 typedef struct ControlItem{
   uint16_t start_addr;
@@ -50,11 +50,15 @@ class Slave
     uint8_t getFirmwareVersion() const;
     
     bool setPort(PortHandler &port);
+    PortHandler* getPort() const;
+    
     bool setPortProtocolVersion(float version);
-    float getPortProtocolVersion();
+    bool setPortProtocolVersionUsingIndex(uint8_t version_idx);
+    float getPortProtocolVersion() const;
+    uint8_t getPortProtocolVersionIndex() const;
 
-    void setWriteCallbackFunc(userCallbackFunc callback_func);
-    void setReadCallbackFunc(userCallbackFunc callback_func);
+    void setWriteCallbackFunc(userCallbackFunc callback_func, void* callback_arg = nullptr);
+    void setReadCallbackFunc(userCallbackFunc callback_func, void* callback_arg = nullptr);
 
     bool processPacket();
     
@@ -77,19 +81,21 @@ class Slave
     uint8_t addControlItem(uint16_t start_addr, float &data);
     uint8_t addControlItem(uint16_t start_addr, double &data);
 
-
   private:
     PortHandler *p_port_;
     
     const uint16_t model_num_;
     uint8_t firmware_ver_;
+    uint8_t protocol_ver_idx_;
     uint8_t id_;
 
     uint8_t registered_item_cnt_;
     ControlItem_t control_table_[CONTROL_ITEM_MAX];
     
     userCallbackFunc user_write_callback_;
+    void* user_write_callbakc_arg_;
     userCallbackFunc user_read_callback_;
+    void* user_read_callbakc_arg_;
 
     dxl_t packet_;
 

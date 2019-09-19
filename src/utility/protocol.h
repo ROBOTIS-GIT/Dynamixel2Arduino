@@ -29,9 +29,6 @@
 #define DXL_TYPE_INST           0
 #define DXL_TYPE_STATUS         1
 
-#define DXL_MODE_SLAVE          0
-#define DXL_MODE_MASTER         1
-
 #define DXL_BROADCAST_ID        0xFE
 #define DXL_ALL_ID              DXL_BROADCAST_ID
 #define DXL_NONE_ID             0xFF
@@ -83,6 +80,11 @@
 #define RX_PACKET_TYPE_INST     1
 
 namespace DYNAMIXEL{
+
+  enum DXLMode{
+    DXL_MODE_MASTER = 0,
+    DXL_MODE_SLAVE
+  };
 
   enum Instruction{
     INST_PING = 0x01,
@@ -162,7 +164,7 @@ namespace DYNAMIXEL{
   } dxl_t;
 
   bool setDxlPort(dxl_t *p_packet, PortHandler *port);
-  bool dxlInit(dxl_t *p_packet, float protocol_ver);
+  bool dxlInit(dxl_t *p_packet, float protocol_ver, uint8_t mode = DXLMode::DXL_MODE_MASTER);
   
   bool    dxlSetId(dxl_t *p_packet, uint8_t id);
   uint8_t dxlGetId(dxl_t *p_packet);
