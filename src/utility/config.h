@@ -29,10 +29,13 @@
 
 
 #if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
-  || defined (ARDUINO_AVR_LEONARDO) || defined (ARDUINO_AVR_INDUSTRIAL101)
+  || defined (ARDUINO_AVR_INDUSTRIAL101)
 #define DXL_MAX_NODE                   16
-#define DXL_MAX_NODE_BUFFER_SIZE       16
-#elif defined(OpenCR)
+#define DXL_MAX_NODE_BUFFER_SIZE       10
+#elif defined (ARDUINO_AVR_LEONARDO)
+#define DXL_MAX_NODE                   16
+#define DXL_MAX_NODE_BUFFER_SIZE       12
+#elif defined (OpenCR)
 #define DXL_MAX_NODE                  253 // Max number of XEL on DYNAMIXEL protocol
 #define DXL_MAX_NODE_BUFFER_SIZE       32
 #else
