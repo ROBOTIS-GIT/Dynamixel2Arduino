@@ -21,6 +21,21 @@ bool Master::setPortProtocolVersion(float version)
   return dxlSetProtocolVersion(&packet_, version);
 }
 
+bool Master::setPortProtocolVersionUsingIndex(uint8_t version_idx)
+{
+  float version_float;
+
+  if(version_idx == 1){
+    version_float = 1.0;
+  }else if(version_idx == 2){
+    version_float = 2.0;
+  }else{
+    return false;
+  }
+
+  return setPortProtocolVersion(version_float);
+}
+
 float Master::getPortProtocolVersion()
 {
   return dxlGetProtocolVersion(&packet_);

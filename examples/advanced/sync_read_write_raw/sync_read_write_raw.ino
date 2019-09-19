@@ -134,18 +134,18 @@ void loop() {
 
   // Print the read data using SyncRead
   dxl.syncRead(sync_read_param, read_result);
-  DEBUG_SERIAL.println("======= Sync Read =======");
+  DEBUG_SERIAL.println(F("======= Sync Read ======="));
   memcpy(&recv_velocity[0], read_result.xel[0].data, read_result.xel[0].length);
   memcpy(&recv_velocity[1], read_result.xel[1].data, read_result.xel[1].length);
-  DEBUG_SERIAL.print("ID: ");DEBUG_SERIAL.print(read_result.xel[0].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Present Velocity: ");DEBUG_SERIAL.print(recv_velocity[0]);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Packet Error: ");DEBUG_SERIAL.print(read_result.xel[0].error);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Param Length: ");DEBUG_SERIAL.print(read_result.xel[0].length);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F("ID: "));DEBUG_SERIAL.print(read_result.xel[0].id);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F(", Present Velocity: "));DEBUG_SERIAL.print(recv_velocity[0]);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F(", Packet Error: "));DEBUG_SERIAL.print(read_result.xel[0].error);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F(", Param Length: "));DEBUG_SERIAL.print(read_result.xel[0].length);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.println();
-  DEBUG_SERIAL.print("ID: ");DEBUG_SERIAL.print(read_result.xel[1].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Present Velocity: ");DEBUG_SERIAL.print(recv_velocity[1]);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Packet Error: ");DEBUG_SERIAL.print(read_result.xel[1].error);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(", Param Length: ");DEBUG_SERIAL.print(read_result.xel[1].length);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F("ID: "));DEBUG_SERIAL.print(read_result.xel[1].id);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F(", Present Velocity: "));DEBUG_SERIAL.print(recv_velocity[1]);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F(", Packet Error: "));DEBUG_SERIAL.print(read_result.xel[1].error);DEBUG_SERIAL.print(" ");
+  DEBUG_SERIAL.print(F(", Param Length: "));DEBUG_SERIAL.print(read_result.xel[1].length);DEBUG_SERIAL.print(" ");
   DEBUG_SERIAL.println();
   DEBUG_SERIAL.println();  
   delay(100);

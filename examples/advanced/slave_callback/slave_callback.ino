@@ -93,8 +93,10 @@ void loop() {
 // If you use dxl_err_code, you can send the packet's error code to the Master.
 // See the DYNAMIXEL Protocol documentation for this. 
 // (http://emanual.robotis.com/docs/kr/dxl/protocol2/)
-void read_callback_func(uint16_t item_addr, uint8_t &dxl_err_code)
+void read_callback_func(uint16_t item_addr, uint8_t &dxl_err_code, void* arg)
 {
+  (void)dxl_err_code, (void)arg;
+
   if(item_addr == ADDR_CONTROL_ITEM_ANALOG){
     control_item_analog = analogRead(A0);
   }
@@ -104,8 +106,10 @@ void read_callback_func(uint16_t item_addr, uint8_t &dxl_err_code)
 // If you use dxl_err_code, you can send the packet's error code to the Master.
 // See the DYNAMIXEL Protocol documentation for this. 
 // (http://emanual.robotis.com/docs/kr/dxl/protocol2/)
-void write_callback_func(uint16_t item_addr, uint8_t &dxl_err_code)
+void write_callback_func(uint16_t item_addr, uint8_t &dxl_err_code, void* arg)
 {
+  (void)dxl_err_code, (void)arg;
+
   if(item_addr == ADDR_CONTROL_ITEM_LED){
     digitalWrite(LED_BUILTIN, control_item_led);
   }

@@ -1,8 +1,6 @@
 #ifndef DYNAMIXEL_CONFIG_H_
 #define DYNAMIXEL_CONFIG_H_
 
-//TODO: move to Slave class. // DO NOT USE THIS FUNCTION YET.
-#define USE_SLAVE_FUNC 0
 
 #define ENABLE_ACTUATOR_AX              1
 #define ENABLE_ACTUATOR_DX              0
@@ -31,15 +29,18 @@
 
 
 #if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
-  || defined (ARDUINO_AVR_LEONARDO) || defined (ARDUINO_AVR_INDUSTRIAL101)
+  || defined (ARDUINO_AVR_INDUSTRIAL101)
 #define DXL_MAX_NODE                   16
-#define DXL_MAX_NODE_BUFFER_SIZE        8
-#elif defined(OpenCR)
+#define DXL_MAX_NODE_BUFFER_SIZE       10
+#elif defined (ARDUINO_AVR_LEONARDO)
+#define DXL_MAX_NODE                   16
+#define DXL_MAX_NODE_BUFFER_SIZE       12
+#elif defined (OpenCR)
 #define DXL_MAX_NODE                  253 // Max number of XEL on DYNAMIXEL protocol
 #define DXL_MAX_NODE_BUFFER_SIZE       32
 #else
 #define DXL_MAX_NODE                   16
-#define DXL_MAX_NODE_BUFFER_SIZE       12
+#define DXL_MAX_NODE_BUFFER_SIZE       16
 #endif
 
 #define DXL_BUF_LENGTH (DXL_MAX_NODE*DXL_MAX_NODE_BUFFER_SIZE + 11) // 11 = Header(3)+Reserved(1)+ID(1)+Length(2)+Instruction(1)+Error(1)+crc(2)
