@@ -20,14 +20,14 @@
 // Please modify it to suit your hardware.
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560)
   #include <SoftwareSerial.h>
-  SoftwareSerial soft_serial(7, 8); //RX,TX //UART Port on DYNAMIXEL Shield
+  SoftwareSerial soft_serial(7, 8); // DYNAMIXELShield UART RX/TX
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL soft_serial
-  const uint8_t DXL_DIR_PIN = 2; //DYNAMIXEL Shield
+  const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #else
   #define DXL_SERIAL   Serial1
   #define DEBUG_SERIAL Serial
-  const uint8_t DXL_DIR_PIN = 2; //DYNAMIXEL Shield
+  const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
 
 // Create a port object for DYNAMIXEL communication.
