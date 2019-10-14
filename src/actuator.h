@@ -20,7 +20,7 @@
 
 #define EX106               (uint16_t)107
 
-#define MX12W               (uint16_t)104
+#define MX12W               (uint16_t)360
 #define MX28                (uint16_t)29
 #define MX64                (uint16_t)310
 #define MX106               (uint16_t)320
