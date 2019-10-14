@@ -142,6 +142,7 @@ class Master
     float getPortProtocolVersion();
 
     bool setPort(PortHandler &port);
+    bool setPort(PortHandler *p_port);
     PortHandler* getPort() const;
 
     uint8_t ping(uint8_t id, 

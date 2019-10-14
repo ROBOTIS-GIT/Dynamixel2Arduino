@@ -48,6 +48,14 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
     /**
      * @brief The constructor.
      * @code
+     * Dynamixel2Arduino dxl;
+     * @endcode
+     */   
+    Dynamixel2Arduino();
+
+    /**
+     * @brief The constructor.
+     * @code
      * const int DXL_DIR_PIN = 2;
      * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
      * @endcode
@@ -79,7 +87,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @endcode
      * @return It returns serial baudrate of board port.
      */   
-    unsigned long getPortBaud() const;
+    unsigned long getPortBaud();
     
     /**
      * @brief It is API for To checking the communication connection status of DYNAMIXEL.
@@ -409,7 +417,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
       uint8_t id;
     } IdAndModelNum_t;
 
-    DYNAMIXEL::SerialPortHandler dxl_port_;
+    DYNAMIXEL::SerialPortHandler *p_dxl_port_;
     
     IdAndModelNum_t registered_dxl_[DXL_MAX_NODE];
     uint8_t         registered_dxl_cnt_;
