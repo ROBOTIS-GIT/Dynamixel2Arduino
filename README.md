@@ -8,7 +8,8 @@
     |:-:|:-:|:-:|:-:|
     |OpenCM9.04|Serial1|28|because of the OpenCM 9.04 driver code, you must call Serial1.setDxlMode(true); before dxl.begin();.|
     |OpenCM9.04 EXP|Serial3|22||
-    |OpenCR|Serial3|84||
+    |OpenCR|Serial3|84|For OpenCR, there is a DXL Power Enable pin, so you must initialize and control it. ([Reference link](https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78))|
+
 
 ## How to add new DYNAMIXEL model.
  - For the convenience of the user, Dynamixel2Arduino API hardcodes some information in the control table and stores it in flash.
