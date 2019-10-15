@@ -98,7 +98,8 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @endcode
      * @param id DYNAMIXEL Actuator's ID or BROADCAST ID (0xFE). (default : 0xFE)
      * @return It returns true(1) on success, false(0) on failure.
-     */    
+     */
+    using DYNAMIXEL::Master::ping;    
     bool ping(uint8_t id = DXL_BROADCAST_ID);
 
     /**
@@ -253,7 +254,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_DEGREE.
      * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
-     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastLibErrCode().
      */    
     float getPresentPosition(uint8_t id, uint8_t unit = UNIT_RAW);
 
@@ -285,7 +286,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_RPM.
      * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
-     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastLibErrCode().
      */    
     float getPresentVelocity(uint8_t id, uint8_t unit = UNIT_RAW);
 
@@ -317,7 +318,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_PERCENT.
      * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
-     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastLibErrCode().
      */    
     float getPresentPWM(uint8_t id, uint8_t unit = UNIT_RAW);
 
@@ -349,7 +350,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @param unit The unit you want to return (the function converts the raw value to the unit you specified and returns it) (default : UNIT_RAW)
      *    Only support UNIT_RAW, UNIT_PERCENT, UNIT_MILLI_AMPERE.
      * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
-     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastLibErrCode().
      */  
     float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
 
@@ -367,7 +368,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @param id DYNAMIXEL Actuator's ID.
      * @param timeout A timeout waiting for a response to a data transfer.
      * @return It returns the data read from DXL control table item.(Returns the value appropriate for @unit.)
-     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastErrorCode().
+     * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastLibErrCode().
      */  
     int32_t readControlTableItem(uint8_t item_idx, 
       uint8_t id, uint32_t timeout = 100);
