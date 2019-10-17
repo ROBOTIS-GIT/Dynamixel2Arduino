@@ -712,3 +712,23 @@ lib_err_code_t Master::getLastLibErrCode() const
   return last_lib_err_code_;
 }
 
+
+bool Master::txPacketInst(uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length) 
+{
+  uint32_t pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, inst_cmd, p_data, length);
+  packet_.tx_time = micros() - pre_time_us;
+  return last_lib_err_code_ == DXL_LIB_OK;
+}
+
+const dxl_packet_t* Master::rxPacket() 
+{
+  uint32_t pre_time_us = micros();
+  last_lib_err_code_ = dxlRxPacket(&packet_);
+
+  // See if we received some valid data...
+  if(last_lib_err_code_ != DXL_LIB_OK) 
+    return nullptr;
+  packet_.rx_time = micros() - pre_time_us;
+  return &packet_.rx;
+}

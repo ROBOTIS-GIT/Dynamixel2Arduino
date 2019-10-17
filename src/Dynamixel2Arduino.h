@@ -416,7 +416,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
     typedef struct IdAndModelNum{
       uint16_t model_num;
       uint8_t id;
-    } IdAndModelNum_t;
+    } __attribute__((packed)) IdAndModelNum_t;
 
     DYNAMIXEL::SerialPortHandler *p_dxl_port_;
     

@@ -33,6 +33,12 @@ void SerialPortHandler::begin()
 
 void SerialPortHandler::begin(unsigned long baud)
 {
+#if defined(Arduino_OpenCM904)
+  if(port_ == Serial1){
+    Serial1.setDxlMode(true);
+  }
+#endif
+
   baud_ = baud;
   port_.begin(baud_);
   
