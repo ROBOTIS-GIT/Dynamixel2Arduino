@@ -41,6 +41,15 @@ float Master::getPortProtocolVersion()
   return dxlGetProtocolVersion(&packet_);
 }
 
+bool Master::setPort(PortHandler *p_port)
+{
+  bool ret = setDxlPort(&packet_, p_port);
+
+  p_port_ = p_port;
+
+  return ret;
+}
+
 bool Master::setPort(PortHandler &port)
 {
   bool ret = setDxlPort(&packet_, &port);
@@ -60,14 +69,14 @@ uint8_t Master::ping(uint8_t id, XelInfoFromPing_t *recv_info_array, uint8_t rec
   uint8_t recv_id_cnt = 0;
   uint32_t pre_time_ms, pre_time_us;
 
-  if(recv_info_array == nullptr){
-    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
-    return 0;
-  }
-
   if(recv_array_cnt == 0){
     last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
     return 0;    
+  }
+
+  if(p_port_ == nullptr || recv_info_array == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return 0;
   }
 
   if (p_port_->getOpenState() != true) {
@@ -140,7 +149,12 @@ int32_t Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
     last_lib_err_code_ = DXL_LIB_ERROR_ADDR_LENGTH;
     return -1;
   }
-    
+
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return -1;
+  }
+
   if (p_port_->getOpenState() != true) {
     last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
     return -1;
@@ -252,6 +266,11 @@ bool Master::writeNoResp(uint8_t id, uint16_t addr, const uint8_t *p_data, uint1
     return false;
   }
 
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return -1;
+  }
+
   if (p_port_->getOpenState() != true)
   {
     last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
@@ -308,6 +327,11 @@ bool Master::factoryReset(uint8_t id, uint8_t option, uint32_t timeout)
     return false;
   }
 
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return false;
+  }
+
   if (p_port_->getOpenState() != true){
     last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
     return false;
@@ -351,6 +375,11 @@ bool Master::reboot(uint8_t id, uint32_t timeout)
 
   if (id == DXL_BROADCAST_ID){
     last_lib_err_code_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
     return false;
   }
 
@@ -401,6 +430,11 @@ bool Master::syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStat
   if(param_info.id_count > DXL_MAX_NODE
      || (size_t)(PKT_INST_PARAM_IDX + param_info.id_count * 5 + 2) > sizeof(packet_.tx.data)){
     last_lib_err_code_ = DXL_LIB_ERROR_BUFFER_OVERFLOW;
+    return false;
+  }
+
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
     return false;
   }
 
@@ -471,6 +505,11 @@ bool Master::syncWrite(const ParamForSyncWriteInst_t &param_info)
   uint16_t tx_length = 0;
   uint8_t *p_tx_data;
 
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return false;
+  }
+
   if (p_port_->getOpenState() != true){
     last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
     return false;
@@ -523,6 +562,11 @@ bool Master::bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStat
   uint32_t i, pre_time_us, pre_time_ms;
   uint16_t tx_length = 0;
   uint8_t *p_tx_data;
+
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return false;
+  }
 
   if (p_port_->getOpenState() != true){
     last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
@@ -624,6 +668,11 @@ bool Master::bulkWrite(const ParamForBulkWriteInst_t &param_info)
     return false;
   }
 
+  if(p_port_ == nullptr){
+    last_lib_err_code_ = DXL_LIB_ERROR_NULLPTR;
+    return false;
+  }
+
   if (p_port_->getOpenState() != true){
     last_lib_err_code_ = DXL_LIB_ERROR_PORT_NOT_OPEN;
     return false;
@@ -663,3 +712,23 @@ lib_err_code_t Master::getLastLibErrCode() const
   return last_lib_err_code_;
 }
 
+
+bool Master::txPacketInst(uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length) 
+{
+  uint32_t pre_time_us = micros();
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, inst_cmd, p_data, length);
+  packet_.tx_time = micros() - pre_time_us;
+  return last_lib_err_code_ == DXL_LIB_OK;
+}
+
+const dxl_packet_t* Master::rxPacket() 
+{
+  uint32_t pre_time_us = micros();
+  last_lib_err_code_ = dxlRxPacket(&packet_);
+
+  // See if we received some valid data...
+  if(last_lib_err_code_ != DXL_LIB_OK) 
+    return nullptr;
+  packet_.rx_time = micros() - pre_time_us;
+  return &packet_.rx;
+}

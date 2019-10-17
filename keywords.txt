@@ -43,6 +43,7 @@ writeControlTableItem	KEYWORD2
 
 # Master Class
 setPortProtocolVersion	KEYWORD2
+setPortProtocolVersionUsingIndex	KEYWORD2
 getPortProtocolVersion	KEYWORD2
 setPort	KEYWORD2
 ping	KEYWORD2

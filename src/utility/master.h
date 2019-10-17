@@ -142,6 +142,7 @@ class Master
     float getPortProtocolVersion();
 
     bool setPort(PortHandler &port);
+    bool setPort(PortHandler *p_port);
     PortHandler* getPort() const;
 
     uint8_t ping(uint8_t id, 
@@ -175,6 +176,10 @@ class Master
     lib_err_code_t getLastLibErrCode() const;
 
     void setLastLibErrCode(lib_err_code_t err_code);
+
+    //raw APIs
+    bool  txPacketInst(uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length);
+    const dxl_packet_t *rxPacket();
 
   private:
     PortHandler *p_port_;
