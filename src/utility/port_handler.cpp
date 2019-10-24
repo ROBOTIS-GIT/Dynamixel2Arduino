@@ -1,21 +1,19 @@
-
-
-
 #include "port_handler.h"
+
 
 using namespace DYNAMIXEL;
 
-PortHandler::PortHandler()
+DXLPortHandler::DXLPortHandler()
  : open_state_(false)
 {}
 
-/* PortHandler */
-bool PortHandler::getOpenState()
+/* DXLPortHandler */
+bool DXLPortHandler::getOpenState()
 {
   return open_state_;
 }
 
-void PortHandler::setOpenState(bool state)
+void DXLPortHandler::setOpenState(bool state)
 {
   open_state_ = state;
 }
@@ -23,7 +21,7 @@ void PortHandler::setOpenState(bool state)
 
 /* SerialPortHandler */
 SerialPortHandler::SerialPortHandler(HardwareSerial& port, const int dir_pin)
- : PortHandler(), port_(port), dir_pin_(dir_pin), baud_(57600)
+ : DXLPortHandler(), port_(port), dir_pin_(dir_pin), baud_(57600)
 {}
 
 void SerialPortHandler::begin()
@@ -113,7 +111,7 @@ unsigned long SerialPortHandler::getBaud() const
 
 /* USBSerialPortHandler */
 USBSerialPortHandler::USBSerialPortHandler(USB_SERIAL_CLASS& port)
- : PortHandler(), port_(port)
+ : DXLPortHandler(), port_(port)
 {}
 
 void USBSerialPortHandler::begin()
@@ -155,3 +153,4 @@ size_t USBSerialPortHandler::write(uint8_t *buf, size_t len)
 
   return ret;      
 }
+

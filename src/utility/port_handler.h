@@ -14,18 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
-#ifndef DYNAMIXEL_PORT_HANDLER_H_
-#define DYNAMIXEL_PORT_HANDLER_H_
+#ifndef DYNAMIXEL_PORT_HANDLER_HPP_
+#define DYNAMIXEL_PORT_HANDLER_HPP_
 
 
 #include <Arduino.h>
 
 namespace DYNAMIXEL{
 
-class PortHandler
+class DXLPortHandler
 {
   public:
-    PortHandler();
+    DXLPortHandler();
     
     virtual void begin() = 0;
     virtual void end() = 0;
@@ -40,7 +40,7 @@ class PortHandler
     bool open_state_;
 };
 
-class SerialPortHandler : public PortHandler
+class SerialPortHandler : public DXLPortHandler
 {
   public:
     SerialPortHandler(HardwareSerial& port, const int dir_pin = -1);
@@ -77,7 +77,7 @@ class SerialPortHandler : public PortHandler
   #define USB_SERIAL_CLASS HardwareSerial
 #endif
 
-class USBSerialPortHandler : public PortHandler
+class USBSerialPortHandler : public DXLPortHandler
 {
   public:
     USBSerialPortHandler(USB_SERIAL_CLASS& port);
@@ -93,6 +93,6 @@ class USBSerialPortHandler : public PortHandler
     USB_SERIAL_CLASS& port_;
 };
 
-} //namespace DYNAMIXEL
+}//namespace DYNAMIXEL
 
-#endif /* DYNAMIXEL_PORT_HANDLER_H_ */
+#endif /* DYNAMIXEL_PORT_HANDLER_HPP_ */

@@ -15,7 +15,6 @@
 *******************************************************************************/
 
 #include "Dynamixel2Arduino.h"
-#include "actuator.h"
 
 using namespace DYNAMIXEL;
 
@@ -117,39 +116,35 @@ bool Dynamixel2Arduino::ping(uint8_t id)
   uint8_t i;
 
   if (id == DXL_BROADCAST_ID){
-    RecvInfoFromPing_t recv_info;
+    uint8_t recv_ids[DXL_MAX_NODE];
+    uint8_t recv_cnt;
     registered_dxl_cnt_ = 0;
 
-    if(Master::ping(DXL_BROADCAST_ID, recv_info, 3*253) == true){
-      for (i=0; i<recv_info.id_count && registered_dxl_cnt_<DXL_MAX_NODE; i++){
+    recv_cnt = Master::ping(DXL_BROADCAST_ID, recv_ids, sizeof(recv_ids), 3*253);
 
-        registered_dxl_[registered_dxl_cnt_].id  = recv_info.xel[i].id;
-        if(getPortProtocolVersion() == 2.0){
-          registered_dxl_[registered_dxl_cnt_].model_num = recv_info.xel[i].model_number;
-        }else{
-          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(recv_info.xel[i].id);
-        }
+    if(recv_cnt > 0){
+      for (i=0; i<recv_cnt && registered_dxl_cnt_<DXL_MAX_NODE; i++){
+        registered_dxl_[registered_dxl_cnt_].id  = recv_ids[i];
+        registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(recv_ids[i]);
         registered_dxl_cnt_++;
       }
       ret = true;
     }  
   }else{
-    XelInfoFromPing_t recv_info;
-    if(Master::ping(id, &recv_info, 1, 20) > 0){
-      if(recv_info.id != id)
+    uint8_t recv_id;
+    if(Master::ping(id, &recv_id, 1, 10) > 0){
+      if(recv_id != id){
         return false;
+      }
       for (i=0; i<registered_dxl_cnt_; i++){
-        if (registered_dxl_[i].id == id)
+        if (registered_dxl_[i].id == recv_id){
           return true;
+        }
       }
 
       if (registered_dxl_cnt_ < DXL_MAX_NODE){
-        registered_dxl_[registered_dxl_cnt_].id = id;
-        if(getPortProtocolVersion() == 2.0){
-          registered_dxl_[registered_dxl_cnt_].model_num = recv_info.model_number;
-        }else{
-          registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id);
-        }
+        registered_dxl_[registered_dxl_cnt_].id = recv_id;
+        registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id);
         registered_dxl_cnt_++;      
         ret = true;
       }
@@ -184,9 +179,9 @@ bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
 {
   uint8_t ver_idx;
 
-  if(version == DXL_PACKET_VER_1_0){
+  if(version == 1.0){
     ver_idx = 1;
-  }else if(version == DXL_PACKET_VER_2_0){
+  }else if(version == 2.0){
     ver_idx = 2;
   }else{
     return false;

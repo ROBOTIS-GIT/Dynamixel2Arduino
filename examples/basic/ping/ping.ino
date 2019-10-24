@@ -69,7 +69,8 @@ void loop() {
     DEBUG_SERIAL.print(", Model Number: ");
     DEBUG_SERIAL.println(dxl.getModelNumber(DXL_ID));
   }else{
-    DEBUG_SERIAL.println("ping failed!");
+    DEBUG_SERIAL.print("ping failed!, err code: ");
+    DEBUG_SERIAL.println(dxl.getLastLibErrCode());
   }
   delay(500);
 }

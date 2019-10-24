@@ -1,5 +1,5 @@
-#ifndef DYNAMIXEL_ACTUATOR_H_
-#define DYNAMIXEL_ACTUATOR_H_
+#ifndef DYNAMIXEL_ACTUATOR_HPP_
+#define DYNAMIXEL_ACTUATOR_HPP_
 
 #include "stdint.h"
 #include "utility/config.h"
@@ -192,4 +192,4 @@ ControlTableItemInfo_t getControlTableItemInfo(uint16_t model_num, uint8_t contr
 
 } // namespace DYNAMIXEL
 
-#endif /* DYNAMIXEL_ACTUATOR_H_ */
+#endif /* DYNAMIXEL_ACTUATOR_HPP_ */

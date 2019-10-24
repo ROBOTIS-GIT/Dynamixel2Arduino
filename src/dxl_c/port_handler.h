@@ -14,22 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
-#ifndef DYNAMIXEL_PACKET_HANDLER_H_
-#define DYNAMIXEL_PACKET_HANDLER_H_
+#ifndef DYNAMIXEL_PORT_HANDLER_H_
+#define DYNAMIXEL_PORT_HANDLER_H_
 
-#include "port_handler.h"
-#include "protocol.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace DYNAMIXEL{
 
-class PacketHandler
-{
-  public:
+#ifdef __cplusplus
+}
+#endif
 
-  private:
 
-};
 
-} //namespace DYNAMIXEL
-
-#endif /* DYNAMIXEL_PACKET_HANDLER_H_ */
+#endif /* DYNAMIXEL_PORT_HANDLER_H_ */
