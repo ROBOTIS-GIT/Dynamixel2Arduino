@@ -357,7 +357,7 @@ Slave::processInstPing()
       }else{
         err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
       }
-    }else if(p_rx_info->protocol_ver == 2){
+    }else if(p_rx_info->protocol_ver == 1){
       //
     }else{
       err = DXL_LIB_ERROR_WRONG_PACKET;

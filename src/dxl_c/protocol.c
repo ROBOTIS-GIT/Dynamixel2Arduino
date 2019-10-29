@@ -1,7 +1,8 @@
 #include "protocol.h"
 
 #if defined(ARDUINO)
-  #include "Arduino.h"
+  #include <Arduino.h>
+  #include <avr/pgmspace.h>
 #elif !defined(PROGMEM)
   #define PROGMEM
 #endif
@@ -336,7 +337,8 @@ DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet,
   p_parse_packet->protocol_ver = protocol_ver;
   p_parse_packet->p_param_buf = p_param_buf;
   p_parse_packet->param_buf_capacity = param_buf_capacity;
-  p_parse_packet->recv_param_len = 0;
+  // p_parse_packet->recv_param_len = 0;
+  // p_parse_packet->parse_state = 0;
   p_parse_packet->is_init = true;
 
   return DXL_LIB_OK;
