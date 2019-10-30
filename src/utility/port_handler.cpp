@@ -1,8 +1,6 @@
 #include "port_handler.h"
 
 
-using namespace DYNAMIXEL;
-
 DXLPortHandler::DXLPortHandler()
  : open_state_(false)
 {}
@@ -18,6 +16,8 @@ void DXLPortHandler::setOpenState(bool state)
   open_state_ = state;
 }
 
+
+using namespace DYNAMIXEL;
 
 /* SerialPortHandler */
 SerialPortHandler::SerialPortHandler(HardwareSerial& port, const int dir_pin)

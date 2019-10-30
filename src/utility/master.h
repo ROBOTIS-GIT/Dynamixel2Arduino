@@ -65,34 +65,53 @@ class Master
     bool setPort(DXLPortHandler *p_port);
     DXLPortHandler* getPort() const;
 
-    uint8_t ping(uint8_t id, uint8_t *p_recv_buf, uint8_t recv_buf_cap, uint32_t timeout_ms = 10);
-    // bool ping(uint8_t id,
-    //   RecvInfoFromPing_t &recv_info, uint32_t timeout_ms = 10);
-          
+    /* Instructions */
+    uint8_t ping(uint8_t id, uint8_t *p_recv_buf, uint8_t recv_buf_capacity, uint32_t timeout_ms = 10);
     int32_t read(uint8_t id, uint16_t addr, uint16_t addr_length,
-      uint8_t *p_recv_buf, uint16_t recv_buf_length, uint32_t timeout_ms = 10);
-
+      uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
     bool write(uint8_t id, uint16_t addr, 
-      const uint8_t *p_data, uint16_t data_length, uint32_t timeout_ms = 10);
-
+      const uint8_t *p_data, uint16_t data_length, uint32_t timeout_ms = 10);      
     bool writeNoResp(uint8_t id, uint16_t addr, 
       const uint8_t *p_data, uint16_t data_length);
-
-    //TODO: bool regWrite();
-    //TODO: bool action();
+    bool regWrite(uint8_t id, uint16_t addr, 
+      const uint8_t *p_data, uint16_t data_length, uint32_t timeout_ms = 10);
+    bool action(uint8_t id, uint32_t timeout_ms = 10);      
     bool factoryReset(uint8_t id, uint8_t option, uint32_t timeout_ms = 10);
     bool reboot(uint8_t id, uint32_t timeout_ms = 10);
+    bool clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_ms = 10);
 
-    //TODO: bool clear();
 
-    // bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 10);
-    // bool syncWrite(const ParamForSyncWriteInst_t &param_info);
+//TODO
+#if 0 
+    bool syncRead(uint8_t *p_param, uint16_t param_len,
+      uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
+    bool syncWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
+    bool bulkRead(uint8_t *p_param, uint16_t param_len,
+      uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
+    bool bulkWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
 
-    // bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 10);
-    // bool bulkWrite(const ParamForBulkWriteInst_t &param_info);
+    /* Easy functions for Sync Read */
+    bool beginSyncRead(uint16_t addr, uint16_t addr_len);
+    bool addSyncReadID(uint8_t id);
+    bool sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity);
+
+    /* Easy functions for Sync Write */
+    bool beginSyncWrite(uint16_t addr, uint16_t addr_len);
+    bool addSyncWriteData(uint8_t id, uint8_t *p_data, uint16_t data_len);
+    bool sendSyncWrite();
+
+    /* Easy functions for Bulk Read */
+    bool beginBulkRead();
+    bool addBulkReadID(uint8_t id, uint16_t addr, uint16_t addr_len);
+    bool sendBulkRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity);
+
+    /* Easy functions for Bulk Write */
+    bool beginBulkWrite();
+    bool addBulkWriteData(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len);
+    bool sendBulkWrite();
+#endif    
 
     void setLastLibErrCode(DXLLibErrorCode_t err_code);
-
     DXLLibErrorCode_t getLastLibErrCode() const;
     uint8_t getLastStatusPacketError() const;
 

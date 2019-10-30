@@ -20,7 +20,6 @@
 
 #include <Arduino.h>
 
-namespace DYNAMIXEL{
 
 class DXLPortHandler
 {
@@ -39,6 +38,9 @@ class DXLPortHandler
   private:
     bool open_state_;
 };
+
+
+namespace DYNAMIXEL{
 
 class SerialPortHandler : public DXLPortHandler
 {
