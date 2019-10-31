@@ -12,9 +12,9 @@ Master::Master(DXLPortHandler &port, float protocol_ver)
   setPort(port);
   setPortProtocolVersion(protocol_ver);
   
-  p_packet_buf_ = new uint8_t[DXL_BUF_LENGTH];
+  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
   if(p_packet_buf_ != nullptr){
-    packet_buf_capacity_ = DXL_BUF_LENGTH;
+    packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
     is_buf_malloced_ = true;
   }
   info_tx_packet_.is_init = false;
@@ -29,9 +29,9 @@ Master::Master(float protocol_ver)
 {
   setPortProtocolVersion(protocol_ver);
 
-  p_packet_buf_ = new uint8_t[DXL_BUF_LENGTH];
+  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
   if(p_packet_buf_ != nullptr){
-    packet_buf_capacity_ = DXL_BUF_LENGTH;
+    packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
     is_buf_malloced_ = true;
   }
   info_tx_packet_.is_init = false;
@@ -472,10 +472,33 @@ Master::clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_m
 // (Protocol 1.0) Not Supported
 // (Protocol 2.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol2/#sync-read
 bool
-Master::syncRead(uint8_t *p_param, uint16_t param_len,
+Master::syncRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
   uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms)
 {
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  uint16_t 
 
+  // Parameter exception handling
+  if(protocol_ver_idx_ != 2){
+    err = DXL_LIB_ERROR_NOT_SUPPORTED;
+  }else if(p_recv_buf == nullptr){
+    err = DXL_LIB_ERROR_NULLPTR;
+  }else if(recv_buf_capacity == 0) {
+    err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+  }
+  if(err != DXL_LIB_OK){
+    last_lib_err_ = err;
+    return false;
+  }
+
+  // Send SyncRead Instruction
+  if(txInstPacket(DXL_BROADCAST_ID, protocol_ver_idx_, p_param, param_len) == true){
+    while(1)
+    {
+
+    }
+  }
 }
 
 
@@ -491,8 +514,8 @@ Master::syncWrite(uint8_t *p_param, uint16_t param_len)
 // (Protocol 1.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol1/#bulk-read
 // (Protocol 2.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol2/#bulk-read
 bool
-Master::bulkRead(uint8_t *p_param, uint16_t param_len,
-  uint8_t *p_recv_buf, uint16_t recv_buf_capacity)
+Master::bulkRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
+  uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms)
 {
 
 }
@@ -522,6 +545,12 @@ DXLLibErrorCode_t
 Master::getLastLibErrCode() const
 {
   return last_lib_err_;
+}
+
+void
+Master::setLastLibErrCode(DXLLibErrorCode_t err_code)
+{
+  last_lib_err_ = err_code;
 }
 
 

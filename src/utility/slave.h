@@ -22,12 +22,11 @@
 #include "config.h"
 
 #define CONTROL_ITEM_MAX         64
-#define CONTROL_ITEM_ADDR_LIMIT (DXL_BUF_LENGTH-11)
+#define CONTROL_ITEM_ADDR_LIMIT (DEFAULT_DXL_BUF_LENGTH-11)
 
 
 namespace DYNAMIXEL{
 
-#if 1
 typedef void (*userCallbackFunc)(uint16_t addr, uint8_t &dxl_err_code, void* arg);
 
 typedef struct ControlItem{
@@ -122,7 +121,6 @@ class Slave
     bool processInst(uint8_t inst_idx);
     bool addDefaultControlItem();    
 };
-#endif
 
 } // namespace DYNAMIXEL
 

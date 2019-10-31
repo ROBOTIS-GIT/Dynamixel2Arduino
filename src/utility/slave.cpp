@@ -24,9 +24,9 @@ Slave::Slave(DXLPortHandler &port, const uint16_t model_num, float protocol_ver)
   setPortProtocolVersion(protocol_ver);
   addDefaultControlItem();
 
-  p_packet_buf_ = new uint8_t[DXL_BUF_LENGTH];
+  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
   if(p_packet_buf_ != nullptr){
-    packet_buf_capacity_ = DXL_BUF_LENGTH;
+    packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
     is_buf_malloced_ = true;
   }
   info_tx_packet_.is_init = false;
@@ -42,9 +42,9 @@ Slave::Slave(const uint16_t model_num, float protocol_ver)
   setPortProtocolVersion(protocol_ver);
   addDefaultControlItem();
 
-  p_packet_buf_ = new uint8_t[DXL_BUF_LENGTH];
+  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
   if(p_packet_buf_ != nullptr){
-    packet_buf_capacity_ = DXL_BUF_LENGTH;
+    packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
     is_buf_malloced_ = true;
   }  
   info_tx_packet_.is_init = false;

@@ -20,6 +20,42 @@ using namespace DYNAMIXEL;
 
 namespace DYNAMIXEL{
 
+const uint16_t model_number_table[] PROGMEM = {
+    AX12A, AX12W, AX18A,
+    
+    RX10, RX24F, RX28, RX64,
+    
+    DX113, DX116, DX117,
+    
+    EX106,
+
+    MX12W,  MX28,   MX64,    MX106,
+    MX28_2, MX64_2, MX106_2,
+    
+    XL320,
+    XL430_W250,
+    XXL430_W250,
+    XC430_W150,  XC430_W240,
+    XM430_W210,  XM430_W350,
+    XM540_W150,  XM540_W270, 
+    XH430_V210,  XH430_V350, XH430_W210, XH430_W350,
+    XH540_V150,  XH540_V270, XH540_W150, XH540_W270,
+
+    PRO_L42_10_S300_R,   
+    PRO_L54_30_S400_R,   PRO_L54_30_S500_R,   PRO_L54_50_S290_R,   PRO_L54_50_S500_R,
+    PRO_M42_10_S260_R,   PRO_M42_10_S260_RA,
+    PRO_M54_40_S250_R,   PRO_M54_40_S250_RA,  PRO_M54_60_S250_R,   PRO_M54_60_S250_RA,
+    PRO_H42_20_S300_R,   PRO_H42_20_S300_RA,
+    PRO_H54_100_S500_R,  PRO_H54_100_S500_RA, PRO_H54_200_S500_R,  PRO_H54_200_S500_RA,
+
+    PRO_M42P_010_S260_R, 
+    PRO_M54P_040_S250_R, PRO_M54P_060_S250_R,
+    PRO_H42P_020_S300_R, 
+    PRO_H54P_100_S500_R, PRO_H54P_200_S500_R
+};
+
+const uint8_t model_number_table_count = sizeof(model_number_table)/sizeof(model_number_table[0]);
+
 enum Functions{
   SET_ID,
   SET_BAUD_RATE,
@@ -67,14 +103,17 @@ static bool checkAndconvertReadData(int32_t in_data, float &out_data, uint8_t un
 
 
 Dynamixel2Arduino::Dynamixel2Arduino()
-  : Master()
-{}
+: Master(), model_number_idx_last_index_(0)
+{
+  memset(&model_number_idx_, 0xff, sizeof(model_number_idx_));
+}
 
 Dynamixel2Arduino::Dynamixel2Arduino(HardwareSerial& port, int dir_pin)
-  : Master()
+: Master(), model_number_idx_last_index_(0)
 {
   p_dxl_port_ = new SerialPortHandler(port, dir_pin);
   setPort(p_dxl_port_);
+  memset(&model_number_idx_, 0xff, sizeof(model_number_idx_));
 }
 
 /* For Master configuration */
@@ -109,48 +148,39 @@ bool Dynamixel2Arduino::scan()
 
 bool Dynamixel2Arduino::ping(uint8_t id)
 {
+  bool ret = false;
+  uint16_t model_num;
+
   if(getPort() == nullptr)
     return false;
-
-  bool ret = false;
-  uint8_t i;
-
-  if (id == DXL_BROADCAST_ID){
-    uint8_t recv_ids[DXL_MAX_NODE];
+  
+  if (id != DXL_BROADCAST_ID){
+    uint8_t recv_id;
+    Serial.println();
+    if(Master::ping(id, &recv_id, 1, 10) > 0){
+      if(recv_id == id){
+        model_num = getModelNumber(id);
+        if(model_number_idx_[id] != getModelNumberIndex(model_num)){
+          model_number_idx_[id] = getModelNumberIndex(model_num);
+        }
+        if(model_number_idx_[id] != 0xFF){
+          ret = true;
+        }
+      }
+    }
+  }else{
+    uint8_t recv_ids[254];
     uint8_t recv_cnt;
-    registered_dxl_cnt_ = 0;
 
     recv_cnt = Master::ping(DXL_BROADCAST_ID, recv_ids, sizeof(recv_ids), 3*253);
 
     if(recv_cnt > 0){
-      for (i=0; i<recv_cnt && registered_dxl_cnt_<DXL_MAX_NODE; i++){
-        registered_dxl_[registered_dxl_cnt_].id  = recv_ids[i];
-        registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(recv_ids[i]);
-        registered_dxl_cnt_++;
+      for (uint8_t i=0; i<recv_cnt; i++){
+        id = recv_ids[i];
+        model_num = getModelNumber(id);
+        model_number_idx_[id] = getModelNumberIndex(model_num);
       }
       ret = true;
-    }  
-  }else{
-    uint8_t recv_id;
-    if(Master::ping(id, &recv_id, 1, 10) > 0){
-      if(recv_id != id){
-        return false;
-      }
-      for (i=0; i<registered_dxl_cnt_; i++){
-        if (registered_dxl_[i].id == recv_id){
-          return true;
-        }
-      }
-
-      if (registered_dxl_cnt_ < DXL_MAX_NODE){
-        registered_dxl_[registered_dxl_cnt_].id = recv_id;
-        registered_dxl_[registered_dxl_cnt_].model_num = getModelNumber(id);
-        registered_dxl_cnt_++;      
-        ret = true;
-      }
-      else{
-        ret = false;
-      }
     }
   }
 
@@ -796,29 +826,46 @@ bool Dynamixel2Arduino::writeControlTableItem(uint16_t model_num, uint8_t item_i
   return write(id, item_info.addr, (uint8_t*)&data, item_info.addr_length, timeout);  
 }
 
-
-uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
+uint8_t
+Dynamixel2Arduino::getModelNumberIndex(uint16_t model_num)
 {
-  uint16_t model_num = UNREGISTERED_MODEL;
-  uint32_t i;
+  uint8_t i, ret = 0xFF;
 
-  for(i = 0; i < DXL_MAX_NODE; i++)
-  {
-    if(registered_dxl_[i].id == id){
-      model_num = registered_dxl_[i].model_num;
-      break;
+  // quick shortcut
+  if(model_num == model_number_idx_[model_number_idx_last_index_]){
+    ret = model_number_idx_last_index_;
+  }else{
+    for(i=0; i<model_number_table_count; i++)
+    {
+      if(model_num == pgm_read_word(&model_number_table[i])){
+        model_number_idx_last_index_ = i;
+        ret = i;
+        break;
+      }
     }
   }
 
-  if(i == DXL_MAX_NODE && registered_dxl_cnt_ < DXL_MAX_NODE){
+  return ret;
+}
+
+
+uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
+{
+  uint8_t idx;
+  uint16_t model_num;
+
+  if(id > 254){
+    setLastLibErrCode(DXL_LIB_ERROR_INVAILD_ID);
+    return UNREGISTERED_MODEL;
+  }
+
+  idx = model_number_idx_[id];
+  model_num = (idx < model_number_table_count) ? pgm_read_word(&model_number_table[idx]) : UNREGISTERED_MODEL;
+
+  if(model_num == UNREGISTERED_MODEL){
     if(ping(id) == true){
-      for(i = 0; i < DXL_MAX_NODE; i++)
-      {
-        if(registered_dxl_[i].id == id){
-          model_num = registered_dxl_[i].model_num;
-          break;
-        }
-      }
+      idx = model_number_idx_[id];
+      model_num = (idx < model_number_table_count) ? pgm_read_word(&model_number_table[idx]) : UNREGISTERED_MODEL;
     }
   }
 

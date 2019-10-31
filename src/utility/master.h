@@ -83,10 +83,10 @@ class Master
 
 //TODO
 #if 0 
-    bool syncRead(uint8_t *p_param, uint16_t param_len,
+    bool syncRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
       uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
     bool syncWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
-    bool bulkRead(uint8_t *p_param, uint16_t param_len,
+    bool bulkRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
       uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
     bool bulkWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
 
@@ -111,9 +111,10 @@ class Master
     bool sendBulkWrite();
 #endif    
 
+    uint8_t getLastStatusPacketError() const;
+    
     void setLastLibErrCode(DXLLibErrorCode_t err_code);
     DXLLibErrorCode_t getLastLibErrCode() const;
-    uint8_t getLastStatusPacketError() const;
 
     // raw APIs
     bool txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t param_len);

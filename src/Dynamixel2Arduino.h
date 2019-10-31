@@ -413,17 +413,12 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
 #endif     
 
   private:
-    typedef struct IdAndModelNum{
-      uint16_t model_num;
-      uint8_t id;
-    } __attribute__((packed)) IdAndModelNum_t;
-
     DYNAMIXEL::SerialPortHandler *p_dxl_port_;
     
-    IdAndModelNum_t registered_dxl_[DXL_MAX_NODE];
-    uint8_t         registered_dxl_cnt_;
-    uint32_t        err_code_;
+    uint8_t model_number_idx_[254];
+    uint8_t model_number_idx_last_index_;
 
+    uint8_t getModelNumberIndex(uint16_t model_num);
     uint16_t getModelNumberFromTable(uint8_t id);
 
     bool setTorqueEnable(uint8_t id, bool enable);
