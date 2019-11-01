@@ -121,8 +121,10 @@ void Dynamixel2Arduino::begin(unsigned long baud)
 {
   p_dxl_port_ = (SerialPortHandler*)getPort();
 
-  if(p_dxl_port_ == nullptr)
+  if(p_dxl_port_ == nullptr){
+    setLastLibErrCode(D2A_LIB_ERROR_NULLPTR_PORT_HANDLER);
     return;
+  }
 
   p_dxl_port_->begin(baud);
 }
@@ -131,8 +133,10 @@ unsigned long Dynamixel2Arduino::getPortBaud()
 {
   p_dxl_port_ = (SerialPortHandler*)getPort();
 
-  if(p_dxl_port_ == nullptr)
+  if(p_dxl_port_ == nullptr){
+    setLastLibErrCode(D2A_LIB_ERROR_NULLPTR_PORT_HANDLER);
     return 0;
+  }
 
   return p_dxl_port_->getBaud();
 }
@@ -150,22 +154,14 @@ bool Dynamixel2Arduino::ping(uint8_t id)
 {
   bool ret = false;
   uint16_t model_num;
-
-  if(getPort() == nullptr)
-    return false;
-  
+ 
   if (id != DXL_BROADCAST_ID){
     uint8_t recv_id;
-    Serial.println();
     if(Master::ping(id, &recv_id, 1, 10) > 0){
       if(recv_id == id){
         model_num = getModelNumber(id);
-        if(model_number_idx_[id] != getModelNumberIndex(model_num)){
-          model_number_idx_[id] = getModelNumberIndex(model_num);
-        }
-        if(model_number_idx_[id] != 0xFF){
-          ret = true;
-        }
+        model_number_idx_[id] = getModelNumberIndex(model_num);
+        ret = (model_number_idx_[id] != 0xFF) ? true:false;
       }
     }
   }else{
@@ -189,9 +185,6 @@ bool Dynamixel2Arduino::ping(uint8_t id)
 
 uint16_t Dynamixel2Arduino::getModelNumber(uint8_t id)
 {
-  if(getPort() == nullptr)
-    return false;
-
   uint16_t model_num = 0xFFFF;
 
   (void) read(id, COMMON_MODEL_NUMBER_ADDR, COMMON_MODEL_NUMBER_ADDR_LENGTH,
@@ -214,6 +207,7 @@ bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
   }else if(version == 2.0){
     ver_idx = 2;
   }else{
+    setLastLibErrCode(DXL_LIB_ERROR_INVAILD_PROTOCOL_VERSION);
     return false;
   }
 
@@ -223,9 +217,6 @@ bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
 //TODO: Simplify the code by grouping model numbers.
 bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
 {
-  if(getPort() == nullptr)
-    return false;
-
   uint16_t model_num = getModelNumberFromTable(id);
   uint8_t baud_idx = 0;
 
@@ -469,9 +460,6 @@ bool Dynamixel2Arduino::ledOff(uint8_t id)
 
 bool Dynamixel2Arduino::setLedState(uint8_t id, bool state)
 {
-  if(getPort() == nullptr)
-    return false;
-
   bool ret = false;
   uint16_t model_num = getModelNumberFromTable(id);
 
@@ -515,9 +503,6 @@ bool Dynamixel2Arduino::setLedState(uint8_t id, bool state)
 //TODO: Simplify the code by grouping model numbers.
 bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
 {
-  if(getPort() == nullptr)
-    return false;
-
   bool ret = false;
   uint16_t model_num = getModelNumberFromTable(id);
 
@@ -762,9 +747,6 @@ float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
 
 int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
-  if(getPort() == nullptr)
-    return 0;
-
   uint16_t model_num = getModelNumberFromTable(id);
 
   return readControlTableItem(model_num, item_idx, id, timeout);
@@ -772,9 +754,6 @@ int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, ui
 
 bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
 {
-  if(getPort() == nullptr)
-    return false;
-
   uint16_t model_num = getModelNumberFromTable(id);
 
   return writeControlTableItem(model_num, item_idx, id, data, timeout);
@@ -787,25 +766,28 @@ bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int3
 
 int32_t Dynamixel2Arduino::readControlTableItem(uint16_t model_num, uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
-  if(getPort() == nullptr)
-    return 0;
-
   int32_t recv_len, ret = 0;
   ControlTableItemInfo_t item_info;
 
+  p_dxl_port_ = (SerialPortHandler*)getPort();
+  if(p_dxl_port_ == nullptr){
+    setLastLibErrCode(D2A_LIB_ERROR_NULLPTR_PORT_HANDLER);
+    return 0;
+  }
+
   item_info = getControlTableItemInfo(model_num, item_idx);
 
-  if(item_info.addr_length == 0)
-    return 0;
+  if(item_info.addr_length > 0)
+  {
+    recv_len = read(id, item_info.addr, item_info.addr_length, (uint8_t*)&ret, sizeof(ret), timeout);
 
-  recv_len = read(id, item_info.addr, item_info.addr_length, (uint8_t*)&ret, sizeof(ret), timeout);
-
-  if(recv_len == 1){
-    int8_t t_data = (int8_t)ret;
-    ret = (int32_t)t_data;
-  }else if(recv_len == 2){
-    int16_t t_data = (int16_t)ret;
-    ret = (int32_t)t_data;
+    if(recv_len == 1){
+      int8_t t_data = (int8_t)ret;
+      ret = (int32_t)t_data;
+    }else if(recv_len == 2){
+      int16_t t_data = (int16_t)ret;
+      ret = (int32_t)t_data;
+    }
   }
 
   return ret;
@@ -813,17 +795,21 @@ int32_t Dynamixel2Arduino::readControlTableItem(uint16_t model_num, uint8_t item
 
 bool Dynamixel2Arduino::writeControlTableItem(uint16_t model_num, uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
 {
-  if(getPort() == nullptr)
-    return false;
-  
+  bool ret = false;
   ControlTableItemInfo_t item_info;
+  
+  p_dxl_port_ = (SerialPortHandler*)getPort();
+  if(p_dxl_port_ == nullptr){
+    setLastLibErrCode(D2A_LIB_ERROR_NULLPTR_PORT_HANDLER);
+    return false;
+  }
 
   item_info = getControlTableItemInfo(model_num, item_idx);
+  if(item_info.addr_length > 0){
+    ret = write(id, item_info.addr, (uint8_t*)&data, item_info.addr_length, timeout);
+  }
 
-  if(item_info.addr_length == 0)
-    return false;
-
-  return write(id, item_info.addr, (uint8_t*)&data, item_info.addr_length, timeout);  
+  return ret;
 }
 
 uint8_t
@@ -862,34 +848,22 @@ uint16_t Dynamixel2Arduino::getModelNumberFromTable(uint8_t id)
   idx = model_number_idx_[id];
   model_num = (idx < model_number_table_count) ? pgm_read_word(&model_number_table[idx]) : UNREGISTERED_MODEL;
 
-  if(model_num == UNREGISTERED_MODEL){
-    if(ping(id) == true){
-      idx = model_number_idx_[id];
-      model_num = (idx < model_number_table_count) ? pgm_read_word(&model_number_table[idx]) : UNREGISTERED_MODEL;
-    }
-  }
-
   return model_num;
 }
 
 float Dynamixel2Arduino::readForRangeDependencyFunc(uint8_t func_idx, uint8_t id, uint8_t unit)
 {
-  p_dxl_port_ = (SerialPortHandler*)getPort();
-
-  if(p_dxl_port_ == nullptr)
-    return 0.0;
-
   float ret = 0;
-  int32_t ret_data = 0;
+  int32_t recv_data = 0;
   uint16_t model_num = getModelNumberFromTable(id);
   ItemAndRangeInfo_t item_info = getModelDependencyFuncInfo(model_num, func_idx);
 
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
-    return false;
-
-  ret_data = readControlTableItem(model_num, item_info.item_idx, id);
-  if(checkAndconvertReadData(ret_data, ret, unit, item_info) == false)
-    return 0;
+  if(item_info.item_idx != LAST_DUMMY_ITEM){
+    recv_data = readControlTableItem(model_num, item_info.item_idx, id);
+    checkAndconvertReadData(recv_data, ret, unit, item_info);
+  }else{
+    setLastLibErrCode(D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION);
+  }
 
   return ret;
 }
@@ -898,8 +872,10 @@ bool Dynamixel2Arduino::writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id
 {
   p_dxl_port_ = (SerialPortHandler*)getPort();
 
-  if(p_dxl_port_ == nullptr)
+  if(p_dxl_port_ == nullptr){
+    setLastLibErrCode(D2A_LIB_ERROR_NULLPTR_PORT_HANDLER);
     return false;
+  }
 
   bool ret = false;
   int32_t data = 0;
@@ -1248,10 +1224,11 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_200[] PRO
 
 static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t func_num)
 {
-  uint8_t func_idx, i = 0;
   const ModelDependencyFuncItemAndRangeInfo_t *p_common_ctable = nullptr;
   const ModelDependencyFuncItemAndRangeInfo_t *p_dep_ctable = nullptr;
+  uint8_t func_idx, i = 0;
   ItemAndRangeInfo_t item_info;
+  
   memset(&item_info, 0, sizeof(item_info));
   item_info.item_idx = LAST_DUMMY_ITEM;
 

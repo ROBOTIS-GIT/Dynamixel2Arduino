@@ -87,7 +87,7 @@ enum DXL2_0PacketState{
    DXL2_0_PACKET_PARSING_STATE_CRC_H
 };
 
-typedef enum DXLLibErrorCode
+enum DXLLibErrorCode
 {
   DXL_LIB_OK = 0,
   DXL_LIB_PROCEEDING,
@@ -110,7 +110,7 @@ typedef enum DXLLibErrorCode
   DXL_LIB_ERROR_INVAILD_PROTOCOL_VERSION,
   DXL_LIB_ERROR_NOT_INITIALIZED,
   DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE
-} DXLLibErrorCode_t;
+};
 
 typedef struct InfoToParseDXLPacket{
   uint8_t header[3];
@@ -144,6 +144,8 @@ typedef struct InfoToMakeDXLPacket{
   bool is_init;
 }InfoToMakeDXLPacket_t;
 
+
+typedef int32_t DXLLibErrorCode_t;
 
 DXLLibErrorCode_t begin_make_dxl_packet(InfoToMakeDXLPacket_t* p_make_packet, 
   uint8_t id, uint8_t protocol_ver, uint8_t inst_idx, uint8_t err_idx, 

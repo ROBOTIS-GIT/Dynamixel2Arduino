@@ -41,6 +41,11 @@ enum ParamUnit{
   UNIT_MILLI_AMPERE
 };
 
+enum D2ALibErrorCode
+{
+  D2A_LIB_ERROR_NULLPTR_PORT_HANDLER = 0x0040,
+  D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION
+};
 
 class Dynamixel2Arduino : public DYNAMIXEL::Master
 {
