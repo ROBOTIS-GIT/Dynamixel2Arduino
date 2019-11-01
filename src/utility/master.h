@@ -25,6 +25,12 @@
 
 namespace DYNAMIXEL {
 
+typedef struct InfoFromPing{
+  uint8_t id;
+  uint8_t firmware_version;
+  uint16_t model_number;
+} InfoFromPing_t;
+
 class Master
 {
   public:
@@ -66,7 +72,10 @@ class Master
     DXLPortHandler* getPort() const;
 
     /* Instructions */
-    uint8_t ping(uint8_t id, uint8_t *p_recv_buf, uint8_t recv_buf_capacity, uint32_t timeout_ms = 10);
+    uint8_t ping(uint8_t id, uint8_t *p_recv_id_array, uint8_t recv_array_capacity,
+      uint32_t timeout_ms = 10);
+    uint8_t ping(uint8_t id, InfoFromPing_t *recv_ping_info_array, uint8_t recv_array_cnt,
+      uint32_t timeout_ms = 10);
     int32_t read(uint8_t id, uint16_t addr, uint16_t addr_length,
       uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
     bool write(uint8_t id, uint16_t addr, 
@@ -134,6 +143,9 @@ class Master
     DXLLibErrorCode_t last_lib_err_;
   };
 }
+
+//legacy
+typedef DYNAMIXEL::InfoFromPing_t XelInfoFromPing_t;
 
 
 #endif /* DYNAMIXEL_MASTER_HPP_ */

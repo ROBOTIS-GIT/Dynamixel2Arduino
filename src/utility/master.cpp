@@ -150,17 +150,17 @@ Master::getPort() const
 // (Protocol 1.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol1/#ping
 // (Protocol 2.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol2/#ping
 uint8_t 
-Master::ping(uint8_t id, uint8_t *p_recv_buf, uint8_t recv_buf_capacity, uint32_t timeout_ms)
+Master::ping(uint8_t id, uint8_t *p_recv_id_array, uint8_t recv_array_capacity, uint32_t timeout_ms)
 {
   uint8_t ret_id_cnt = 0;
   uint32_t pre_time_ms;
   uint8_t rx_param[3];
 
   // Parameter exception handling
-  if(p_recv_buf == nullptr){
+  if(p_recv_id_array == nullptr){
     last_lib_err_ = DXL_LIB_ERROR_NULLPTR;
     return 0;
-  }else if(recv_buf_capacity == 0){
+  }else if(recv_array_capacity == 0){
     last_lib_err_ = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
     return 0;
   }
@@ -171,15 +171,72 @@ Master::ping(uint8_t id, uint8_t *p_recv_buf, uint8_t recv_buf_capacity, uint32_
     if(id != DXL_BROADCAST_ID){
       if(rxStatusPacket(rx_param, 3, timeout_ms) != nullptr){
         if(info_rx_packet_.id == id){
-          p_recv_buf[ret_id_cnt++] = info_rx_packet_.id;
+          p_recv_id_array[ret_id_cnt++] = info_rx_packet_.id;
         }
       }
     }else{
       pre_time_ms = millis();
-      while(ret_id_cnt < recv_buf_capacity)
+      while(ret_id_cnt < recv_array_capacity)
       {
         if(rxStatusPacket(rx_param, 3, 3) != nullptr){
-          p_recv_buf[ret_id_cnt++] = info_rx_packet_.id;
+          p_recv_id_array[ret_id_cnt++] = info_rx_packet_.id;
+        }
+
+        if (millis()-pre_time_ms >= timeout_ms) {
+          last_lib_err_ = DXL_LIB_ERROR_TIMEOUT;
+          break;
+        }
+      }
+    }
+  }
+
+  return ret_id_cnt;
+}
+
+uint8_t 
+Master::ping(uint8_t id, InfoFromPing_t *recv_ping_info_array, uint8_t recv_array_cnt, uint32_t timeout_ms)
+{
+  uint8_t ret_id_cnt = 0;
+  InfoFromPing_t *p_info = recv_ping_info_array;
+  uint32_t pre_time_ms;
+  uint8_t rx_param[3];
+
+  // Parameter exception handling
+  if(p_info == nullptr){
+    last_lib_err_ = DXL_LIB_ERROR_NULLPTR;
+    return 0;
+  }else if(recv_array_cnt == 0){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+    return 0;
+  }
+
+  // Send Ping Instruction
+  if(txInstPacket(id, DXL_INST_PING, nullptr, 0) == true){
+    // Receive Status Packet
+    if(id != DXL_BROADCAST_ID){
+      if(rxStatusPacket(rx_param, 3, timeout_ms) != nullptr){
+        if(info_rx_packet_.id == id){
+          p_info[ret_id_cnt].id = info_rx_packet_.id;
+          if(protocol_ver_idx_ == 2){
+            p_info[ret_id_cnt].model_number = rx_param[0]<<0;
+            p_info[ret_id_cnt].model_number |= rx_param[1]<<8;
+            p_info[ret_id_cnt].firmware_version = rx_param[2];
+          }
+          ret_id_cnt++;
+        }
+      }
+    }else{
+      pre_time_ms = millis();
+      while(ret_id_cnt < recv_array_cnt)
+      {
+        if(rxStatusPacket(rx_param, 3, 3) != nullptr){
+          p_info[ret_id_cnt].id = info_rx_packet_.id;
+          if(protocol_ver_idx_ == 2){
+            p_info[ret_id_cnt].model_number = rx_param[0]<<0;
+            p_info[ret_id_cnt].model_number |= rx_param[1]<<8;
+            p_info[ret_id_cnt].firmware_version = rx_param[2];
+          }
+          ret_id_cnt++;
         }
 
         if (millis()-pre_time_ms >= timeout_ms) {
