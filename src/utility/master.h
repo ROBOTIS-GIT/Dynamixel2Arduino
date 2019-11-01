@@ -27,8 +27,8 @@ namespace DYNAMIXEL {
 
 typedef struct InfoFromPing{
   uint8_t id;
-  uint8_t firmware_version;
   uint16_t model_number;
+  uint8_t firmware_version;
 } InfoFromPing_t;
 
 class Master

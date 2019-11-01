@@ -199,7 +199,6 @@ Master::ping(uint8_t id, InfoFromPing_t *recv_ping_info_array, uint8_t recv_arra
   uint8_t ret_id_cnt = 0;
   InfoFromPing_t *p_info = recv_ping_info_array;
   uint32_t pre_time_ms;
-  uint8_t rx_param[3];
 
   // Parameter exception handling
   if(p_info == nullptr){
@@ -214,29 +213,17 @@ Master::ping(uint8_t id, InfoFromPing_t *recv_ping_info_array, uint8_t recv_arra
   if(txInstPacket(id, DXL_INST_PING, nullptr, 0) == true){
     // Receive Status Packet
     if(id != DXL_BROADCAST_ID){
-      if(rxStatusPacket(rx_param, 3, timeout_ms) != nullptr){
+      if(rxStatusPacket((uint8_t*)&p_info[ret_id_cnt].model_number, 3, timeout_ms) != nullptr){
         if(info_rx_packet_.id == id){
-          p_info[ret_id_cnt].id = info_rx_packet_.id;
-          if(protocol_ver_idx_ == 2){
-            p_info[ret_id_cnt].model_number = rx_param[0]<<0;
-            p_info[ret_id_cnt].model_number |= rx_param[1]<<8;
-            p_info[ret_id_cnt].firmware_version = rx_param[2];
-          }
-          ret_id_cnt++;
+          p_info[ret_id_cnt++].id = info_rx_packet_.id;
         }
       }
     }else{
       pre_time_ms = millis();
       while(ret_id_cnt < recv_array_cnt)
       {
-        if(rxStatusPacket(rx_param, 3, 3) != nullptr){
-          p_info[ret_id_cnt].id = info_rx_packet_.id;
-          if(protocol_ver_idx_ == 2){
-            p_info[ret_id_cnt].model_number = rx_param[0]<<0;
-            p_info[ret_id_cnt].model_number |= rx_param[1]<<8;
-            p_info[ret_id_cnt].firmware_version = rx_param[2];
-          }
-          ret_id_cnt++;
+        if(rxStatusPacket((uint8_t*)&p_info[ret_id_cnt].model_number, 3, 3) != nullptr){
+          p_info[ret_id_cnt++].id = info_rx_packet_.id;
         }
 
         if (millis()-pre_time_ms >= timeout_ms) {

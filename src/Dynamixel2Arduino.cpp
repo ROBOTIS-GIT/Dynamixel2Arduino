@@ -153,14 +153,15 @@ bool Dynamixel2Arduino::scan()
 bool Dynamixel2Arduino::ping(uint8_t id)
 {
   bool ret = false;
-  uint16_t model_num;
  
   if (id != DXL_BROADCAST_ID){
-    uint8_t recv_id;
-    if(Master::ping(id, &recv_id, 1, 10) > 0){
-      if(recv_id == id){
-        model_num = getModelNumber(id);
-        model_number_idx_[id] = getModelNumberIndex(model_num);
+    XelInfoFromPing_t recv_info;
+    if(Master::ping(id, &recv_info, 1, 10) > 0){
+      if(recv_info.id == id){
+        if(getPortProtocolVersion() == 1.0){
+          recv_info.model_number = getModelNumber(id);
+        }
+        model_number_idx_[id] = getModelNumberIndex(recv_info.model_number);
         ret = (model_number_idx_[id] != 0xFF) ? true:false;
       }
     }
@@ -173,8 +174,7 @@ bool Dynamixel2Arduino::ping(uint8_t id)
     if(recv_cnt > 0){
       for (uint8_t i=0; i<recv_cnt; i++){
         id = recv_ids[i];
-        model_num = getModelNumber(id);
-        model_number_idx_[id] = getModelNumberIndex(model_num);
+        model_number_idx_[id] = getModelNumberIndex(getModelNumber(id));
       }
       ret = true;
     }
