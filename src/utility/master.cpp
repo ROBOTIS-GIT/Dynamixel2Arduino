@@ -4,7 +4,7 @@
 using namespace DYNAMIXEL;
 
 
-Master::Master(DXLPortHandler &port, float protocol_ver)
+Master::Master(DXLPortHandler &port, float protocol_ver, uint16_t malloc_buf_size)
 : protocol_ver_idx_(2),
   is_buf_malloced_(false), packet_buf_capacity_(0),
   last_lib_err_(DXL_LIB_OK)
@@ -12,27 +12,31 @@ Master::Master(DXLPortHandler &port, float protocol_ver)
   setPort(port);
   setPortProtocolVersion(protocol_ver);
   
-  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
-  if(p_packet_buf_ != nullptr){
-    packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
-    is_buf_malloced_ = true;
+  if(malloc_buf_size > 0){
+    p_packet_buf_ = new uint8_t[malloc_buf_size];
+    if(p_packet_buf_ != nullptr){
+      packet_buf_capacity_ = malloc_buf_size;
+      is_buf_malloced_ = true;
+    }
   }
   info_tx_packet_.is_init = false;
   info_rx_packet_.is_init = false;  
 }
 
 
-Master::Master(float protocol_ver)
+Master::Master(float protocol_ver, uint16_t malloc_buf_size)
 : protocol_ver_idx_(2),
   is_buf_malloced_(false), packet_buf_capacity_(0),
   last_lib_err_(DXL_LIB_OK)
 {
   setPortProtocolVersion(protocol_ver);
 
-  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
-  if(p_packet_buf_ != nullptr){
-    packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
-    is_buf_malloced_ = true;
+  if(malloc_buf_size > 0){
+    p_packet_buf_ = new uint8_t[malloc_buf_size];
+    if(p_packet_buf_ != nullptr){
+      packet_buf_capacity_ = malloc_buf_size;
+      is_buf_malloced_ = true;
+    }
   }
   info_tx_packet_.is_init = false;
   info_rx_packet_.is_init = false;  
@@ -42,7 +46,7 @@ Master::Master(float protocol_ver)
 bool 
 Master::setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity)
 {
-  if(p_packet_buf_ == nullptr){
+  if(p_buf == nullptr){
     last_lib_err_ = DXL_LIB_ERROR_NULLPTR;
     return false;
   }

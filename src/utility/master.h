@@ -40,7 +40,7 @@ class Master
      *             It can be used not only for Serial but also for other communication port handlers like SerialPortHandler class.
      * @param protocol_ver DYNAMIXEL protocol version used for communications. (default : 2.0)
      */
-    Master(DXLPortHandler &port, float protocol_ver = 2.0);
+    Master(DXLPortHandler &port, float protocol_ver = 2.0, uint16_t malloc_buf_size = 256);
 
     /**
      * @brief The constructor.
@@ -51,7 +51,7 @@ class Master
      * @endcode
      * @param protocol_ver DYNAMIXEL protocol version used for communications. (default : 2.0)        
      */    
-    Master(float protocol_ver = 2.0);
+    Master(float protocol_ver = 2.0, uint16_t malloc_buf_size = 256);
 
     bool setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity);
     uint8_t* getPacketBuffer() const;

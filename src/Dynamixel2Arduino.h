@@ -56,7 +56,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * Dynamixel2Arduino dxl;
      * @endcode
      */   
-    Dynamixel2Arduino();
+    Dynamixel2Arduino(uint16_t packet_buf_size = DEFAULT_DXL_BUF_LENGTH);
 
     /**
      * @brief The constructor.
@@ -68,7 +68,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      *          It is automatically initialized baudrate to 57600 by calling the begin () function.
      * @param dir_pin Directional pins for using half-duplex communication. -1 uses full duplex. (default : -1)
      */   
-    Dynamixel2Arduino(HardwareSerial& port, int dir_pin = -1);
+    Dynamixel2Arduino(HardwareSerial& port, int dir_pin = -1, uint16_t packet_buf_size = DEFAULT_DXL_BUF_LENGTH);
     
     /**
      * @brief Initialization function to start communication with DYNAMIXEL.
