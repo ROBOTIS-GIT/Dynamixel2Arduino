@@ -161,8 +161,7 @@ bool Dynamixel2Arduino::ping(uint8_t id)
         if(getPortProtocolVersion() == 1.0){
           recv_info.model_number = getModelNumber(id);
         }
-        model_number_idx_[id] = getModelNumberIndex(recv_info.model_number);
-        ret = (model_number_idx_[id] != 0xFF) ? true:false;
+        ret = setModelNumber(id, recv_info.model_number);
       }
     }
   }else{
@@ -173,14 +172,31 @@ bool Dynamixel2Arduino::ping(uint8_t id)
 
     if(recv_cnt > 0){
       for (uint8_t i=0; i<recv_cnt; i++){
-        id = recv_ids[i];
-        model_number_idx_[id] = getModelNumberIndex(getModelNumber(id));
+        (void)setModelNumber(recv_ids[i], getModelNumber(id));
       }
       ret = true;
     }
   }
 
   return ret;  
+}
+
+bool 
+Dynamixel2Arduino::setModelNumber(uint8_t id, uint16_t model_number)
+{
+  bool ret = false;
+
+  if(id != 255){
+    model_number_idx_[id] = getModelNumberIndex(model_number);
+    ret = (model_number_idx_[id] != 0xFF) ? true:false;
+    if(ret == false){
+      setLastLibErrCode(D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER);
+    }
+  }else{
+    setLastLibErrCode(DXL_LIB_ERROR_INVAILD_ID);
+  }
+
+  return ret;
 }
 
 uint16_t Dynamixel2Arduino::getModelNumber(uint8_t id)
@@ -386,7 +402,7 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case PRO_M42P_010_S260_R:
     case PRO_M54P_040_S250_R:
     case PRO_M54P_060_S250_R:
-      switch(baudrate)  
+      switch(baudrate)
       {
         case 9600:
           baud_idx = 0;
@@ -747,16 +763,44 @@ float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
 
 int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
+  int32_t ret = 0;
   uint16_t model_num = getModelNumberFromTable(id);
 
-  return readControlTableItem(model_num, item_idx, id, timeout);
+  // To use the command function without ping() or model addition.
+  if(model_num == UNREGISTERED_MODEL){
+    if(setModelNumber(id, getModelNumber(id)) == true){
+      model_num = getModelNumberFromTable(id);
+    }
+  }
+
+  if(model_num != UNREGISTERED_MODEL){
+    ret = readControlTableItem(model_num, item_idx, id, timeout);
+  }else{
+    setLastLibErrCode(D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER);
+  }
+
+  return ret;
 }
 
 bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout)
 {
+  bool ret = false;
   uint16_t model_num = getModelNumberFromTable(id);
+  
+  // To use the command function without ping() or model addition.
+  if(model_num == UNREGISTERED_MODEL){
+    if(setModelNumber(id, getModelNumber(id)) == true){
+      model_num = getModelNumberFromTable(id);
+    }
+  }
 
-  return writeControlTableItem(model_num, item_idx, id, data, timeout);
+  if(model_num != UNREGISTERED_MODEL){
+    ret = writeControlTableItem(model_num, item_idx, id, data, timeout);
+  }else{
+    setLastLibErrCode(D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER);
+  }
+
+  return ret;
 }
 
 
@@ -856,13 +900,26 @@ float Dynamixel2Arduino::readForRangeDependencyFunc(uint8_t func_idx, uint8_t id
   float ret = 0;
   int32_t recv_data = 0;
   uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependencyFuncInfo(model_num, func_idx);
+  ItemAndRangeInfo_t item_info;
 
-  if(item_info.item_idx != LAST_DUMMY_ITEM){
-    recv_data = readControlTableItem(model_num, item_info.item_idx, id);
-    checkAndconvertReadData(recv_data, ret, unit, item_info);
+  // To use the command function without ping() or model addition.
+  if(model_num == UNREGISTERED_MODEL){
+    if(setModelNumber(id, getModelNumber(id)) == true){
+      model_num = getModelNumberFromTable(id);
+    }
+  }
+
+  if(model_num != UNREGISTERED_MODEL){
+    item_info = getModelDependencyFuncInfo(model_num, func_idx);
+
+    if(item_info.item_idx != LAST_DUMMY_ITEM){
+      recv_data = readControlTableItem(model_num, item_info.item_idx, id);
+      checkAndconvertReadData(recv_data, ret, unit, item_info);
+    }else{
+      setLastLibErrCode(D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION);
+    }    
   }else{
-    setLastLibErrCode(D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION);
+    setLastLibErrCode(D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER);
   }
 
   return ret;
@@ -870,25 +927,31 @@ float Dynamixel2Arduino::readForRangeDependencyFunc(uint8_t func_idx, uint8_t id
 
 bool Dynamixel2Arduino::writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit)
 {
-  p_dxl_port_ = (SerialPortHandler*)getPort();
-
-  if(p_dxl_port_ == nullptr){
-    setLastLibErrCode(D2A_LIB_ERROR_NULLPTR_PORT_HANDLER);
-    return false;
-  }
-
   bool ret = false;
   int32_t data = 0;
   uint16_t model_num = getModelNumberFromTable(id);
-  ItemAndRangeInfo_t item_info = getModelDependencyFuncInfo(model_num, func_idx);
+  ItemAndRangeInfo_t item_info;
 
-  if(item_info.item_idx == LAST_DUMMY_ITEM)
-    return false;
+  // To use the command function without ping() or model addition.
+  if(model_num == UNREGISTERED_MODEL){
+    if(setModelNumber(id, getModelNumber(id)) == true){
+      model_num = getModelNumberFromTable(id);
+    }
+  }
 
-  if(checkAndconvertWriteData(value, data, unit, item_info) == false)
-    return false;
+  if(model_num != UNREGISTERED_MODEL){
+    item_info = getModelDependencyFuncInfo(model_num, func_idx);
 
-  ret = writeControlTableItem(model_num, item_info.item_idx, id, data);
+    if(item_info.item_idx == LAST_DUMMY_ITEM)
+      return false;
+
+    if(checkAndconvertWriteData(value, data, unit, item_info) == false)
+      return false;
+
+    ret = writeControlTableItem(model_num, item_info.item_idx, id, data);
+  }else{
+    setLastLibErrCode(D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER);
+  }
 
   return ret;
 }

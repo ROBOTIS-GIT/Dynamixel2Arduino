@@ -44,7 +44,8 @@ enum ParamUnit{
 enum D2ALibErrorCode
 {
   D2A_LIB_ERROR_NULLPTR_PORT_HANDLER = 0x0040,
-  D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION
+  D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION,
+  D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER
 };
 
 class Dynamixel2Arduino : public DYNAMIXEL::Master
@@ -117,6 +118,20 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @return If a dynamixel succeeds in pinging, it returns 1, and returns 0 if none succeeds.
      */    
     bool scan();
+
+    /**
+     * @brief It is API for getting model number of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setModelNumber(1, 1020);
+     * Serial.print(dxl.getModelNumber(1));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param model_number DYNAMIXEL Actuator's model number.
+     * @return It returns true(1) on success, false(0) on failure.
+     */  
+    bool setModelNumber(uint8_t id, uint16_t model_number);
 
     /**
      * @brief It is API for getting model number of DYNAMIXEL.
