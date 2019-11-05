@@ -16,8 +16,6 @@
 
 #include "Dynamixel2Arduino.h"
 
-using namespace DYNAMIXEL;
-
 namespace DYNAMIXEL{
 
 const uint16_t model_number_table[] PROGMEM = {
@@ -77,7 +75,9 @@ enum Functions{
   LAST_DUMMY_FUNC = 0xFF
 };
 
-}
+} //namespace DYNAMIXEL
+
+using namespace DYNAMIXEL;
 
 typedef struct ModelDependencyFuncItemAndRangeInfo{
   uint8_t func_idx; //enum Functions
@@ -186,7 +186,7 @@ Dynamixel2Arduino::setModelNumber(uint8_t id, uint16_t model_number)
 {
   bool ret = false;
 
-  if(id != 255){
+  if(id <= 253){
     model_number_idx_[id] = getModelNumberIndex(model_number);
     ret = (model_number_idx_[id] != 0xFF) ? true:false;
     if(ret == false){
