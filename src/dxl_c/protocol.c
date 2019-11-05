@@ -2,10 +2,19 @@
 
 #if defined(ARDUINO)
   #include <Arduino.h>
-  #include <avr/pgmspace.h>
-#elif !defined(PROGMEM)
+  #if !defined(ESP_PLATFORM)
+    #include <avr/pgmspace.h>
+  #endif
+#endif
+
+#if !defined(PROGMEM)
   #define PROGMEM
 #endif
+
+#if !defined(pgm_read_word_near)
+  #define pgm_read_word_near(x) (*(uint16_t*)(x))
+#endif
+
 
 // 2.0 Protocol
 #define DXL2_0_PACKET_IDX_HEADER_1        0
