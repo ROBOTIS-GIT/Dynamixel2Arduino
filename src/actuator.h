@@ -5,85 +5,203 @@
 #include "utility/config.h"
 
 
+// The reason for checking #ifndef here is to avoid conflict with Dynamixel SDK.
+#ifndef AX12A
 #define AX12A               (uint16_t)12
+#endif
+#ifndef AX12W
 #define AX12W               (uint16_t)300
+#endif
+#ifndef AX18A
 #define AX18A               (uint16_t)18
+#endif
 
+#ifndef RX10
 #define RX10                (uint16_t)10
+#endif
+#ifndef RX24F
 #define RX24F               (uint16_t)24
+#endif
+#ifndef RX28
 #define RX28                (uint16_t)28
+#endif
+#ifndef RX64
 #define RX64                (uint16_t)64
+#endif
 
+#ifndef DX113
 #define DX113               (uint16_t)113
+#endif
+#ifndef DX116
 #define DX116               (uint16_t)116
+#endif
+#ifndef DX117
 #define DX117               (uint16_t)117
+#endif
 
+#ifndef EX106
 #define EX106               (uint16_t)107
+#endif
 
+#ifndef MX12W
 #define MX12W               (uint16_t)360
+#endif
+#ifndef MX28
 #define MX28                (uint16_t)29
+#endif
+#ifndef MX64
 #define MX64                (uint16_t)310
+#endif
+#ifndef MX106
 #define MX106               (uint16_t)320
+#endif
 
+#ifndef MX28_2
 #define MX28_2              (uint16_t)30
+#endif
+#ifndef MX64_2
 #define MX64_2              (uint16_t)311
+#endif
+#ifndef MX106_2
 #define MX106_2             (uint16_t)321
+#endif
 
+#ifndef XL320
 #define XL320               (uint16_t)350
+#endif
 
+#ifndef XC430_W150
 #define XC430_W150          (uint16_t)1070
+#endif
+#ifndef XC430_W240
 #define XC430_W240          (uint16_t)1080
+#endif
 
+#ifndef XL430_W250
 #define XL430_W250          (uint16_t)1060
-
+#endif
+#ifndef XXL430_W250
 #define XXL430_W250         (uint16_t)1090
+#endif
 
+#ifndef XM430_W210
 #define XM430_W210          (uint16_t)1030
+#endif
+#ifndef XM430_W350
 #define XM430_W350          (uint16_t)1020
+#endif
 
+#ifndef XM540_W150
 #define XM540_W150          (uint16_t)1130
+#endif
+#ifndef XM540_W270
 #define XM540_W270          (uint16_t)1120
+#endif
 
+#ifndef XH430_V210
 #define XH430_V210          (uint16_t)1050
+#endif
+#ifndef XH430_V350
 #define XH430_V350          (uint16_t)1040
+#endif
+#ifndef XH430_W210
 #define XH430_W210          (uint16_t)1010
+#endif
+#ifndef XH430_W350
 #define XH430_W350          (uint16_t)1000
+#endif
 
+#ifndef XH540_W150
 #define XH540_W150          (uint16_t)1110
+#endif
+#ifndef XH540_W270
 #define XH540_W270          (uint16_t)1100
+#endif
+#ifndef XH540_V150
 #define XH540_V150          (uint16_t)1150
+#endif
+#ifndef XH540_V270
 #define XH540_V270          (uint16_t)1140
+#endif
 
+#ifndef PRO_L42_10_S300_R
 #define PRO_L42_10_S300_R   (uint16_t)35072
+#endif
+#ifndef PRO_L54_30_S400_R
 #define PRO_L54_30_S400_R   (uint16_t)37928
+#endif
+#ifndef PRO_L54_30_S500_R
 #define PRO_L54_30_S500_R   (uint16_t)37896
+#endif
+#ifndef PRO_L54_50_S290_R
 #define PRO_L54_50_S290_R   (uint16_t)38176
+#endif
+#ifndef PRO_L54_50_S500_R
 #define PRO_L54_50_S500_R   (uint16_t)38152
+#endif
 
+#ifndef PRO_M42_10_S260_R
 #define PRO_M42_10_S260_R   (uint16_t)43288
+#endif
+#ifndef PRO_M54_40_S250_R
 #define PRO_M54_40_S250_R   (uint16_t)46096
+#endif
+#ifndef PRO_M54_60_S250_R
 #define PRO_M54_60_S250_R   (uint16_t)46352
+#endif
 
+#ifndef PRO_H42_20_S300_R
 #define PRO_H42_20_S300_R   (uint16_t)51200
+#endif
+#ifndef PRO_H54_100_S500_R
 #define PRO_H54_100_S500_R  (uint16_t)53768
+#endif
+#ifndef PRO_H54_200_S500_R
 #define PRO_H54_200_S500_R  (uint16_t)54024
+#endif
 
+#ifndef PRO_M42_10_S260_RA
 #define PRO_M42_10_S260_RA  (uint16_t)43289
+#endif
+#ifndef PRO_M54_40_S250_RA
 #define PRO_M54_40_S250_RA  (uint16_t)46097
+#endif
+#ifndef PRO_M54_60_S250_RA
 #define PRO_M54_60_S250_RA  (uint16_t)46353
+#endif
 
+#ifndef PRO_H42_20_S300_RA
 #define PRO_H42_20_S300_RA  (uint16_t)51201
+#endif
+#ifndef PRO_H54_100_S500_RA
 #define PRO_H54_100_S500_RA (uint16_t)53761
+#endif
+#ifndef PRO_H54_200_S500_RA
 #define PRO_H54_200_S500_RA (uint16_t)54025
+#endif
 
+#ifndef PRO_H42P_020_S300_R
 #define PRO_H42P_020_S300_R (uint16_t)2000
+#endif
+#ifndef PRO_H54P_100_S500_R
 #define PRO_H54P_100_S500_R (uint16_t)2010
+#endif
+#ifndef PRO_H54P_200_S500_R
 #define PRO_H54P_200_S500_R (uint16_t)2020
+#endif
 
+#ifndef PRO_M42P_010_S260_R
 #define PRO_M42P_010_S260_R (uint16_t)2100
+#endif
+#ifndef PRO_M54P_040_S250_R
 #define PRO_M54P_040_S250_R (uint16_t)2110
+#endif
+#ifndef PRO_M54P_060_S250_R
 #define PRO_M54P_060_S250_R (uint16_t)2120
+#endif
 
+
+namespace DYNAMIXEL{
 
 enum ControlTableItem{
   MODEL_NUMBER = 0,
@@ -180,8 +298,6 @@ enum ControlTableItem{
 
   LAST_DUMMY_ITEM = 0xFF
 };
-
-namespace DYNAMIXEL{
 
 typedef struct ControlTableItemInfo{
   uint16_t addr;
