@@ -502,7 +502,7 @@ Slave::processInstWrite()
     }
   
     if(err == DXL_LIB_OK){
-      uint8_t i, j, backup_data;
+      uint8_t i, j, backup_data = 0;
       uint16_t item_start_addr, item_addr_length;
       ControlItem_t *p_item;
       for(i=0; i < registered_item_cnt_; i++){
