@@ -136,9 +136,9 @@ Slave::setID(uint8_t id)
 {
   DXLLibErrorCode_t err = DXL_LIB_OK;
 
-  if(protocol_ver_idx_ == 2 && id > 252){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
+  if(protocol_ver_idx_ == 2 && id >= 0xFD){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
     err = DXL_LIB_ERROR_INVAILD_ID;
-  }else if(protocol_ver_idx_ == 1 && id > 254){ //http://emanual.robotis.com/docs/en/dxl/protocol1/#packet-id
+  }else if(protocol_ver_idx_ == 1 && id >= DXL_BROADCAST_ID){ //http://emanual.robotis.com/docs/en/dxl/protocol1/#packet-id
     err = DXL_LIB_ERROR_INVAILD_ID;
   }
   last_lib_err_ = err; 
@@ -514,22 +514,45 @@ Slave::processInstWrite()
           if(item_addr_length != 0
           && p_item->p_data != nullptr
           && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+            // Check data for ID, Protocol Version (Act as a system callback)
             if(item_start_addr == ADDR_ID){
-              backup_data = id_;
+              backup_data = p_data[item_start_addr-addr];
+              if(protocol_ver_idx_ == 2 && backup_data >= 0xFD){
+                packet_err = DXL2_0_ERR_DATA_RANGE;
+              }else if(protocol_ver_idx_ == 1 && backup_data >= 0xFE){
+                packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+              }
+              backup_data = id_;             
             }else if(item_start_addr == ADDR_PROTOCOL_VER){  
-              backup_data = protocol_ver_idx_;
+              backup_data = p_data[item_start_addr-addr];
+              if(backup_data != 1 && backup_data != 2){
+                if(protocol_ver_idx_ == 2){
+                  packet_err = DXL2_0_ERR_DATA_RANGE;
+                }else if(protocol_ver_idx_ == 1){
+                  packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+                }                
+              }
+              backup_data = protocol_ver_idx_;        
             }
+            if(packet_err != 0){
+              break;
+            }
+            // Copy received data to each item
             for(j=0; j<item_addr_length; j++){
               p_item->p_data[j] = p_data[item_start_addr-addr+j];
             }
+            // Run user callback for Write instruction,
+            // then check and handle the returned error.
             if(user_write_callback_ != nullptr){
               user_write_callback_(item_start_addr, packet_err, user_write_callbakc_arg_);
               if(packet_err != 0){
+                // If an error occurs for the ID and Protocol Version,
+                // restore the previous data. (Act as a system callback)
                 if(item_start_addr == ADDR_ID){
                   id_ = backup_data;
                 }else if(item_start_addr == ADDR_PROTOCOL_VER){
                   protocol_ver_idx_ = backup_data;
-                }                
+                }   
                 break;
               }
             }

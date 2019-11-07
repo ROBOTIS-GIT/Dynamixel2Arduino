@@ -71,14 +71,14 @@ DXLLibErrorCode_t begin_make_dxl_packet(InfoToMakeDXLPacket_t* p_make_packet,
   }
   
   if(protocol_ver == 2){
-    if(id > 252 && id != 0xFE){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
+    if(id == 0xFD && id == 0xFF){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
       return DXL_LIB_ERROR_INVAILD_ID;
     }
     if(packet_buf_capacity < 11){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#status-packet
       return DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
     }
   }else if(protocol_ver == 1){
-    if(id > 254){ //http://emanual.robotis.com/docs/en/dxl/protocol1/#packet-id
+    if(id == 0xFF){ //http://emanual.robotis.com/docs/en/dxl/protocol1/#packet-id
       return DXL_LIB_ERROR_INVAILD_ID;
     }
     if(packet_buf_capacity < 6){ //http://emanual.robotis.com/docs/en/dxl/protocol1/#instruction-packet
@@ -275,7 +275,7 @@ static DXLLibErrorCode_t end_make_dxl1_0_packet(InfoToMakeDXLPacket_t* p_make_pa
   }
   generated_packet_len += p_make_packet->param_length;
 
-  for (i=0; i<generated_packet_len; i++)
+  for (i=DXL1_0_PACKET_IDX_ID; i<generated_packet_len; i++)
   {
     check_sum += p_packet[i];
   }
@@ -387,7 +387,7 @@ static DXLLibErrorCode_t parse_dxl1_0_packet(InfoToParseDXLPacket_t* p_parse_pac
       p_parse_packet->header[p_parse_packet->header_cnt++] = recv_data;
       if(p_parse_packet->header_cnt == 2){
         if(p_parse_packet->header[0] == 0xFF
-        && p_parse_packet->header[1] == 0xFD){
+        && p_parse_packet->header[1] == 0xFF){
           p_parse_packet->recv_param_len = 0;
           p_parse_packet->calculated_check_sum = 0;
           p_parse_packet->parse_state = DXL1_0_PACKET_PARSING_STATE_ID;
@@ -508,7 +508,7 @@ static DXLLibErrorCode_t parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_parse_pac
       break;
 
     case DXL2_0_PACKET_PARSING_STATE_ID:
-      if(recv_data <= 252 || recv_data == 0xFE){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
+      if(recv_data < 0xFD || recv_data == DXL_BROADCAST_ID){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
         p_parse_packet->id = recv_data;
         update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
         p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_LENGTH_L;
