@@ -425,7 +425,7 @@ Slave::processInstRead()
     }else{
       err = DXL_LIB_ERROR_WRONG_PACKET;
     }
-  
+
     if(err == DXL_LIB_OK){
       uint8_t i, j;
       uint16_t item_start_addr, item_addr_length;
@@ -500,7 +500,7 @@ Slave::processInstWrite()
     }else{
       err = DXL_LIB_ERROR_WRONG_PACKET;
     }
-  
+
     if(err == DXL_LIB_OK){
       uint8_t i, j, backup_data = 0;
       uint16_t item_start_addr, item_addr_length;
@@ -670,7 +670,9 @@ Slave::rxInstPacket(uint8_t* p_param_buf, uint16_t param_buf_cap)
     if(err == DXL_LIB_OK){
       if((protocol_ver_idx_ == 2 && info_rx_packet_.inst_idx != DXL_INST_STATUS)
       || protocol_ver_idx_ == 1){
-        p_ret = &info_rx_packet_;
+        if(info_rx_packet_.id == id_ || info_rx_packet_.id == DXL_BROADCAST_ID){
+          p_ret = &info_rx_packet_;
+        }
         break;
       }
     }else if(err != DXL_LIB_PROCEEDING){
