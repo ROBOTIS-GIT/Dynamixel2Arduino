@@ -360,7 +360,7 @@ bool Master::reboot(uint8_t id, uint32_t timeout)
   }
 
   pre_time_us = micros();
-  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, INST_REBOOT, tx_param, 1);
+  last_lib_err_code_ = dxlTxPacketInst(&packet_, id, INST_REBOOT, tx_param, 0);
   packet_.tx_time = micros() - pre_time_us;
 
   pre_time_ms = millis();
