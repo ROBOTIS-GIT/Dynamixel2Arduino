@@ -295,7 +295,11 @@ Master::write(uint8_t id, uint16_t addr,
   // Send Write Instruction
   if(writeNoResp(id, addr, p_data, data_length) == true){
     // Receive Status Packet
-    if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+    if(id != DXL_BROADCAST_ID){
+      if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+        ret = true;
+      }
+    }else{
       ret = true;
     }
   }
@@ -318,8 +322,6 @@ Master::writeNoResp(uint8_t id, uint16_t addr, const uint8_t *p_data, uint16_t d
     err = DXL_LIB_ERROR_PORT_NOT_OPEN;
   }else if(data_length == 0) {
     err = DXL_LIB_ERROR_INVAILD_DATA_LENGTH;
-  }else if(id == DXL_BROADCAST_ID) {
-    err = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
   }
   if(err != DXL_LIB_OK){
     last_lib_err_ = err;
@@ -389,7 +391,13 @@ Master::regWrite(uint8_t id, uint16_t addr,
 
     // Receive Status Packet
     if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
-      ret = true;
+      if(id != DXL_BROADCAST_ID){
+        if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+          ret = true;
+        }
+      }else{
+        ret = true;
+      }
     }
   }
 
@@ -428,19 +436,17 @@ Master::factoryReset(uint8_t id, uint8_t option, uint32_t timeout_ms)
 {
   bool ret = false;
   uint8_t param_len = 0;
-
-  // Parameter exception handling
-  if (id == DXL_BROADCAST_ID){
-    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
-    return false;
-  }
-  
+ 
   // Send FactoryReset Instruction
   if(protocol_ver_idx_ == 2){
     param_len = 1;
   }
   if(txInstPacket(id, DXL_INST_FACTORY_RESET, (uint8_t*)&option, param_len) == true){
-    if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+    if(id != DXL_BROADCAST_ID){
+      if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+        ret = true;
+      }
+    }else{
       ret = true;
     }
   } 
@@ -456,15 +462,13 @@ Master::reboot(uint8_t id, uint32_t timeout_ms)
 { 
   bool ret = false;
 
-  // Parameter exception handling
-  if (id == DXL_BROADCAST_ID){
-    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
-    return false;
-  }
-
   // Send Reboot Instruction
   if(txInstPacket(id, DXL_INST_REBOOT, nullptr, 0) == true){
-    if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+    if(id != DXL_BROADCAST_ID){
+      if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+        ret = true;
+      }
+    }else{
       ret = true;
     }
   }
@@ -485,9 +489,6 @@ Master::clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_m
   if(protocol_ver_idx_ != 2){
     last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORTED;
     return false;
-  }else if(id == DXL_BROADCAST_ID){
-    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
-    return false;
   }
 
   // http://emanual.robotis.com/docs/en/dxl/protocol2/#clear
@@ -503,7 +504,11 @@ Master::clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_m
 
   // Send Reboot Instruction
   if(txInstPacket(id, DXL_INST_CLEAR, tx_param, 5) == true){
-    if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+    if(id != DXL_BROADCAST_ID){
+      if(rxStatusPacket(nullptr, 0, timeout_ms) != nullptr){
+        ret = true;
+      }
+    }else{
       ret = true;
     }
   }
@@ -665,9 +670,13 @@ Master::rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t ti
     if(p_port_->available() > 0){
       err = parse_dxl_packet(&info_rx_packet_, p_port_->read());
       if(err == DXL_LIB_OK){
-        if((protocol_ver_idx_ == 2 && info_rx_packet_.inst_idx == DXL_INST_STATUS)
-        || protocol_ver_idx_ == 1){
-          if(info_rx_packet_.err_idx == 0){
+        if(protocol_ver_idx_ == 2 && info_rx_packet_.inst_idx == DXL_INST_STATUS){
+          if(info_rx_packet_.err_idx == 0 || info_rx_packet_.err_idx == 0x80){
+            p_ret = &info_rx_packet_;
+          }
+          break;
+        }else if(protocol_ver_idx_ == 1){
+          if(info_rx_packet_.err_idx == 0 || info_rx_packet_.err_idx == (1<<DXL1_0_ERR_OVERLOAD_BIT)){
             p_ret = &info_rx_packet_;
           }
           break;
