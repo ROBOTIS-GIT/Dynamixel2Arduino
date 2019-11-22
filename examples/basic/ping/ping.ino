@@ -32,7 +32,7 @@
   // Reference link : https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78
   #define DXL_SERIAL   Serial3
   #define DEBUG_SERIAL Serial
-  const uint8_t DXL_DIR_PIN = 84; //OpenCM9.04 EXP Board's DIR PIN. (To use the DXL port on the OpenCM 9.04 board, you must use 28 for DIR PIN.)    
+  const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.    
 #else // When using DynamixelShield
   #define DXL_SERIAL   Serial1
   #define DEBUG_SERIAL Serial
@@ -73,4 +73,31 @@ void loop() {
     DEBUG_SERIAL.println(dxl.getLastLibErrCode());
   }
   delay(500);
+
+  FindServos();
+}
+
+
+XelInfoFromPing_t ping_info[32];
+void FindServos(void) {
+  Serial.println("  Try Protocol 2 - broadcast ping: ");
+  Serial.flush(); // flush it as ping may take awhile... 
+      
+  if (uint8_t count_pinged = dxl.ping(DXL_BROADCAST_ID, ping_info, 
+    sizeof(ping_info)/sizeof(ping_info[0]))) {
+    Serial.print("Detected Dynamixel : \n");
+    for (int i = 0; i < count_pinged; i++)
+    {
+      Serial.print("    ");
+      Serial.print(ping_info[i].id, DEC);
+      Serial.print(", Model:");
+      Serial.print(ping_info[i].model_number);
+      Serial.print(", Ver:");
+      Serial.println(ping_info[i].firmware_version, HEX);
+      //g_servo_protocol[i] = 2;
+    }
+  }else{
+    Serial.print("Broadcast returned no items : ");
+    Serial.println(dxl.getLastLibErrCode());
+  }
 }

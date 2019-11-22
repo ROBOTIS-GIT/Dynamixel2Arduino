@@ -31,7 +31,7 @@
   // For OpenCR, there is a DXL Power Enable pin, so you must initialize and control it.
   // Reference link : https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78
   #define DXL_SERIAL   Serial3
-  const uint8_t DXL_DIR_PIN = 84; //OpenCM9.04 EXP Board's DIR PIN. (To use the DXL port on the OpenCM 9.04 board, you must use 28 for DIR PIN.)    
+  const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.    
 #else // When using DynamixelShield
   #define DXL_SERIAL   Serial1
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
