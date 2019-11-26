@@ -39,78 +39,32 @@
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
 
-/* ParamForSyncReadInst_t
-  A structure that contains the information needed for the parameters of the 'syncRead packet'.
+/* InfoSyncBulkInst_t
+  A structure that contains the information needed for the parameters of the 'Sync/Bulk Read/Write packet'.
 
-  typedef struct ParamForSyncReadInst{
-    uint16_t addr;
-    uint16_t length;
-    uint8_t id_count;
-    InfoForSyncReadParam_t xel[DXL_MAX_NODE]; //refer to below.
-  } ParamForSyncReadInst_t;
-
-  typedef struct InfoForSyncReadParam{
-    uint8_t id;
-  } InfoForSyncReadParam_t;
+typedef struct InfoSyncBulkInst{
+  uint8_t* p_packet_buf;
+  uint16_t packet_buf_capacity;
+  uint16_t packet_length;
+  uint8_t id_cnt;
+  bool is_complete_packet;
+} InfoSyncBulkInst_t;
 */
 
-/* ParamForSyncWriteInst_t
-  A structure that contains the information needed for the parameters of the 'syncWrite packet'.
-
-  typedef struct ParamForSyncWriteInst{
-    uint16_t addr;
-    uint16_t length;
-    uint8_t id_count;
-    XelInfoForSyncWriteParam_t xel[DXL_MAX_NODE]; //refer to below.
-  } ParamForSyncWriteInst_t;
-
-  typedef struct XelInfoForSyncWriteParam{
-    uint8_t id;
-    uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
-  } XelInfoForSyncWriteParam_t;
-*/
-
-/* RecvInfoFromStatusInst_t
-  A structure used to receive data from multiple XELs.
-
-  typedef struct RecvInfoFromStatusInst{
-    uint8_t id_count;
-    XelInfoForStatusInst_t xel[DXL_MAX_NODE]; //refer to below.
-  } RecvInfoFromStatusInst_t;
-
-  typedef struct XelInfoForStatusInst{
-    uint8_t id;
-    uint16_t length;
-    uint8_t error;
-    uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
-  } XelInfoForStatusInst_t;
-*/
-
-ParamForSyncReadInst_t sync_read_param;
-ParamForSyncWriteInst_t sync_write_param;
-RecvInfoFromStatusInst_t read_result;
+DYNAMIXEL::InfoSyncBulkInst_t sr_present_pos;
+const uint16_t user_pkt_buf_cap = 128;
+uint8_t user_pkt_buf[user_pkt_buf_cap];
+const uint16_t recv_buf_cap = 128;
+uint8_t recv_buf[recv_buf_cap];
+int32_t goal_vel = 0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
   DEBUG_SERIAL.begin(115200);
-  dxl.begin(57600);
+  dxl.begin(1000000);
   dxl.scan();
-
-  // fill the members of structure for syncWrite
-  sync_write_param.addr = 104; //Goal Velocity on X serise
-  sync_write_param.length = 4;
-  sync_write_param.xel[0].id = 1;
-  sync_write_param.xel[1].id = 3;
-  sync_write_param.id_count = 2;
-
-  // fill the members of structure for syncRead
-  sync_read_param.addr = 128; //Present Velocity on X serise
-  sync_read_param.length = 4;
-  sync_read_param.xel[0].id = 1;
-  sync_read_param.xel[1].id = 3;
-  sync_read_param.id_count = 2;
   
   dxl.torqueOff(1);
   dxl.setOperatingMode(1, OP_VELOCITY);
@@ -119,39 +73,43 @@ void setup() {
   dxl.torqueOff(3);
   dxl.setOperatingMode(3, OP_VELOCITY);
   dxl.torqueOn(3);
+
+  // Using user buffer
+  sr_present_pos.p_packet_buf = user_pkt_buf;
+  sr_present_pos.packet_buf_capacity = user_pkt_buf_cap;
+
+  dxl.beginSyncRead(132, 4, &sr_present_pos);
+  dxl.addSyncReadID(1, &sr_present_pos);
+  dxl.addSyncReadID(3, &sr_present_pos, true);
+
+  // Using class default buffer
+  dxl.beginSyncWrite(104, 4);
+  goal_vel = 100;
+  dxl.addSyncWriteData(1, (uint8_t*)&goal_vel);
+  goal_vel = 200;
+  dxl.addSyncWriteData(3, (uint8_t*)&goal_vel);
+  dxl.sendSyncWrite();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  static int32_t velocity = 0;
-  int32_t recv_velocity[2];
-
-  // set value to data buffer for syncWrite
-  velocity = velocity >= 200 ? -200 : velocity+10;
-  memcpy(sync_write_param.xel[0].data, &velocity, sizeof(velocity));
-  memcpy(sync_write_param.xel[1].data, &velocity, sizeof(velocity));
-
-  // send command using syncWrite
-  dxl.syncWrite(sync_write_param);
-  delay(100);
-
-  // Print the read data using SyncRead
-  dxl.syncRead(sync_read_param, read_result);
-  DEBUG_SERIAL.println(F("======= Sync Read ======="));
-  memcpy(&recv_velocity[0], read_result.xel[0].data, read_result.xel[0].length);
-  memcpy(&recv_velocity[1], read_result.xel[1].data, read_result.xel[1].length);
-  DEBUG_SERIAL.print(F("ID: "));DEBUG_SERIAL.print(read_result.xel[0].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Present Velocity: "));DEBUG_SERIAL.print(recv_velocity[0]);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Packet Error: "));DEBUG_SERIAL.print(read_result.xel[0].error);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Param Length: "));DEBUG_SERIAL.print(read_result.xel[0].length);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.println();
-  DEBUG_SERIAL.print(F("ID: "));DEBUG_SERIAL.print(read_result.xel[1].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Present Velocity: "));DEBUG_SERIAL.print(recv_velocity[1]);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Packet Error: "));DEBUG_SERIAL.print(read_result.xel[1].error);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Param Length: "));DEBUG_SERIAL.print(read_result.xel[1].length);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.println();
-  DEBUG_SERIAL.println();  
-  delay(100);
+  uint16_t recv_len;
+  
+  recv_len = dxl.sendSyncRead(recv_buf, recv_buf_cap, &sr_present_pos);
+  if(recv_len > 0){
+    DEBUG_SERIAL.print("\t Receive Len : ");
+    DEBUG_SERIAL.print(recv_len);
+    DEBUG_SERIAL.println();
+    for(uint16_t i=0; i<recv_len; i++){
+      DEBUG_SERIAL.print(recv_buf[i], HEX);DEBUG_SERIAL.print(" ");
+    }
+    DEBUG_SERIAL.println();
+  }else{
+    DEBUG_SERIAL.print("\t Fail!!   ");
+    DEBUG_SERIAL.print(dxl.getLastLibErrCode());
+    DEBUG_SERIAL.println();
+  }
+  delay(500);
 }
 
 

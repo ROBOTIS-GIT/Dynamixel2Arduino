@@ -31,6 +31,15 @@ typedef struct InfoFromPing{
   uint8_t firmware_version;
 } InfoFromPing_t;
 
+typedef struct InfoSyncBulkInst{
+  uint8_t* p_packet_buf;
+  uint16_t packet_buf_capacity;
+  uint16_t packet_length;
+  uint8_t id_cnt;
+  bool is_complete_packet;
+  uint16_t addr_len;
+} InfoSyncBulkInst_t;
+
 class Master
 {
   public:
@@ -91,23 +100,23 @@ class Master
 
 
 //TODO
-#if 0 
-    bool syncRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
-      uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
-    bool syncWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
-    bool bulkRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
-      uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
-    bool bulkWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
+#if 1
+    // bool syncRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
+    //   uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
+    // bool syncWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
+    // bool bulkRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
+    //   uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
+    // bool bulkWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
 
     /* Easy functions for Sync Read */
-    bool beginSyncRead(uint16_t addr, uint16_t addr_len);
-    bool addSyncReadID(uint8_t id);
-    bool sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity);
+    bool beginSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    bool addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info = nullptr, bool flag_end_add = false);
+    uint16_t sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBulkInst_t *p_sync_info = nullptr);
 
     /* Easy functions for Sync Write */
-    bool beginSyncWrite(uint16_t addr, uint16_t addr_len);
-    bool addSyncWriteData(uint8_t id, uint8_t *p_data, uint16_t data_len);
-    bool sendSyncWrite();
+    bool beginSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    bool addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync_info = nullptr, bool flag_end_add = false);
+    bool sendSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
 
     /* Easy functions for Bulk Read */
     bool beginBulkRead();
@@ -139,6 +148,7 @@ class Master
     uint16_t packet_buf_capacity_;
     InfoToMakeDXLPacket_t info_tx_packet_;
     InfoToParseDXLPacket_t info_rx_packet_;
+    InfoSyncBulkInst_t info_sync_bulk_;
 
     DXLLibErrorCode_t last_lib_err_;
   };
