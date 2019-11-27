@@ -201,8 +201,6 @@
 #endif
 
 
-namespace DYNAMIXEL{
-
 enum ControlTableItem{
   MODEL_NUMBER = 0,
   MODEL_INFORMATION,
@@ -298,6 +296,8 @@ enum ControlTableItem{
 
   LAST_DUMMY_ITEM = 0xFF
 };
+
+namespace DYNAMIXEL{
 
 typedef struct ControlTableItemInfo{
   uint16_t addr;
