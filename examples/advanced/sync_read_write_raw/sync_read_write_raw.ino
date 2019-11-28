@@ -54,54 +54,71 @@ typedef struct InfoSyncBulkInst{
 DYNAMIXEL::InfoSyncBulkInst_t sr_present_pos;
 const uint16_t user_pkt_buf_cap = 128;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
-const uint16_t recv_buf_cap = 128;
-uint8_t recv_buf[recv_buf_cap];
-int32_t goal_vel = 0;
+
+const uint8_t DXL_ID_CNT = 2;
+const uint16_t SR_START_ADDR = 126;
+const uint16_t SR_ADDR_LEN = 10; //2+4+4
+const uint16_t SW_START_ADDR = 104; //Goal velocity
+const uint16_t SW_ADDR_LEN = 4;
+typedef struct sr_data{
+  int16_t present_current;
+  int32_t present_velocity;
+  int32_t present_position;
+} sr_data_t;
+uint8_t id_list[DXL_ID_CNT] = {1, 3};
+sr_data_t present_values[DXL_ID_CNT];
+int32_t goal_velocity[DXL_ID_CNT] = {100, 300};
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
+  uint8_t i;
   DEBUG_SERIAL.begin(115200);
-  dxl.begin(1000000);
-  dxl.scan();
+  dxl.begin(57600);
   
-  dxl.torqueOff(1);
-  dxl.setOperatingMode(1, OP_VELOCITY);
-  dxl.torqueOn(1);
+  for(i=0; i<DXL_ID_CNT; i++){
+    dxl.torqueOff(id_list[i]);
+    dxl.setOperatingMode(id_list[i], OP_VELOCITY);
+  }
+  for(i=0; i<DXL_ID_CNT; i++){
+    dxl.torqueOn(id_list[i]);
+  }
 
-  dxl.torqueOff(3);
-  dxl.setOperatingMode(3, OP_VELOCITY);
-  dxl.torqueOn(3);
-
-  // Using user buffer
+  // Generate SyncRead packet using user buffer
   sr_present_pos.p_packet_buf = user_pkt_buf;
   sr_present_pos.packet_buf_capacity = user_pkt_buf_cap;
+  dxl.beginSyncRead(SR_START_ADDR, SR_ADDR_LEN, &sr_present_pos);
+  for(i=0; i<DXL_ID_CNT; i++){
+    if(i<(DXL_ID_CNT-1)){
+      dxl.addSyncReadID(id_list[i], &sr_present_pos);
+    }else{
+      //3rd parameter is a flag to finish adding parameter (ID) and create packet.(default is false)
+      dxl.addSyncReadID(id_list[i], &sr_present_pos, true);
+    }
+  }
 
-  dxl.beginSyncRead(132, 4, &sr_present_pos);
-  dxl.addSyncReadID(1, &sr_present_pos);
-  dxl.addSyncReadID(3, &sr_present_pos, true);
-
-  // Using class default buffer
-  dxl.beginSyncWrite(104, 4);
-  goal_vel = 100;
-  dxl.addSyncWriteData(1, (uint8_t*)&goal_vel);
-  goal_vel = 200;
-  dxl.addSyncWriteData(3, (uint8_t*)&goal_vel);
+  // Generate SyncRead packet using class default buffer
+  dxl.beginSyncWrite(SW_START_ADDR, SW_ADDR_LEN);
+  for(i=0; i<DXL_ID_CNT; i++){
+    dxl.addSyncWriteData(id_list[i], (uint8_t*)&goal_velocity[i]);
+  }
   dxl.sendSyncWrite();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  uint16_t recv_len;
+  uint8_t recv_cnt;
   
-  recv_len = dxl.sendSyncRead(recv_buf, recv_buf_cap, &sr_present_pos);
-  if(recv_len > 0){
-    DEBUG_SERIAL.print("\t Receive Len : ");
-    DEBUG_SERIAL.print(recv_len);
-    DEBUG_SERIAL.println();
-    for(uint16_t i=0; i<recv_len; i++){
-      DEBUG_SERIAL.print(recv_buf[i], HEX);DEBUG_SERIAL.print(" ");
+  recv_cnt = dxl.sendSyncRead((uint8_t*)&present_values, sizeof(present_values), &sr_present_pos);
+  if(recv_cnt > 0){
+    DEBUG_SERIAL.print("Received ID Count: ");
+    DEBUG_SERIAL.println(recv_cnt);
+    for(uint16_t i=0; i<recv_cnt; i++){
+      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(id_list[i]);
+      DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(present_values[i].present_current);
+      DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(present_values[i].present_velocity);
+      DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(present_values[i].present_position);
     }
     DEBUG_SERIAL.println();
   }else{

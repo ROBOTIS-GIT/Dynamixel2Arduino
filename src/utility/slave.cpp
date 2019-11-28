@@ -666,8 +666,7 @@ Slave::rxInstPacket(uint8_t* p_param_buf, uint16_t param_buf_cap)
   begin_parse_dxl_packet(&info_rx_packet_, protocol_ver_idx_, p_param_buf, param_buf_cap);
   while(p_port_->available() > 0) 
   {
-    uint8_t c = p_port_->read();
-    err = parse_dxl_packet(&info_rx_packet_, c);
+    err = parse_dxl_packet(&info_rx_packet_, p_port_->read());
     if(err == DXL_LIB_OK){
       if((protocol_ver_idx_ == 2 && info_rx_packet_.inst_idx != DXL_INST_STATUS)
       || protocol_ver_idx_ == 1){

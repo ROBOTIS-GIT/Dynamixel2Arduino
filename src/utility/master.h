@@ -111,7 +111,7 @@ class Master
     /* Easy functions for Sync Read */
     bool beginSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
     bool addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info = nullptr, bool flag_end_add = false);
-    uint16_t sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    uint8_t sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBulkInst_t *p_sync_info = nullptr);
 
     /* Easy functions for Sync Write */
     bool beginSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);

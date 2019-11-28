@@ -551,6 +551,7 @@ Master::beginSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sy
   p_info->id_cnt = 0;
   p_info->packet_length = 0;
   p_info->is_complete_packet = false;
+  p_info->addr_len = addr_len;
 
   tx_param[param_len++] = addr >> 0;
   tx_param[param_len++] = addr >> 8;
@@ -615,10 +616,10 @@ Master::addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info, bool flag_end
   return ret;
 }
 
-uint16_t
+uint8_t
 Master::sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBulkInst_t *p_sync_info)
 {
-  uint16_t total_recv_len = 0;
+  uint8_t recv_cnt = 0;
   DXLLibErrorCode_t err = DXL_LIB_OK;
   InfoSyncBulkInst_t *p_info = &info_sync_bulk_;
 
@@ -659,12 +660,13 @@ Master::sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBu
 
   for(uint8_t i=0; i<p_info->id_cnt; i++)
   {
-    if(rxStatusPacket(&p_recv_buf[total_recv_len], recv_buf_capacity-total_recv_len) != nullptr){
-      total_recv_len += info_rx_packet_.recv_param_len;
+    if(rxStatusPacket(&p_recv_buf[i*p_info->addr_len], 
+    recv_buf_capacity-i*p_info->addr_len, 3) != nullptr){
+      recv_cnt++;
     }
   }
 
-  return total_recv_len;
+  return recv_cnt;
 }
 
 
