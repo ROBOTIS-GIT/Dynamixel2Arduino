@@ -4,10 +4,10 @@ using namespace DYNAMIXEL;
 
 
 enum DefaultControlTableItemAddr{
-  ADDR_MODEL_NUMBER    = 0,
-  ADDR_FIRMWARE_VER    = 6,
-  ADDR_ID              = 7,
-  ADDR_PROTOCOL_VER    = 9
+  ADDR_ITEM_MODEL_NUMBER    = 0,
+  ADDR_ITEM_FIRMWARE_VER    = 6,
+  ADDR_ITEM_ID              = 7,
+  ADDR_ITEM_PROTOCOL_VER    = 9
 };
 
 static bool isAddrInRange(uint16_t addr, uint16_t length, uint16_t range_addr, uint16_t range_length);
@@ -310,6 +310,19 @@ void Slave::setReadCallbackFunc(userCallbackFunc callback_func, void* callback_a
 }
 
 bool 
+Slave::setPort(DXLPortHandler *p_port)
+{
+  if(p_port == nullptr){
+    last_lib_err_ = DXL_LIB_ERROR_NULLPTR;
+    return false;
+  }
+
+  p_port_ = p_port;
+
+  return true;
+}
+
+bool 
 Slave::setPort(DXLPortHandler &port)
 {
   p_port_ = &port;
@@ -327,6 +340,12 @@ DXLLibErrorCode_t
 Slave::getLastLibErrCode() const
 {
   return last_lib_err_;
+}
+
+void
+Slave::setLastLibErrCode(DXLLibErrorCode_t err_code)
+{
+  last_lib_err_ = err_code;
 }
 
 uint8_t 
@@ -509,13 +528,13 @@ Slave::processInstWrite()
         p_item = &control_table_[i];
         item_start_addr = p_item->start_addr;
         item_addr_length = p_item->length;
-        if(item_start_addr != ADDR_MODEL_NUMBER
-        && item_start_addr != ADDR_FIRMWARE_VER){
+        if(item_start_addr != ADDR_ITEM_MODEL_NUMBER
+        && item_start_addr != ADDR_ITEM_FIRMWARE_VER){
           if(item_addr_length != 0
           && p_item->p_data != nullptr
           && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
             // Check data for ID, Protocol Version (Act as a system callback)
-            if(item_start_addr == ADDR_ID){
+            if(item_start_addr == ADDR_ITEM_ID){
               backup_data = p_data[item_start_addr-addr];
               if(protocol_ver_idx_ == 2 && backup_data >= 0xFD){
                 packet_err = DXL2_0_ERR_DATA_RANGE;
@@ -523,7 +542,7 @@ Slave::processInstWrite()
                 packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
               }
               backup_data = id_;             
-            }else if(item_start_addr == ADDR_PROTOCOL_VER){  
+            }else if(item_start_addr == ADDR_ITEM_PROTOCOL_VER){  
               backup_data = p_data[item_start_addr-addr];
               if(backup_data != 1 && backup_data != 2){
                 if(protocol_ver_idx_ == 2){
@@ -548,9 +567,9 @@ Slave::processInstWrite()
               if(packet_err != 0){
                 // If an error occurs for the ID and Protocol Version,
                 // restore the previous data. (Act as a system callback)
-                if(item_start_addr == ADDR_ID){
+                if(item_start_addr == ADDR_ITEM_ID){
                   id_ = backup_data;
-                }else if(item_start_addr == ADDR_PROTOCOL_VER){
+                }else if(item_start_addr == ADDR_ITEM_PROTOCOL_VER){
                   protocol_ver_idx_ = backup_data;
                 }   
                 break;
@@ -573,10 +592,10 @@ Slave::processInstWrite()
 bool 
 Slave::addDefaultControlItem()
 {
-  if(addControlItem(ADDR_MODEL_NUMBER, (uint16_t&)model_num_) != DXL_LIB_OK
-  || addControlItem(ADDR_FIRMWARE_VER, firmware_ver_) != DXL_LIB_OK
-  || addControlItem(ADDR_ID, id_) != DXL_LIB_OK
-  || addControlItem(ADDR_PROTOCOL_VER, protocol_ver_idx_) != DXL_LIB_OK){
+  if(addControlItem(ADDR_ITEM_MODEL_NUMBER, (uint16_t&)model_num_) != DXL_LIB_OK
+  || addControlItem(ADDR_ITEM_FIRMWARE_VER, firmware_ver_) != DXL_LIB_OK
+  || addControlItem(ADDR_ITEM_ID, id_) != DXL_LIB_OK
+  || addControlItem(ADDR_ITEM_PROTOCOL_VER, protocol_ver_idx_) != DXL_LIB_OK){
     return false;
   }   
 

@@ -55,6 +55,7 @@ class Slave
     uint8_t getFirmwareVersion() const;
     
     bool setPort(DXLPortHandler &port);
+    bool setPort(DXLPortHandler *p_port);
     DXLPortHandler* getPort() const;
     
     bool setPortProtocolVersion(float version);
@@ -83,8 +84,10 @@ class Slave
 
     bool processPacket();
 
-    DXLLibErrorCode_t getLastLibErrCode() const;
     uint8_t getLastStatusPacketError() const;
+
+    void setLastLibErrCode(DXLLibErrorCode_t err_code);
+    DXLLibErrorCode_t getLastLibErrCode() const;
 
     // raw APIs
     bool txStatusPacket(uint8_t id, uint8_t err_code, uint8_t *p_param, uint16_t param_len);
