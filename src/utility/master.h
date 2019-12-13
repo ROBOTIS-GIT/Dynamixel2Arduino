@@ -112,23 +112,25 @@ class Master
     bool beginSetupSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
     bool addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info = nullptr);
     bool endSetupSyncRead(InfoSyncBulkInst_t *p_sync_info = nullptr);
-    uint8_t sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    uint8_t doSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint8_t *p_err_list, uint8_t err_list_size, InfoSyncBulkInst_t *p_sync_info = nullptr);
 
     /* Easy functions for Sync Write */
     bool beginSetupSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
     bool addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync_info = nullptr);
     bool endSetupSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool sendSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
+    bool doSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
 
     /* Easy functions for Bulk Read */
-    bool beginBulkRead();
-    bool addBulkReadID(uint8_t id, uint16_t addr, uint16_t addr_len);
-    bool sendBulkRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity);
+    bool beginSetupBulkRead(InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    bool addBulkReadID(uint8_t id, uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    bool endSetupBulkRead(InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    bool doBulkRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint8_t *p_err_list, uint8_t err_list_size, InfoSyncBulkInst_t *p_bulk_info = nullptr);
 
     /* Easy functions for Bulk Write */
-    bool beginBulkWrite();
-    bool addBulkWriteData(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len);
-    bool sendBulkWrite();
+    bool beginSetupBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    bool addBulkWriteData(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len, InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    bool endSetupBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    bool doBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
 #endif    
 
     uint8_t getLastStatusPacketError() const;

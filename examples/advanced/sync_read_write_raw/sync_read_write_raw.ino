@@ -67,6 +67,7 @@ typedef struct sr_data{
 } sr_data_t;
 uint8_t id_list[DXL_ID_CNT] = {1, 2};
 sr_data_t present_values[DXL_ID_CNT];
+uint8_t err_list[DXL_ID_CNT] = {0, };
 int32_t goal_velocity[DXL_ID_CNT] = {100, 200};
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
@@ -100,19 +101,20 @@ void setup() {
     dxl.addSyncWriteData(id_list[i], (uint8_t*)&goal_velocity[i]);
   }
   dxl.endSetupSyncWrite();
-  dxl.sendSyncWrite();
+  dxl.doSyncWrite();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   uint8_t recv_cnt;
   
-  recv_cnt = dxl.sendSyncRead((uint8_t*)&present_values, sizeof(present_values), &sr_present_pos);
+  recv_cnt = dxl.doSyncRead((uint8_t*)&present_values, sizeof(present_values), err_list, sizeof(err_list), &sr_present_pos);
   if(recv_cnt > 0){
     DEBUG_SERIAL.print("Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
     for(uint16_t i=0; i<recv_cnt; i++){
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(id_list[i]);
+      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(id_list[i]);
+      DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(err_list[i]);
       DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(present_values[i].present_current);
       DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(present_values[i].present_velocity);
       DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(present_values[i].present_position);

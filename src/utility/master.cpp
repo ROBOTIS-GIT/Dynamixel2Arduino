@@ -642,7 +642,7 @@ Master::endSetupSyncRead(InfoSyncBulkInst_t *p_sync_info)
 }
 
 uint8_t
-Master::sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBulkInst_t *p_sync_info)
+Master::doSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint8_t *p_err_list, uint8_t err_list_size, InfoSyncBulkInst_t *p_sync_info)
 {
   uint8_t recv_cnt = 0;
   DXLLibErrorCode_t err = DXL_LIB_OK;
@@ -687,6 +687,9 @@ Master::sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBu
   {
     if(rxStatusPacket(&p_recv_buf[i*p_info->addr_len], 
     recv_buf_capacity-i*p_info->addr_len, 3) != nullptr){
+      if(p_err_list != nullptr && err_list_size > recv_cnt){
+        p_err_list[recv_cnt] = info_rx_packet_.err_idx;
+      }
       recv_cnt++;
     }else{
       break;
@@ -814,7 +817,7 @@ Master::endSetupSyncWrite(InfoSyncBulkInst_t *p_sync_info)
 }
 
 bool
-Master::sendSyncWrite(InfoSyncBulkInst_t *p_sync_info)
+Master::doSyncWrite(InfoSyncBulkInst_t *p_sync_info)
 {
   bool ret = false;
   DXLLibErrorCode_t err = DXL_LIB_OK;
