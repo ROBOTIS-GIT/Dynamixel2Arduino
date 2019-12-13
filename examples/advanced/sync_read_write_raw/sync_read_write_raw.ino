@@ -65,9 +65,9 @@ typedef struct sr_data{
   int32_t present_velocity;
   int32_t present_position;
 } sr_data_t;
-uint8_t id_list[DXL_ID_CNT] = {1, 3};
+uint8_t id_list[DXL_ID_CNT] = {1, 2};
 sr_data_t present_values[DXL_ID_CNT];
-int32_t goal_velocity[DXL_ID_CNT] = {100, 300};
+int32_t goal_velocity[DXL_ID_CNT] = {100, 200};
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
@@ -88,21 +88,18 @@ void setup() {
   // Generate SyncRead packet using user buffer
   sr_present_pos.p_packet_buf = user_pkt_buf;
   sr_present_pos.packet_buf_capacity = user_pkt_buf_cap;
-  dxl.beginSyncRead(SR_START_ADDR, SR_ADDR_LEN, &sr_present_pos);
+  dxl.beginSetupSyncRead(SR_START_ADDR, SR_ADDR_LEN, &sr_present_pos);
   for(i=0; i<DXL_ID_CNT; i++){
-    if(i<(DXL_ID_CNT-1)){
-      dxl.addSyncReadID(id_list[i], &sr_present_pos);
-    }else{
-      //3rd parameter is a flag to finish adding parameter (ID) and create packet.(default is false)
-      dxl.addSyncReadID(id_list[i], &sr_present_pos, true);
-    }
+    dxl.addSyncReadID(id_list[i], &sr_present_pos);
   }
+  dxl.endSetupSyncRead(&sr_present_pos);
 
   // Generate SyncRead packet using class default buffer
-  dxl.beginSyncWrite(SW_START_ADDR, SW_ADDR_LEN);
+  dxl.beginSetupSyncWrite(SW_START_ADDR, SW_ADDR_LEN);
   for(i=0; i<DXL_ID_CNT; i++){
     dxl.addSyncWriteData(id_list[i], (uint8_t*)&goal_velocity[i]);
   }
+  dxl.endSetupSyncWrite();
   dxl.sendSyncWrite();
 }
 

@@ -109,13 +109,15 @@ class Master
     // bool bulkWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
 
     /* Easy functions for Sync Read */
-    bool beginSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info = nullptr, bool flag_end_add = false);
+    bool beginSetupSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    bool addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    bool endSetupSyncRead(InfoSyncBulkInst_t *p_sync_info = nullptr);
     uint8_t sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBulkInst_t *p_sync_info = nullptr);
 
     /* Easy functions for Sync Write */
-    bool beginSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync_info = nullptr, bool flag_end_add = false);
+    bool beginSetupSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    bool addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync_info = nullptr);
+    bool endSetupSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
     bool sendSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
 
     /* Easy functions for Bulk Read */

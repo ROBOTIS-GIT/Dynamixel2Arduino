@@ -531,7 +531,7 @@ Master::clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_m
 // (Protocol 1.0) Not Supported
 // (Protocol 2.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol2/#sync-read
 bool 
-Master::beginSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info)
+Master::beginSetupSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info)
 {
   bool ret = false;
   DXLLibErrorCode_t err = DXL_LIB_OK;
@@ -574,7 +574,7 @@ Master::beginSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sy
 }
 
 bool
-Master::addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info, bool flag_end_add)
+Master::addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info)
 {
   bool ret = false;
   DXLLibErrorCode_t err = DXL_LIB_OK;
@@ -599,21 +599,46 @@ Master::addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info, bool flag_end
 
   if(err == DXL_LIB_OK){
     p_info->id_cnt++;
-    if(flag_end_add == true){
-      err = end_make_dxl_packet(&info_tx_packet_);
-      if(err == DXL_LIB_OK){
-        p_info->packet_length = info_tx_packet_.generated_packet_length;
-        p_info->is_complete_packet = true;        
-        ret = true;
-      }
-    }else{
-      ret = true;
-    }
+    ret = true;
   }
 
   last_lib_err_ = err;
 
   return ret;
+}
+
+bool
+Master::endSetupSyncRead(InfoSyncBulkInst_t *p_sync_info)
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoSyncBulkInst_t *p_info = &info_sync_bulk_;
+
+  // Parameter exception handling
+  if(protocol_ver_idx_ != 2){
+    err = DXL_LIB_ERROR_NOT_SUPPORTED;
+  }else if(info_tx_packet_.inst_idx != DXL_INST_SYNC_READ){
+    err = DXL_LIB_ERROR_NOT_INITIALIZED;
+  }
+  if(err != DXL_LIB_OK){
+    last_lib_err_ = err;
+    return false;
+  }
+
+  if(p_sync_info != nullptr){
+    p_info = p_sync_info;
+  }
+
+  if(info_tx_packet_.inst_idx == DXL_INST_SYNC_READ){
+    err = end_make_dxl_packet(&info_tx_packet_);
+    if(err == DXL_LIB_OK){
+      p_info->packet_length = info_tx_packet_.generated_packet_length;
+      p_info->is_complete_packet = true;
+      ret = true;
+    }
+  }
+
+  return ret;  
 }
 
 uint8_t
@@ -663,6 +688,8 @@ Master::sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBu
     if(rxStatusPacket(&p_recv_buf[i*p_info->addr_len], 
     recv_buf_capacity-i*p_info->addr_len, 3) != nullptr){
       recv_cnt++;
+    }else{
+      break;
     }
   }
 
@@ -674,7 +701,7 @@ Master::sendSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, InfoSyncBu
 // (Protocol 1.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol1/#sync-write
 // (Protocol 2.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol2/#sync-write
 bool 
-Master::beginSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info)
+Master::beginSetupSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info)
 {
   bool ret = false;
   DXLLibErrorCode_t err = DXL_LIB_OK;
@@ -717,7 +744,7 @@ Master::beginSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_s
 }
 
 bool
-Master::addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync_info, bool flag_end_add)
+Master::addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync_info)
 {
   bool ret = false;
   DXLLibErrorCode_t err = DXL_LIB_OK;
@@ -743,20 +770,45 @@ Master::addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync
     err = add_param_to_dxl_packet(&info_tx_packet_, (uint8_t*)p_data, p_info->addr_len);
     if(err == DXL_LIB_OK){
       p_info->id_cnt++;
-      if(flag_end_add == true){
-        err = end_make_dxl_packet(&info_tx_packet_);
-        if(err == DXL_LIB_OK){
-          p_info->packet_length = info_tx_packet_.generated_packet_length;
-          p_info->is_complete_packet = true;        
-          ret = true;
-        }
-      }else{
-        ret = true;
-      }
+      ret = true;
     }
   }
 
   last_lib_err_ = err;
+
+  return ret;
+}
+
+bool
+Master::endSetupSyncWrite(InfoSyncBulkInst_t *p_sync_info)
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoSyncBulkInst_t *p_info = &info_sync_bulk_;
+
+  // Parameter exception handling
+  if(protocol_ver_idx_ != 2){
+    err = DXL_LIB_ERROR_NOT_SUPPORTED;
+  }else if(info_tx_packet_.inst_idx != DXL_INST_SYNC_WRITE){
+    err = DXL_LIB_ERROR_NOT_INITIALIZED;
+  }
+  if(err != DXL_LIB_OK){
+    last_lib_err_ = err;
+    return false;
+  }
+
+  if(p_sync_info != nullptr){
+    p_info = p_sync_info;
+  }
+
+  if(info_tx_packet_.inst_idx == DXL_INST_SYNC_WRITE){
+    err = end_make_dxl_packet(&info_tx_packet_);
+    if(err == DXL_LIB_OK){
+      p_info->packet_length = info_tx_packet_.generated_packet_length;
+      p_info->is_complete_packet = true;
+      ret = true;
+    }
+  }
 
   return ret;
 }
