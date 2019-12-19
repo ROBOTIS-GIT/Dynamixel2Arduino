@@ -37,6 +37,7 @@ void SerialPortHandler::begin(unsigned long baud)
   }
 #elif defined(ARDUINO_OpenCR)
   if(port_ == Serial3){
+    pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
     digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
   }
 #endif
