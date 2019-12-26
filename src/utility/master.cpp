@@ -634,6 +634,7 @@ Master::syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms)
       }
     }
   }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_SYNC_READ){
+    p_info->packet.is_completed = false;
     err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
@@ -730,6 +731,7 @@ Master::syncWrite(InfoSyncWriteInst_t* p_info)
       }
     }
   }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_SYNC_WRITE){
+    p_info->packet.is_completed = false;
     err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
@@ -812,6 +814,7 @@ Master::bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms)
       }
     }
   }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_BULK_READ){
+    p_info->packet.is_completed = false;
     err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
@@ -900,6 +903,7 @@ Master::bulkWrite(InfoBulkWriteInst_t* p_info)
       }
     }
   }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_BULK_WRITE){
+    p_info->packet.is_completed = false;
     err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
