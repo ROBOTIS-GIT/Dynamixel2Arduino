@@ -18,9 +18,14 @@
 #define DYNAMIXEL_MASTER_HPP_
 
 
-#include "dxl_c/master.h"
+#include "dxl_c/protocol.h"
 #include "port_handler.h"
 #include "config.h"
+
+
+#define UNREGISTERED_MODEL  (uint16_t)0xFFFF
+#define COMMON_MODEL_NUMBER_ADDR         0
+#define COMMON_MODEL_NUMBER_ADDR_LENGTH  2
 
 
 namespace DYNAMIXEL {
@@ -31,14 +36,79 @@ typedef struct InfoFromPing{
   uint8_t firmware_version;
 } InfoFromPing_t;
 
-typedef struct InfoSyncBulkInst{
-  uint8_t* p_packet_buf;
-  uint16_t packet_buf_capacity;
-  uint16_t packet_length;
-  uint8_t id_cnt;
-  bool is_complete_packet;
-  uint16_t addr_len;
-} InfoSyncBulkInst_t;
+
+#if 1
+typedef struct InfoSyncBulkBuffer{
+  uint8_t* p_buf;
+  uint16_t buf_capacity;
+  uint16_t gen_length;
+  bool is_completed;
+} __attribute__((packed)) InfoSyncBulkBuffer_t;
+
+/* Sync Instructions */
+typedef struct XELInfoSyncRead{
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoSyncRead_t;
+
+typedef struct InfoSyncReadInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoSyncRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoSyncReadInst_t;
+
+typedef struct XELInfoSyncWrite{
+  uint8_t* p_data;
+  uint8_t id;
+} __attribute__((packed)) XELInfoSyncWrite_t;
+
+typedef struct InfoSyncWriteInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoSyncWrite_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoSyncWriteInst_t;
+
+/* Bulk Instructions */
+typedef struct XELInfoBulkRead{
+  uint16_t addr;
+  uint16_t addr_length;
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoBulkRead_t;
+
+typedef struct InfoBulkReadInst{
+  XELInfoBulkRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoBulkReadInst_t;
+
+typedef struct XELInfoBulkWrite{
+  uint16_t addr;
+  uint16_t addr_length;
+  uint8_t* p_data;
+  uint8_t id;
+} __attribute__((packed)) XELInfoBulkWrite_t;
+
+typedef struct InfoBulkWriteInst{
+  XELInfoBulkWrite_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoBulkWriteInst_t;
+
+#endif
+
+
+
 
 class Master
 {
@@ -101,13 +171,12 @@ class Master
 
 //TODO
 #if 1
-    // bool syncRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
-    //   uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
-    // bool syncWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
-    // bool bulkRead(uint8_t *p_param, uint16_t param_len, uint8_t id_cnt,
-    //   uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
-    // bool bulkWrite(uint8_t *p_param, uint16_t param_len, uint32_t timeout_ms = 10);
+    uint8_t syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms = 10);
+    bool syncWrite(InfoSyncWriteInst_t* p_info);
 
+    uint8_t bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
+    bool bulkWrite(InfoBulkWriteInst_t* p_info);
+#else
     /* Easy functions for Sync Read */
     bool beginSetupSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
     bool addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info = nullptr);
@@ -124,11 +193,11 @@ class Master
     bool beginSetupBulkRead(InfoSyncBulkInst_t *p_bulk_info = nullptr);
     bool addBulkReadID(uint8_t id, uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_bulk_info = nullptr);
     bool endSetupBulkRead(InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    bool doBulkRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint8_t *p_err_list, uint8_t err_list_size, InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    uint8_t doBulkRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint8_t *p_err_list, uint8_t err_list_size, InfoSyncBulkInst_t *p_bulk_info = nullptr);
 
     /* Easy functions for Bulk Write */
     bool beginSetupBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    bool addBulkWriteData(uint8_t id, uint16_t addr, uint8_t *p_data, uint16_t data_len, InfoSyncBulkInst_t *p_bulk_info = nullptr);
+    bool addBulkWriteData(uint8_t id, uint16_t addr, uint16_t addr_len, uint8_t *p_data, InfoSyncBulkInst_t *p_bulk_info = nullptr);
     bool endSetupBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
     bool doBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
 #endif    
@@ -152,11 +221,44 @@ class Master
     uint16_t packet_buf_capacity_;
     InfoToMakeDXLPacket_t info_tx_packet_;
     InfoToParseDXLPacket_t info_rx_packet_;
-    InfoSyncBulkInst_t info_sync_bulk_;
 
     DXLLibErrorCode_t last_lib_err_;
   };
 }
+
+
+// template <uint8_t XEL_CNT_MAX = 16>
+// class SyncWriteMaster
+// {
+//   public:
+
+
+//   private:
+//     uint8_t id_cnt;
+//     uint8_t id_list[XEL_CNT_MAX];
+//     uint8_t err_list[XEL_CNT_MAX];
+//     uint8_t *p_data[XEL_CNT_MAX];
+//     uint8_t *p_packet_buf;
+//     uint8_t packet_buf_cap;
+//     bool 
+// };
+
+// class SyncReadMaster
+// {
+
+// };
+
+// class BulkWriteMaster
+// {
+
+// };
+
+// class BulkReadMaster
+// {
+
+// };
+
+
 
 //legacy
 typedef DYNAMIXEL::InfoFromPing_t XelInfoFromPing_t;

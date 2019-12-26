@@ -23,140 +23,210 @@
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL soft_serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
-#elif ARDUINO_OpenCM904 // Official ROBOTIS board with DXL circuit.
+#elif defined(ARDUINO_SAM_DUE) // When using DynamixelShield
+  #define DXL_SERIAL   Serial
+  #define DEBUG_SERIAL SerialUSB
+  const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
+#elif defined(ARDUINO_SAM_ZERO) // When using DynamixelShield
+  #define DXL_SERIAL   Serial1
+  #define DEBUG_SERIAL SerialUSB
+  const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
+#elif defined(ARDUINO_OpenCM904) // When using official ROBOTIS board with DXL circuit.
   #define DXL_SERIAL   Serial3 //OpenCM9.04 EXP Board's DXL port Serial. (Serial1 for the DXL port on the OpenCM 9.04 board)
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 22; //OpenCM9.04 EXP Board's DIR PIN. (28 for the DXL port on the OpenCM 9.04 board)
-#elif ARDUINO_OpenCR // Official ROBOTIS board with DXL circuit.
+#elif defined(ARDUINO_OpenCR) // When using official ROBOTIS board with DXL circuit.
   // For OpenCR, there is a DXL Power Enable pin, so you must initialize and control it.
   // Reference link : https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78
   #define DXL_SERIAL   Serial3
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.    
-#else // When using DynamixelShield
+#else // Other boards when using DynamixelShield
   #define DXL_SERIAL   Serial1
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
+ 
 
-/* XelInfoForBulkReadParam_t
-  A structure that contains the information needed for the parameters of the 'bulkRead packet'.
+/* bulkRead
+  Structures containing the necessary information to process the 'bulkRead' packet.
 
-  typedef struct ParamForBulkReadInst{
-    uint8_t id_count;
-    XelInfoForBulkReadParam_t xel[DXL_MAX_NODE]; //refer to below.
-  } ParamForBulkReadInst_t;
-
-  typedef struct XelInfoForBulkReadParam{
-    uint8_t id;
+  typedef struct XELInfoBulkRead{
     uint16_t addr;
-    uint16_t length;
-  } XelInfoForBulkReadParam_t;
-*/
-
-/* XelInfoForBulkWriteParam_t
-  A structure that contains the information needed for the parameters of the 'bulkWrite packet'.
-
-  typedef struct ParamForBulkWriteInst{
-    uint8_t id_count;
-    XelInfoForBulkWriteParam_t xel[DXL_MAX_NODE]; //refer to below. 
-  } ParamForBulkWriteInst_t;
-
-  typedef struct XelInfoForBulkWriteParam{
+    uint16_t addr_length;
+    uint8_t *p_recv_buf;
     uint8_t id;
-    uint16_t addr;
-    uint16_t length;
-    uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
-  } XelInfoForBulkWriteParam_t;
-*/
-
-/* RecvInfoFromStatusInst_t
-  A structure used to receive data from multiple XELs.
-
-  typedef struct RecvInfoFromStatusInst{
-    uint8_t id_count;
-    XelInfoForStatusInst_t xel[DXL_MAX_NODE]; //refer to below.
-  } RecvInfoFromStatusInst_t;
-
-  typedef struct XelInfoForStatusInst{
-    uint8_t id;
-    uint16_t length;
     uint8_t error;
-    uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
-  } XelInfoForStatusInst_t;
+  } __attribute__((packed)) XELInfoBulkRead_t;
+
+  typedef struct InfoBulkReadInst{
+    XELInfoBulkRead_t* p_xels;
+    uint8_t xel_count;
+    bool is_info_changed;
+    InfoSyncBulkBuffer_t packet;
+  } __attribute__((packed)) InfoBulkReadInst_t;
 */
 
-ParamForBulkReadInst_t bulk_read_param;
-ParamForBulkWriteInst_t bulk_write_param;
-RecvInfoFromStatusInst_t read_result;
+/* bulkWrite
+  Structures containing the necessary information to process the 'bulkWrite' packet.
+
+  typedef struct XELInfoBulkWrite{
+    uint16_t addr;
+    uint16_t addr_length;
+    uint8_t* p_data;
+    uint8_t id;
+  } __attribute__((packed)) XELInfoBulkWrite_t;
+
+  typedef struct InfoBulkWriteInst{
+    XELInfoBulkWrite_t* p_xels;
+    uint8_t xel_count;
+    bool is_info_changed;
+    InfoSyncBulkBuffer_t packet;
+  } __attribute__((packed)) InfoBulkWriteInst_t;
+*/
+
+const uint8_t DXL_1_ID = 1;
+const uint8_t DXL_2_ID = 2;
+const uint8_t DXL_ID_CNT = 2;
+const uint16_t user_pkt_buf_cap = 128;
+uint8_t user_pkt_buf[user_pkt_buf_cap];
+
+struct br_data_xel_1{
+  int16_t present_current;
+  int32_t present_velocity;
+} __attribute__((packed));
+struct br_data_xel_2{
+  int32_t present_position;
+} __attribute__((packed));
+struct bw_data_xel_1{
+  int32_t goal_velocity;
+} __attribute__((packed));
+struct bw_data_xel_2{
+  int32_t goal_position;
+} __attribute__((packed));
+
+struct br_data_xel_1 br_data_xel_1;
+struct br_data_xel_2 br_data_xel_2;
+DYNAMIXEL::InfoBulkReadInst_t br_infos;
+DYNAMIXEL::XELInfoBulkRead_t info_xels_br[DXL_ID_CNT];
+
+struct bw_data_xel_1 bw_data_xel_1;
+struct bw_data_xel_2 bw_data_xel_2;
+DYNAMIXEL::InfoBulkWriteInst_t bw_infos;
+DYNAMIXEL::XELInfoBulkWrite_t info_xels_bw[DXL_ID_CNT];
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
+  pinMode(LED_BUILTIN, OUTPUT);
   DEBUG_SERIAL.begin(115200);
   dxl.begin(57600);
-  dxl.scan();
- 
-  // fill the members of structure for bulkWrite
-  bulk_write_param.xel[0].id = 1;
-  bulk_write_param.xel[1].id = 3;
-  bulk_write_param.xel[0].addr = 116; //Goal Position on X serise
-  bulk_write_param.xel[1].addr = 104; //Goal Velocity on X serise
-  bulk_write_param.xel[0].length = 4;
-  bulk_write_param.xel[1].length = 4;
-  bulk_write_param.id_count = 2;
+  
+  dxl.torqueOff(DXL_1_ID);
+  dxl.torqueOff(DXL_2_ID);
+  dxl.setOperatingMode(DXL_1_ID, OP_VELOCITY);
+  dxl.setOperatingMode(DXL_2_ID, OP_POSITION);
+  dxl.torqueOn(DXL_1_ID);
+  dxl.torqueOn(DXL_2_ID);
+  
+  // fill the members of structure for bulkRead using external user packet buffer
+  br_infos.packet.p_buf = user_pkt_buf;
+  br_infos.packet.buf_capacity = user_pkt_buf_cap;
+  br_infos.packet.is_completed = false;
+  br_infos.p_xels = info_xels_br;
+  br_infos.xel_count = 0;
 
-  // fill the members of structure for bulkRead
-  bulk_read_param.xel[0].id = 1;
-  bulk_read_param.xel[1].id = 3;
-  bulk_read_param.xel[0].addr = 132; //Present Position on X serise
-  bulk_read_param.xel[1].addr = 128; //Present Velocity on X serise
-  bulk_read_param.xel[0].length = 4;
-  bulk_read_param.xel[1].length = 4;  
-  bulk_read_param.id_count = 2;
+  info_xels_br[0].id = DXL_1_ID;
+  info_xels_br[0].addr = 126; // Present Current of X serise.
+  info_xels_br[0].addr_length = 2+4; // Present Current + Present Velocity
+  info_xels_br[0].p_recv_buf = (uint8_t*)&br_data_xel_1;
+  br_infos.xel_count++;
 
-  dxl.torqueOff(1);
-  dxl.setOperatingMode(1, OP_POSITION);
-  dxl.torqueOn(1);
+  info_xels_br[1].id = DXL_2_ID;
+  info_xels_br[1].addr = 132; // Present Position of X serise.
+  info_xels_br[1].addr_length = 4; // Present Position + Present Velocity
+  info_xels_br[1].p_recv_buf = (uint8_t*)&br_data_xel_2;
+  br_infos.xel_count++;
+  
+  br_infos.is_info_changed = true;
 
-  dxl.torqueOff(3);
-  dxl.setOperatingMode(3, OP_VELOCITY);
-  dxl.torqueOn(3);
+
+  // Fill the members of structure for bulkWrite using internal packet buffer
+  br_infos.packet.p_buf = nullptr;
+  br_infos.packet.is_completed = false;
+  bw_infos.p_xels = info_xels_bw;
+  bw_infos.xel_count = 0;
+
+  bw_data_xel_1.goal_velocity = 0;
+  info_xels_bw[0].id = DXL_1_ID;
+  info_xels_bw[0].addr = 104; // Goal Velocity of X serise.
+  info_xels_bw[0].addr_length = 4; // Goal Velocity
+  info_xels_bw[0].p_data = (uint8_t*)&bw_data_xel_1;
+  bw_infos.xel_count++;
+
+  bw_data_xel_2.goal_position = 0;
+  info_xels_bw[1].id = DXL_2_ID;
+  info_xels_bw[1].addr = 116; // Goal Position of X serise.
+  info_xels_bw[1].addr_length = 4; // Goal Position
+  info_xels_bw[1].p_data = (uint8_t*)&bw_data_xel_2;
+  bw_infos.xel_count++;
+
+  bw_infos.is_info_changed = true;
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  static int32_t position = 0, velocity = 0;
-  int32_t recv_position = 0, recv_velocity = 0;
+  static uint32_t try_count = 0;
+  uint8_t recv_cnt;
+  
+  bw_data_xel_1.goal_velocity+=5;
+  if(bw_data_xel_1.goal_velocity >= 200){
+    bw_data_xel_1.goal_velocity = 0;
+  }
+  bw_data_xel_2.goal_position+=255;
+  if(bw_data_xel_2.goal_position >= 1023){
+    bw_data_xel_2.goal_position = 0;
+  }
+  bw_infos.is_info_changed = true;
 
-  // set value to data buffer for bulkWrite
-  position = position >= 4095 ? 0 : position+409;
-  memcpy(bulk_write_param.xel[0].data, &position, sizeof(position));
-  velocity = velocity >= 200 ? -200 : velocity+10;
-  memcpy(bulk_write_param.xel[1].data, &velocity, sizeof(velocity));
+  DEBUG_SERIAL.print("\n>>>>>> Bulk Instruction Test : ");
+  DEBUG_SERIAL.println(try_count++);
+  if(dxl.bulkWrite(&bw_infos) == true){
+    DEBUG_SERIAL.println("[BulkWrite] Success");
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(bw_infos.p_xels[0].id);
+    DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(bw_data_xel_1.goal_velocity);
 
-  // send command using bulkWrite
-  dxl.bulkWrite(bulk_write_param);
-  delay(100);
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(bw_infos.p_xels[1].id);
+    DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(bw_data_xel_2.goal_position);
+  }else{
+    DEBUG_SERIAL.print("[BulkWrite] Fail, Lib error code: ");
+    DEBUG_SERIAL.print(dxl.getLastLibErrCode());
+  }
+  DEBUG_SERIAL.println();
 
-  // Print the read data using bulkRead
-  dxl.bulkRead(bulk_read_param, read_result);
-  DEBUG_SERIAL.println(F("======= Bulk Read ========"));
-  memcpy(&recv_position, read_result.xel[0].data, read_result.xel[0].length);
-  memcpy(&recv_velocity, read_result.xel[1].data, read_result.xel[1].length);
-  DEBUG_SERIAL.print(F("ID: "));DEBUG_SERIAL.print(read_result.xel[0].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Present Position: "));DEBUG_SERIAL.print(recv_position);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Packet Error: "));DEBUG_SERIAL.print(read_result.xel[0].error);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Param Length: "));DEBUG_SERIAL.print(read_result.xel[0].length);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.println();
-  DEBUG_SERIAL.print(F("ID: "));DEBUG_SERIAL.print(read_result.xel[1].id);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Present Velocity: "));DEBUG_SERIAL.print(recv_velocity);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Packet Error: "));DEBUG_SERIAL.print(read_result.xel[1].error);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.print(F(", Param Length: "));DEBUG_SERIAL.print(read_result.xel[1].length);DEBUG_SERIAL.print(" ");
-  DEBUG_SERIAL.println();
-  DEBUG_SERIAL.println();
-  delay(100);
+  delay(250);
+
+  recv_cnt = dxl.bulkRead(&br_infos);
+  if(recv_cnt > 0){
+    DEBUG_SERIAL.print("[BulkRead] Success, Received ID Count: ");
+    DEBUG_SERIAL.println(recv_cnt);
+
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(br_infos.p_xels[0].id);
+    DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(br_infos.p_xels[0].error);
+    DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(br_data_xel_1.present_current);
+    DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(br_data_xel_1.present_velocity);
+
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(br_infos.p_xels[1].id);
+    DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(br_infos.p_xels[1].error);    
+    DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(br_data_xel_2.present_position);
+  }else{
+    DEBUG_SERIAL.print("[BulkRead] Fail, Lib error code: ");
+    DEBUG_SERIAL.print(dxl.getLastLibErrCode());
+  }
+  DEBUG_SERIAL.println("=======================================================");
+
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+  delay(750);
 }
-
 

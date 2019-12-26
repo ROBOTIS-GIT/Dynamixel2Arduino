@@ -32,14 +32,15 @@ void SerialPortHandler::begin()
 void SerialPortHandler::begin(unsigned long baud)
 {
 #if defined(ARDUINO_OpenCM904)
-  if(port_ == Serial1){
+  if(port_ == Serial1 && getOpenState() == false){
     Serial1.setDxlMode(true);
   }
 #elif defined(ARDUINO_OpenCR)
-  if(port_ == Serial3){
+  if(port_ == Serial3 && getOpenState() == false){
     pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
     digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
   }
+  delay(100); // Wait for the DYNAMIXEL to power up normally.
 #endif
 
   baud_ = baud;
@@ -57,10 +58,10 @@ void SerialPortHandler::begin(unsigned long baud)
 void SerialPortHandler::end(void)
 {
 #if defined(ARDUINO_OpenCR)
-  if(port_ == Serial3){
+  if(port_ == Serial3 && getOpenState() == true){
     digitalWrite(BDPIN_DXL_PWR_EN, LOW);
   }
-#endif  
+#endif
   port_.end();
   setOpenState(false);
 }

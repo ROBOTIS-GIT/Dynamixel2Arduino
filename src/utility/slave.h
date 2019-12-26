@@ -17,7 +17,7 @@
 #ifndef DYNAMIXEL_SLAVE_HPP_
 #define DYNAMIXEL_SLAVE_HPP_
 
-#include "dxl_c/slave.h"
+#include "dxl_c/protocol.h"
 #include "port_handler.h"
 #include "config.h"
 
