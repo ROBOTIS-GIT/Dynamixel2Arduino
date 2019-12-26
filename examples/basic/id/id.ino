@@ -23,32 +23,44 @@
   #define DXL_SERIAL   Serial
   #define DEBUG_SERIAL soft_serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
-#elif ARDUINO_OpenCM904 // Official ROBOTIS board with DXL circuit.
+#elif defined(ARDUINO_SAM_DUE) // When using DynamixelShield
+  #define DXL_SERIAL   Serial
+  #define DEBUG_SERIAL SerialUSB
+  const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
+#elif defined(ARDUINO_SAM_ZERO) // When using DynamixelShield
+  #define DXL_SERIAL   Serial1
+  #define DEBUG_SERIAL SerialUSB
+  const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
+#elif defined(ARDUINO_OpenCM904) // When using official ROBOTIS board with DXL circuit.
   #define DXL_SERIAL   Serial3 //OpenCM9.04 EXP Board's DXL port Serial. (Serial1 for the DXL port on the OpenCM 9.04 board)
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 22; //OpenCM9.04 EXP Board's DIR PIN. (28 for the DXL port on the OpenCM 9.04 board)
-#elif ARDUINO_OpenCR // Official ROBOTIS board with DXL circuit.
+#elif defined(ARDUINO_OpenCR) // When using official ROBOTIS board with DXL circuit.
   // For OpenCR, there is a DXL Power Enable pin, so you must initialize and control it.
   // Reference link : https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78
   #define DXL_SERIAL   Serial3
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.    
-#else // When using DynamixelShield
+#else // Other boards when using DynamixelShield
   #define DXL_SERIAL   Serial1
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
+ 
 
-const uint8_t DXL_ID = 1;
+const uint8_t DEFAULT_DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
+  uint8_t present_id = DEFAULT_DXL_ID;
+  uint8_t new_id = 0;
   
   // Use UART port of DYNAMIXEL Shield to debug.
   DEBUG_SERIAL.begin(115200);
+  while(!DEBUG_SERIAL);
   
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
@@ -58,22 +70,36 @@ void setup() {
   DEBUG_SERIAL.print("PROTOCOL ");
   DEBUG_SERIAL.print(DXL_PROTOCOL_VERSION, 1);
   DEBUG_SERIAL.print(", ID ");
-  DEBUG_SERIAL.print(DXL_ID);
+  DEBUG_SERIAL.print(present_id);
   DEBUG_SERIAL.print(": ");
-  if(dxl.ping(DXL_ID) == true) {
+  if(dxl.ping(present_id) == true) {
     DEBUG_SERIAL.print("ping succeeded!");
     DEBUG_SERIAL.print(", Model Number: ");
-    DEBUG_SERIAL.println(dxl.getModelNumber(DXL_ID));
+    DEBUG_SERIAL.println(dxl.getModelNumber(present_id));
     
     // Turn off torque when configuring items in EEPROM area
-    dxl.torqueOff(DXL_ID);
+    dxl.torqueOff(present_id);
     
     // set a new ID for DYNAMIXEL. Do not use ID 200
-    dxl.setID(DXL_ID, 100);
-    DEBUG_SERIAL.println("ID has been successfully changed to 100");
+    new_id = 100;
+    if(dxl.setID(present_id, new_id) == true){
+      present_id = new_id;
+      DEBUG_SERIAL.print("ID has been successfully changed to ");
+      DEBUG_SERIAL.println(new_id);
 
-    dxl.setID(100, DXL_ID);
-    DEBUG_SERIAL.println("ID has been successfully changed back to Original ID");
+      new_id = DEFAULT_DXL_ID;
+      if(dxl.setID(present_id, new_id) == true){
+        present_id = new_id;
+        DEBUG_SERIAL.print("ID has been successfully changed back to Original ID ");
+        DEBUG_SERIAL.println(new_id);
+      }else{
+        DEBUG_SERIAL.print("Failed to change ID to ");
+        DEBUG_SERIAL.println(new_id);
+      }
+    }else{
+      DEBUG_SERIAL.print("Failed to change ID to ");
+      DEBUG_SERIAL.println(new_id);
+    }
   }
   else{
     DEBUG_SERIAL.println("ping failed!");
