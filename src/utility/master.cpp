@@ -600,14 +600,15 @@ Master::syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms)
     return 0;
   }
 
+  if(p_info->packet.p_buf != nullptr){
+    p_packet_buf = p_info->packet.p_buf;
+    packet_buf_cap = p_info->packet.buf_capacity;
+  }else{
+    p_packet_buf = p_packet_buf_;
+    packet_buf_cap = packet_buf_capacity_;
+  }
+
   if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
-    if(p_info->packet.p_buf != nullptr){
-      p_packet_buf = p_info->packet.p_buf;
-      packet_buf_cap = p_info->packet.buf_capacity;
-    }else{
-      p_packet_buf = p_packet_buf_;
-      packet_buf_cap = packet_buf_capacity_;
-    }
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_SYNC_READ, 0, p_packet_buf, packet_buf_cap);
     if(err == DXL_LIB_OK){
@@ -628,7 +629,8 @@ Master::syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms)
           err = end_make_dxl_packet(&info_tx_packet_);
           if(err == DXL_LIB_OK){
             p_info->packet.gen_length = info_tx_packet_.generated_packet_length;
-            p_info->packet.is_completed = true;      
+            p_info->packet.is_completed = true;
+            p_info->is_info_changed = false;
           }
         }
       }
@@ -655,6 +657,8 @@ Master::syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms)
         break;
       }
     }
+  }else{
+    p_info->packet.is_completed = false;
   }
   last_lib_err_ = err;
 
@@ -687,14 +691,15 @@ Master::syncWrite(InfoSyncWriteInst_t* p_info)
     return 0;
   }
 
+  if(p_info->packet.p_buf != nullptr){
+    p_packet_buf = p_info->packet.p_buf;
+    packet_buf_cap = p_info->packet.buf_capacity;
+  }else{
+    p_packet_buf = p_packet_buf_;
+    packet_buf_cap = packet_buf_capacity_;
+  }
+
   if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
-    if(p_info->packet.p_buf != nullptr){
-      p_packet_buf = p_info->packet.p_buf;
-      packet_buf_cap = p_info->packet.buf_capacity;
-    }else{
-      p_packet_buf = p_packet_buf_;
-      packet_buf_cap = packet_buf_capacity_;
-    }
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_SYNC_WRITE, 0, p_packet_buf, packet_buf_cap);
     if(err == DXL_LIB_OK){
@@ -726,6 +731,7 @@ Master::syncWrite(InfoSyncWriteInst_t* p_info)
           if(err == DXL_LIB_OK){
             p_info->packet.gen_length = info_tx_packet_.generated_packet_length;
             p_info->packet.is_completed = true;      
+            p_info->is_info_changed = false;
           }
         }
       }
@@ -738,6 +744,8 @@ Master::syncWrite(InfoSyncWriteInst_t* p_info)
   if(err == DXL_LIB_OK){
     p_port_->write(p_packet_buf, p_info->packet.gen_length);
     ret = true;
+  }else{
+    p_info->packet.is_completed = false;
   }
   last_lib_err_ = err;
 
@@ -770,15 +778,15 @@ Master::bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms)
     return 0;
   }
 
-  if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
+  if(p_info->packet.p_buf != nullptr){
+    p_packet_buf = p_info->packet.p_buf;
+    packet_buf_cap = p_info->packet.buf_capacity;
+  }else{
+    p_packet_buf = p_packet_buf_;
+    packet_buf_cap = packet_buf_capacity_;
+  }
 
-    if(p_info->packet.p_buf != nullptr){
-      p_packet_buf = p_info->packet.p_buf;
-      packet_buf_cap = p_info->packet.buf_capacity;
-    }else{
-      p_packet_buf = p_packet_buf_;
-      packet_buf_cap = packet_buf_capacity_;
-    }
+  if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_BULK_READ, 0, p_packet_buf, packet_buf_cap);
     if(protocol_ver_idx_ == 1 && err == DXL_LIB_OK){
@@ -810,6 +818,7 @@ Master::bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms)
         if(err == DXL_LIB_OK){
           p_info->packet.gen_length = info_tx_packet_.generated_packet_length;
           p_info->packet.is_completed = true;      
+          p_info->is_info_changed = false;
         }
       }
     }
@@ -835,6 +844,8 @@ Master::bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms)
         break;
       }
     }
+  }else{
+    p_info->packet.is_completed = false;
   }
   last_lib_err_ = err;
 
@@ -867,14 +878,15 @@ Master::bulkWrite(InfoBulkWriteInst_t* p_info)
     return 0;
   }
 
+  if(p_info->packet.p_buf != nullptr){
+    p_packet_buf = p_info->packet.p_buf;
+    packet_buf_cap = p_info->packet.buf_capacity;
+  }else{
+    p_packet_buf = p_packet_buf_;
+    packet_buf_cap = packet_buf_capacity_;
+  }
+
   if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
-    if(p_info->packet.p_buf != nullptr){
-      p_packet_buf = p_info->packet.p_buf;
-      packet_buf_cap = p_info->packet.buf_capacity;
-    }else{
-      p_packet_buf = p_packet_buf_;
-      packet_buf_cap = packet_buf_capacity_;
-    }
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_BULK_WRITE, 0, p_packet_buf, packet_buf_cap);
     if(err == DXL_LIB_OK){
@@ -898,7 +910,8 @@ Master::bulkWrite(InfoBulkWriteInst_t* p_info)
         err = end_make_dxl_packet(&info_tx_packet_);
         if(err == DXL_LIB_OK){
           p_info->packet.gen_length = info_tx_packet_.generated_packet_length;
-          p_info->packet.is_completed = true;      
+          p_info->packet.is_completed = true;
+          p_info->is_info_changed = false;
         }
       }
     }
@@ -910,6 +923,8 @@ Master::bulkWrite(InfoBulkWriteInst_t* p_info)
   if(err == DXL_LIB_OK){
     p_port_->write(p_packet_buf, p_info->packet.gen_length);
     ret = true;
+  }else{
+    p_info->packet.is_completed = false;
   }
   last_lib_err_ = err;
 
