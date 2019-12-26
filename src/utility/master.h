@@ -36,8 +36,6 @@ typedef struct InfoFromPing{
   uint8_t firmware_version;
 } InfoFromPing_t;
 
-
-#if 1
 typedef struct InfoSyncBulkBuffer{
   uint8_t* p_buf;
   uint16_t buf_capacity;
@@ -105,9 +103,6 @@ typedef struct InfoBulkWriteInst{
   InfoSyncBulkBuffer_t packet;
 } __attribute__((packed)) InfoBulkWriteInst_t;
 
-#endif
-
-
 
 
 class Master
@@ -167,40 +162,10 @@ class Master
     bool factoryReset(uint8_t id, uint8_t option, uint32_t timeout_ms = 10);
     bool reboot(uint8_t id, uint32_t timeout_ms = 10);
     bool clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_ms = 10);
-
-
-//TODO
-#if 1
     uint8_t syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms = 10);
     bool syncWrite(InfoSyncWriteInst_t* p_info);
-
     uint8_t bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
     bool bulkWrite(InfoBulkWriteInst_t* p_info);
-#else
-    /* Easy functions for Sync Read */
-    bool beginSetupSyncRead(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool addSyncReadID(uint8_t id, InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool endSetupSyncRead(InfoSyncBulkInst_t *p_sync_info = nullptr);
-    uint8_t doSyncRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint8_t *p_err_list, uint8_t err_list_size, InfoSyncBulkInst_t *p_sync_info = nullptr);
-
-    /* Easy functions for Sync Write */
-    bool beginSetupSyncWrite(uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool addSyncWriteData(uint8_t id, uint8_t *p_data, InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool endSetupSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
-    bool doSyncWrite(InfoSyncBulkInst_t *p_sync_info = nullptr);
-
-    /* Easy functions for Bulk Read */
-    bool beginSetupBulkRead(InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    bool addBulkReadID(uint8_t id, uint16_t addr, uint16_t addr_len, InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    bool endSetupBulkRead(InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    uint8_t doBulkRead(uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint8_t *p_err_list, uint8_t err_list_size, InfoSyncBulkInst_t *p_bulk_info = nullptr);
-
-    /* Easy functions for Bulk Write */
-    bool beginSetupBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    bool addBulkWriteData(uint8_t id, uint16_t addr, uint16_t addr_len, uint8_t *p_data, InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    bool endSetupBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
-    bool doBulkWrite(InfoSyncBulkInst_t *p_bulk_info = nullptr);
-#endif    
 
     uint8_t getLastStatusPacketError() const;
     
@@ -223,40 +188,272 @@ class Master
     InfoToParseDXLPacket_t info_rx_packet_;
 
     DXLLibErrorCode_t last_lib_err_;
-  };
-}
+};
 
 
-// template <uint8_t XEL_CNT_MAX = 16>
-// class SyncWriteMaster
-// {
-//   public:
+
+template <uint16_t START_ADDR,
+          typename T,
+          uint8_t XEL_CNT_MAX = 16>
+class SyncWrite
+{
+  public:
+    SyncWrite(Master &dxl_master)
+    : dxl_master_(dxl_master)
+    {
+      setPacketBuffer(dxl_master_.getPacketBuffer(), dxl_master_.getPacketBufferCapacity());
+      memset(&sw_info_, 0, sizeof(sw_info_));
+      memset(xel_infos_, 0, sizeof(xel_infos_));
+      sw_info_.addr = START_ADDR;
+      sw_info_.addr_length = sizeof(T);
+      sw_info_.p_xels = xel_infos_;
+    }
+
+    bool setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity)
+    {
+      bool ret = false;
+      if(p_buf != nullptr && buf_capacity > 0){
+        sw_info_.packet.p_buf = p_buf;
+        sw_info_.packet.buf_capacity = buf_capacity;
+        ret = true;
+      }
+      return ret;
+    }
+
+    uint8_t* getPacketBuffer() const
+    {
+      return sw_info_.packet.p_buf;
+    }
+
+    bool addParam(uint8_t id, T &data)
+    {
+      bool ret = false;
+      uint8_t i;
+
+      for(i=0; i<sw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          break;
+        }
+      }
+      if(i == sw_info_.xel_count && i < XEL_CNT_MAX){
+        xel_infos_[sw_info_.xel_count].id = id;
+        xel_infos_[sw_info_.xel_count++].p_data = (uint8_t*)&data;
+        sw_info_.is_info_changed = true;
+        ret = true;
+      }
+
+      return ret;
+    }
+
+    bool changeParam(uint8_t id, T &data)
+    {
+      bool ret = false;
+      uint8_t i;
+
+      for(i=0; i<sw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          xel_infos_[i].p_data = (uint8_t*)&data;
+          sw_info_.is_info_changed = true;
+          ret = true;
+          break;
+        }
+      }
+      
+      return ret;
+    }
+
+    void updateParamData(){
+      sw_info_.is_info_changed = true;
+    }
+
+    bool sendPacket(){
+      return dxl_master_.syncWrite(&sw_info_);
+    }
+
+    uint16_t getStartAddr() const
+    {
+      return sw_info_.addr;
+    }
+
+    uint16_t getAddrLength() const
+    {
+      return sw_info_.addr_length;
+    }
+
+    uint8_t getIDByIndex(uint8_t index) const
+    {
+      if(index >= XEL_CNT_MAX){
+        return 0xFF;
+      }
+      return xel_infos_[index].id;
+    }
+
+    T* getDataPtr(uint8_t id)
+    {
+      T* p_ret = nullptr;
+      uint8_t i;
+
+      for(i=0; i<sw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          p_ret = (T*)xel_infos_[i].p_data;
+          break;
+        }
+      }
+
+      return p_ret;
+    }
+
+  private:
+    Master &dxl_master_;
+    InfoSyncWriteInst_t sw_info_;
+    XELInfoSyncWrite_t xel_infos_[XEL_CNT_MAX];
+};
 
 
-//   private:
-//     uint8_t id_cnt;
-//     uint8_t id_list[XEL_CNT_MAX];
-//     uint8_t err_list[XEL_CNT_MAX];
-//     uint8_t *p_data[XEL_CNT_MAX];
-//     uint8_t *p_packet_buf;
-//     uint8_t packet_buf_cap;
-//     bool 
-// };
+template <uint16_t START_ADDR,
+          typename T,
+          uint8_t XEL_CNT_MAX = 16>
+class SyncRead
+{
+  public:
+    SyncRead(Master &dxl_master)
+    : dxl_master_(dxl_master)
+    {
+      setPacketBuffer(dxl_master_.getPacketBuffer(), dxl_master_.getPacketBufferCapacity());
+      memset(&sr_info_, 0, sizeof(sr_info_));
+      memset(xel_infos_, 0, sizeof(xel_infos_));
+      sr_info_.addr = START_ADDR;
+      sr_info_.addr_length = sizeof(T);
+      sr_info_.p_xels = xel_infos_;
+    }
 
-// class SyncReadMaster
-// {
+    bool setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity)
+    {
+      bool ret = false;
+      if(p_buf != nullptr && buf_capacity > 0){
+        sr_info_.packet.p_buf = p_buf;
+        sr_info_.packet.buf_capacity = buf_capacity;
+        ret = true;
+      }
+      return ret;
+    }
 
-// };
+    uint8_t* getPacketBuffer() const
+    {
+      return sr_info_.packet.p_buf;
+    }
 
-// class BulkWriteMaster
-// {
+    bool addParam(uint8_t id, T &recv_data)
+    {
+      bool ret = false;
+      uint8_t i;
 
-// };
+      for(i=0; i<sr_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          break;
+        }
+      }
+      if(i == sr_info_.xel_count && i < XEL_CNT_MAX){
+        xel_infos_[sr_info_.xel_count].id = id;
+        xel_infos_[sr_info_.xel_count++].p_recv_buf = (uint8_t*)&recv_data;
+        sr_info_.is_info_changed = true;
+        ret = true;
+      }
 
-// class BulkReadMaster
-// {
+      return ret;
+    }
 
-// };
+    bool changeParam(uint8_t id, T &recv_data)
+    {
+      bool ret = false;
+      uint8_t i;
+
+      for(i=0; i<sr_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          xel_infos_[i].p_recv_buf = (uint8_t*)&recv_data;
+          sr_info_.is_info_changed = true;
+          ret = true;
+          break;
+        }
+      }
+      
+      return ret;
+    }
+
+    uint8_t sendPacket()
+    {
+      return dxl_master_.syncRead(&sr_info_);
+    }
+
+    uint16_t getStartAddr() const
+    {
+      return sr_info_.addr;
+    }
+
+    uint16_t getAddrLength() const
+    {
+      return sr_info_.addr_length;
+    }
+
+    uint8_t getIDByIndex(uint8_t index) const
+    {
+      if(index >= XEL_CNT_MAX){
+        return 0xFF;
+      }
+      return xel_infos_[index].id;
+    }
+
+    uint8_t getError(uint8_t id) const
+    {
+      uint8_t i, ret = 0;
+
+      for(i=0; i<sr_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          ret = xel_infos_[i].error;
+          break;
+        }
+      }
+
+      return ret;
+    }
+
+    T* getDataPtr(uint8_t id)
+    {
+      T* p_ret = nullptr;
+      uint8_t i;
+
+      for(i=0; i<sr_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          p_ret = (T*)xel_infos_[i].p_recv_buf;
+          break;
+        }
+      }
+
+      return p_ret;
+    }
+
+  private:
+    Master &dxl_master_;
+    InfoSyncReadInst_t sr_info_;
+    XELInfoSyncRead_t xel_infos_[XEL_CNT_MAX];
+};
+
+
+//TODO
+class BulkWriteMaster
+{
+
+};
+
+class BulkReadMaster
+{
+
+};
+
+
+} //namespace DYNAMIXEL
+
+
 
 
 

@@ -222,7 +222,7 @@ void loop() {
     DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(br_data_xel_2.present_position);
   }else{
     DEBUG_SERIAL.print("[BulkRead] Fail, Lib error code: ");
-    DEBUG_SERIAL.print(dxl.getLastLibErrCode());
+    DEBUG_SERIAL.println(dxl.getLastLibErrCode());
   }
   DEBUG_SERIAL.println("=======================================================");
 

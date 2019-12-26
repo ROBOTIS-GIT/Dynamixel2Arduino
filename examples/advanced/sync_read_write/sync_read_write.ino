@@ -48,42 +48,6 @@
 #endif
 
 
-/* syncRead
-  Structures containing the necessary information to process the 'syncRead' packet.
-
-  typedef struct XELInfoBulkRead{
-    uint16_t addr;
-    uint16_t addr_length;
-    uint8_t *p_recv_buf;
-    uint8_t id;
-    uint8_t error;
-  } __attribute__((packed)) XELInfoBulkRead_t;
-
-  typedef struct InfoBulkReadInst{
-    XELInfoBulkRead_t* p_xels;
-    uint8_t xel_count;
-    bool is_info_changed;
-    InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkReadInst_t;
-*/
-
-/* syncWrite
-  Structures containing the necessary information to process the 'syncWrite' packet.
-
-  typedef struct XELInfoBulkWrite{
-    uint16_t addr;
-    uint16_t addr_length;
-    uint8_t* p_data;
-    uint8_t id;
-  } __attribute__((packed)) XELInfoBulkWrite_t;
-
-  typedef struct InfoBulkWriteInst{
-    XELInfoBulkWrite_t* p_xels;
-    uint8_t xel_count;
-    bool is_info_changed;
-    InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkWriteInst_t;
-*/
 
 const uint8_t DXL_ID_CNT = 2;
 const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
@@ -105,14 +69,12 @@ typedef struct sw_data{
 
 
 sr_data_t sr_data[DXL_ID_CNT];
-DYNAMIXEL::InfoSyncReadInst_t sr_infos;
-DYNAMIXEL::XELInfoSyncRead_t info_xels_sr[DXL_ID_CNT];
-
 sw_data_t sw_data[DXL_ID_CNT];
-DYNAMIXEL::InfoSyncWriteInst_t sw_infos;
-DYNAMIXEL::XELInfoSyncWrite_t info_xels_sw[DXL_ID_CNT];
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
+DYNAMIXEL::SyncRead<SR_START_ADDR, sr_data_t, DXL_ID_CNT> dxl_sr(dxl);
+DYNAMIXEL::SyncWrite<SW_START_ADDR, sw_data_t, DXL_ID_CNT> dxl_sw(dxl);
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -127,61 +89,43 @@ void setup() {
     dxl.torqueOn(DXL_ID_LIST[i]);
   }
 
-  // Fill the members of structure to syncRead using external user packet buffer
-  sr_infos.packet.p_buf = user_pkt_buf;
-  sr_infos.packet.buf_capacity = user_pkt_buf_cap;
-  sr_infos.packet.is_completed = false;
-  sr_infos.addr = SR_START_ADDR;
-  sr_infos.addr_length = SR_ADDR_LEN;
-  sr_infos.p_xels = info_xels_sr;
-  sr_infos.xel_count = 0;  
-
+  // SyncRead using user external buffer.
+  dxl_sr.setPacketBuffer(user_pkt_buf, user_pkt_buf_cap);
   for(i=0; i<DXL_ID_CNT; i++){
-    info_xels_sr[i].id = DXL_ID_LIST[i];
-    info_xels_sr[i].p_recv_buf = (uint8_t*)&sr_data[i];
-    sr_infos.xel_count++;
+    dxl_sr.addParam(DXL_ID_LIST[i], sr_data[i]);
   }
-  sr_infos.is_info_changed = true;
 
-
-  // Fill the members of structure to syncWrite using internal packet buffer
-  sw_infos.packet.p_buf = nullptr;
-  sw_infos.packet.is_completed = false;
-  sw_infos.addr = SW_START_ADDR;
-  sw_infos.addr_length = SW_ADDR_LEN;
-  sw_infos.p_xels = info_xels_sw;
-  sw_infos.xel_count = 0;
-
+  // SyncWrite using the internal buffer.
   sw_data[0].goal_velocity = 0;
   sw_data[1].goal_velocity = 100;
   for(i=0; i<DXL_ID_CNT; i++){
-    info_xels_sw[i].id = DXL_ID_LIST[i];
-    info_xels_sw[i].p_data = (uint8_t*)&sw_data[i].goal_velocity;
-    sw_infos.xel_count++;
+    dxl_sw.addParam(DXL_ID_LIST[i], sw_data[i]);
   }
-  sw_infos.is_info_changed = true;
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   static uint32_t try_count = 0;
-  uint8_t i, recv_cnt;
+  uint8_t i, id, recv_cnt;
   
+  // Update parameter data for SyncWrite
   for(i=0; i<DXL_ID_CNT; i++){
     sw_data[i].goal_velocity+=5;
     if(sw_data[i].goal_velocity >= 200){
       sw_data[i].goal_velocity = 0;
     }
   }
-  sw_infos.is_info_changed = true;
+  dxl_sw.updateParamData();
 
   DEBUG_SERIAL.print("\n>>>>>> Sync Instruction Test : ");
   DEBUG_SERIAL.println(try_count++);
-  if(dxl.syncWrite(&sw_infos) == true){
+  // Send syncWrite
+  if(dxl_sw.sendPacket() == true){
     DEBUG_SERIAL.println("[SyncWrite] Success");
-    for(i=0; i<sw_infos.xel_count; i++){
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sw_infos.p_xels[i].id);
-      DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(sw_data[i].goal_velocity);
+    for(i=0; i<DXL_ID_CNT; i++){
+      id = dxl_sw.getIDByIndex(i);
+      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(id);
+      DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(dxl_sw.getDataPtr(id)->goal_velocity);
     }
   }else{
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
@@ -191,16 +135,18 @@ void loop() {
 
   delay(250);
 
-  recv_cnt = dxl.syncRead(&sr_infos);
+  // Send syncRead & Receive data
+  recv_cnt = dxl_sr.sendPacket();
   if(recv_cnt > 0){
     DEBUG_SERIAL.print("[SyncRead] Success, Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
     for(i=0; i<recv_cnt; i++){
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
-      DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(sr_infos.p_xels[i].error);
-      DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(sr_data[i].present_current);
-      DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(sr_data[i].present_velocity);
-      DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(sr_data[i].present_position);
+      id = dxl_sr.getIDByIndex(i);
+      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(dxl_sr.getIDByIndex(i));
+      DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(dxl_sr.getError(id));
+      DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(dxl_sr.getDataPtr(id)->present_current);
+      DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(dxl_sr.getDataPtr(id)->present_velocity);
+      DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(dxl_sr.getDataPtr(id)->present_position);
     }
   }else{
     DEBUG_SERIAL.print("[SyncRead] Fail, Lib error code: ");
