@@ -288,6 +288,11 @@ class SyncWrite
       return xel_infos_[index].id;
     }
 
+    uint8_t getAddedXELCount()
+    {
+      return xel_infos_.xel_count;
+    }
+
     T* getDataPtr(uint8_t id)
     {
       T* p_ret = nullptr;
@@ -403,6 +408,11 @@ class SyncRead
       return xel_infos_[index].id;
     }
 
+    uint8_t getAddedXELCount()
+    {
+      return xel_infos_.xel_count;
+    }
+
     uint8_t getError(uint8_t id) const
     {
       uint8_t i, ret = 0;
@@ -439,17 +449,305 @@ class SyncRead
 };
 
 
-//TODO
-class BulkWriteMaster
-{
 
+template <uint8_t XEL_CNT_MAX = 16>
+class BulkWrite
+{
+  public:
+    BulkWrite(Master &dxl_master)
+    : dxl_master_(dxl_master)
+    {
+      setPacketBuffer(dxl_master_.getPacketBuffer(), dxl_master_.getPacketBufferCapacity());
+      memset(&bw_info_, 0, sizeof(bw_info_));
+      memset(xel_infos_, 0, sizeof(xel_infos_));
+      bw_info_.p_xels = xel_infos_;
+    }
+
+    bool setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity)
+    {
+      bool ret = false;
+      if(p_buf != nullptr && buf_capacity > 0){
+        bw_info_.packet.p_buf = p_buf;
+        bw_info_.packet.buf_capacity = buf_capacity;
+        ret = true;
+      }
+      return ret;
+    }
+
+    uint8_t* getPacketBuffer() const
+    {
+      return bw_info_.packet.p_buf;
+    }
+
+    template <typename T>
+    bool addParam(uint8_t id, uint16_t addr, T &data)
+    {
+      bool ret = false;
+      uint8_t i;
+
+      for(i=0; i<bw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          break;
+        }
+      }
+      if(i == bw_info_.xel_count && i < XEL_CNT_MAX){
+        xel_infos_[bw_info_.xel_count].id = id;
+        xel_infos_[bw_info_.xel_count].addr = addr;
+        xel_infos_[bw_info_.xel_count].addr_length = sizeof(T);
+        xel_infos_[bw_info_.xel_count++].p_data = (uint8_t*)&data;
+        bw_info_.is_info_changed = true;
+        ret = true;
+      }
+
+      return ret;
+    }
+
+    template <typename T>
+    bool changeParam(uint8_t id, uint16_t addr, T &data)
+    {
+      bool ret = false;
+      uint8_t i;
+
+      for(i=0; i<bw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          xel_infos_[i].addr = addr;
+          xel_infos_[i].addr_length = sizeof(T);
+          xel_infos_[i].p_data = (uint8_t*)&data;
+          bw_info_.is_info_changed = true;
+          ret = true;
+          break;
+        }
+      }
+      
+      return ret;
+    }
+
+    void updateParamData(){
+      bw_info_.is_info_changed = true;
+    }
+
+    bool sendPacket(){
+      return dxl_master_.bulkWrite(&bw_info_);
+    }
+
+    uint16_t getStartAddr(uint8_t id) const
+    {
+      uint8_t i;
+      uint16_t ret = 0;
+
+      for(i=0; i<bw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          ret = xel_infos_[i].addr;
+          break;
+        }
+      }
+
+      return ret;
+    }
+
+    uint16_t getAddrLength(uint8_t id) const
+    {
+      uint8_t i;
+      uint16_t ret = 0;
+
+      for(i=0; i<bw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          ret = xel_infos_[i].addr_length;
+          break;
+        }
+      }
+
+      return ret;
+    }
+
+    uint8_t getIDByIndex(uint8_t index) const
+    {
+      if(index >= XEL_CNT_MAX){
+        return 0xFF;
+      }
+      return xel_infos_[index].id;
+    }
+
+    uint8_t getAddedXELCount()
+    {
+      return xel_infos_.xel_count;
+    }
+
+    uint8_t* getDataPtr(uint8_t id)
+    {
+      uint8_t* p_ret = nullptr;
+      uint8_t i;
+
+      for(i=0; i<bw_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          p_ret = xel_infos_[i].p_data;
+          break;
+        }
+      }
+
+      return p_ret;
+    }
+
+  private:
+    Master &dxl_master_;
+    InfoBulkWriteInst_t bw_info_;
+    XELInfoBulkWrite_t xel_infos_[XEL_CNT_MAX];
 };
 
-class BulkReadMaster
+
+template <uint8_t XEL_CNT_MAX = 16>
+class BulkRead
 {
+  public:
+    BulkRead(Master &dxl_master)
+    : dxl_master_(dxl_master)
+    {
+      setPacketBuffer(dxl_master_.getPacketBuffer(), dxl_master_.getPacketBufferCapacity());
+      memset(&br_info_, 0, sizeof(br_info_));
+      memset(xel_infos_, 0, sizeof(xel_infos_));
+      br_info_.p_xels = xel_infos_;
+    }
 
+    bool setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity)
+    {
+      bool ret = false;
+      if(p_buf != nullptr && buf_capacity > 0){
+        br_info_.packet.p_buf = p_buf;
+        br_info_.packet.buf_capacity = buf_capacity;
+        ret = true;
+      }
+      return ret;
+    }
+
+    uint8_t* getPacketBuffer() const
+    {
+      return br_info_.packet.p_buf;
+    }
+
+    template <typename T>
+    bool addParam(uint8_t id, uint16_t addr, T &recv_data)
+    {
+      bool ret = false;
+      uint8_t i;
+
+      for(i=0; i<br_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          break;
+        }
+      }
+      if(i == br_info_.xel_count && i < XEL_CNT_MAX){
+        xel_infos_[br_info_.xel_count].id = id;
+        xel_infos_[br_info_.xel_count].addr = addr;
+        xel_infos_[br_info_.xel_count].addr_length = sizeof(T);
+        xel_infos_[br_info_.xel_count++].p_recv_buf = (uint8_t*)&recv_data;
+        br_info_.is_info_changed = true;
+        ret = true;
+      }
+
+      return ret;
+    }
+
+    template <typename T>
+    bool changeParam(uint8_t id, uint16_t addr, T &recv_data)
+    {
+      bool ret = false;
+      uint8_t i;
+
+      for(i=0; i<br_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          xel_infos_[i].addr = addr;
+          xel_infos_[i].addr_length = sizeof(T);
+          xel_infos_[i].p_recv_buf = (uint8_t*)&recv_data;
+          br_info_.is_info_changed = true;
+          ret = true;
+          break;
+        }
+      }
+      
+      return ret;
+    }
+
+    bool sendPacket(){
+      return dxl_master_.bulkRead(&br_info_);
+    }
+
+    uint16_t getStartAddr(uint8_t id) const
+    {
+      uint8_t i;
+      uint16_t ret = 0;
+
+      for(i=0; i<br_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          ret = xel_infos_[i].addr;
+          break;
+        }
+      }
+
+      return ret;
+    }
+
+    uint16_t getAddrLength(uint8_t id) const
+    {
+      uint8_t i;
+      uint16_t ret = 0;
+
+      for(i=0; i<br_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          ret = xel_infos_[i].addr_length;
+          break;
+        }
+      }
+
+      return ret;
+    }
+
+    uint8_t getIDByIndex(uint8_t index) const
+    {
+      if(index >= XEL_CNT_MAX){
+        return 0xFF;
+      }
+      return xel_infos_[index].id;
+    }
+
+    uint8_t getAddedXELCount()
+    {
+      return xel_infos_.xel_count;
+    }
+
+    uint8_t getError(uint8_t id) const
+    {
+      uint8_t i, ret = 0;
+
+      for(i=0; i<br_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          ret = xel_infos_[i].error;
+          break;
+        }
+      }
+
+      return ret;
+    }
+
+    uint8_t* getDataPtr(uint8_t id)
+    {
+      uint8_t* p_ret = nullptr;
+      uint8_t i;
+
+      for(i=0; i<br_info_.xel_count; i++){
+        if(xel_infos_[i].id == id){
+          p_ret = xel_infos_[i].p_recv_buf;
+          break;
+        }
+      }
+
+      return p_ret;
+    }
+
+  private:
+    Master &dxl_master_;
+    InfoBulkReadInst_t br_info_;
+    XELInfoBulkRead_t xel_infos_[XEL_CNT_MAX];
 };
-
 
 } //namespace DYNAMIXEL
 

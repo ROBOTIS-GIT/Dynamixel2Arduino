@@ -194,10 +194,10 @@ void loop() {
   DEBUG_SERIAL.println(try_count++);
   if(dxl.bulkWrite(&bw_infos) == true){
     DEBUG_SERIAL.println("[BulkWrite] Success");
-    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(bw_infos.p_xels[0].id);
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(bw_infos.p_xels[0].id);
     DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(bw_data_xel_1.goal_velocity);
 
-    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(bw_infos.p_xels[1].id);
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(bw_infos.p_xels[1].id);
     DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(bw_data_xel_2.goal_position);
   }else{
     DEBUG_SERIAL.print("[BulkWrite] Fail, Lib error code: ");

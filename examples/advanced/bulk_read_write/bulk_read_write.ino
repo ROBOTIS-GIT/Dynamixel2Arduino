@@ -46,111 +46,118 @@
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
+ 
 
-
-
+const uint8_t DXL_1_ID = 1;
+const uint8_t DXL_2_ID = 2;
 const uint8_t DXL_ID_CNT = 2;
-const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
 const uint16_t user_pkt_buf_cap = 128;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
 
-const uint16_t SR_START_ADDR = 126;
-const uint16_t SR_ADDR_LEN = 10; //2+4+4
-const uint16_t SW_START_ADDR = 104; //Goal velocity
-const uint16_t SW_ADDR_LEN = 4;
-typedef struct sr_data{
+struct br_data_xel_1{
   int16_t present_current;
   int32_t present_velocity;
+} __attribute__((packed));
+struct br_data_xel_2{
   int32_t present_position;
-} __attribute__((packed)) sr_data_t;
-typedef struct sw_data{
+} __attribute__((packed));
+struct bw_data_xel_1{
   int32_t goal_velocity;
-} __attribute__((packed)) sw_data_t;
+} __attribute__((packed));
+struct bw_data_xel_2{
+  int32_t goal_position;
+} __attribute__((packed));
 
-
-sr_data_t sr_data[DXL_ID_CNT];
-sw_data_t sw_data[DXL_ID_CNT];
+struct br_data_xel_1 br_data_xel_1;
+struct br_data_xel_2 br_data_xel_2;
+struct bw_data_xel_1 bw_data_xel_1;
+struct bw_data_xel_2 bw_data_xel_2;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
-DYNAMIXEL::SyncRead<SR_START_ADDR, sr_data_t, DXL_ID_CNT> dxl_sr(dxl);
-DYNAMIXEL::SyncWrite<SW_START_ADDR, sw_data_t, DXL_ID_CNT> dxl_sw(dxl);
-
+DYNAMIXEL::BulkRead<DXL_ID_CNT> dxl_br(dxl);
+DYNAMIXEL::BulkWrite<DXL_ID_CNT> dxl_bw(dxl);
 
 void setup() {
   // put your setup code here, to run once:
-  uint8_t i;
   pinMode(LED_BUILTIN, OUTPUT);
   DEBUG_SERIAL.begin(115200);
   dxl.begin(57600);
   
-  for(i=0; i<DXL_ID_CNT; i++){
-    dxl.torqueOff(DXL_ID_LIST[i]);
-    dxl.setOperatingMode(DXL_ID_LIST[i], OP_VELOCITY);
-    dxl.torqueOn(DXL_ID_LIST[i]);
-  }
+  dxl.torqueOff(DXL_1_ID);
+  dxl.torqueOff(DXL_2_ID);
+  dxl.setOperatingMode(DXL_1_ID, OP_VELOCITY);
+  dxl.setOperatingMode(DXL_2_ID, OP_POSITION);
+  dxl.torqueOn(DXL_1_ID);
+  dxl.torqueOn(DXL_2_ID);
+  
+  // BulkRead using user external packet buffer.
+  dxl_br.setPacketBuffer(user_pkt_buf, user_pkt_buf_cap);
+  dxl_br.addParam(DXL_1_ID, 126, br_data_xel_1); // Start Addr: Present Current of X serise.
+  dxl_br.addParam(DXL_2_ID, 132, br_data_xel_2); // Start Addr: Present Position of X serise.
 
-  // SyncRead using user external packet buffer.
-  dxl_sr.setPacketBuffer(user_pkt_buf, user_pkt_buf_cap);
-  for(i=0; i<DXL_ID_CNT; i++){
-    dxl_sr.addParam(DXL_ID_LIST[i], sr_data[i]);
-  }
-
-  // SyncWrite using the internal packet buffer.
-  sw_data[0].goal_velocity = 0;
-  sw_data[1].goal_velocity = 100;
-  for(i=0; i<DXL_ID_CNT; i++){
-    dxl_sw.addParam(DXL_ID_LIST[i], sw_data[i]);
-  }
+  // BulkWrite using the internal packet buffer.
+  bw_data_xel_1.goal_velocity = 0;
+  bw_data_xel_2.goal_position = 0;
+  dxl_bw.addParam(DXL_1_ID, 104, bw_data_xel_1); // Start Addr: Goal Velocity of X serise. 
+  dxl_bw.addParam(DXL_2_ID, 116, bw_data_xel_2); // Start Addr: Goal Position of X serise.
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   static uint32_t try_count = 0;
-  uint8_t i, id, recv_cnt;
-  
-  DEBUG_SERIAL.print("\n>>>>>> Sync Instruction Test : ");
+  uint8_t recv_cnt;
+
+  DEBUG_SERIAL.print("\n>>>>>> Bulk Instruction Test : ");
   DEBUG_SERIAL.println(try_count++);
 
-  // Update parameter data for SyncWrite
-  for(i=0; i<DXL_ID_CNT; i++){
-    sw_data[i].goal_velocity+=5;
-    if(sw_data[i].goal_velocity >= 200){
-      sw_data[i].goal_velocity = 0;
-    }
+  // Update parameter data for BulkWrite
+  bw_data_xel_1.goal_velocity+=5;
+  if(bw_data_xel_1.goal_velocity >= 200){
+    bw_data_xel_1.goal_velocity = 0;
   }
-  dxl_sw.updateParamData();
+  bw_data_xel_2.goal_position+=255;
+  if(bw_data_xel_2.goal_position >= 1023){
+    bw_data_xel_2.goal_position = 0;
+  }
+  dxl_bw.updateParamData();
 
-  // Send syncWrite pakcet
-  if(dxl_sw.sendPacket() == true){
-    DEBUG_SERIAL.println("[SyncWrite] Success");
-    for(i=0; i<DXL_ID_CNT; i++){
-      id = dxl_sw.getIDByIndex(i);
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(id);
-      DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(dxl_sw.getDataPtr(id)->goal_velocity);
-    }
+  // Send bulkWrite pakcet
+  if(dxl_bw.sendPacket() == true){
+    DEBUG_SERIAL.println("[BulkWrite] Success");
+
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(DXL_1_ID);
+    DEBUG_SERIAL.print("\t Start Address: ");DEBUG_SERIAL.println(dxl_bw.getStartAddr(DXL_1_ID));
+    DEBUG_SERIAL.print("\t Address Length: ");DEBUG_SERIAL.println(dxl_bw.getAddrLength(DXL_1_ID));
+    DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(bw_data_xel_1.goal_velocity);
+
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(DXL_2_ID);
+    DEBUG_SERIAL.print("\t Start Address: ");DEBUG_SERIAL.println(dxl_bw.getStartAddr(DXL_2_ID));
+    DEBUG_SERIAL.print("\t Address Length: ");DEBUG_SERIAL.println(dxl_bw.getAddrLength(DXL_2_ID));
+    DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(bw_data_xel_2.goal_position);
   }else{
-    DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
+    DEBUG_SERIAL.print("[BulkWrite] Fail, Lib error code: ");
     DEBUG_SERIAL.print(dxl.getLastLibErrCode());
   }
   DEBUG_SERIAL.println();
 
   delay(250);
 
-  // Send syncRead packet & Receive data
-  recv_cnt = dxl_sr.sendPacket();
+  // Send bulkRead packet & Receive data
+  recv_cnt = dxl_br.sendPacket();
   if(recv_cnt > 0){
-    DEBUG_SERIAL.print("[SyncRead] Success, Received ID Count: ");
+    DEBUG_SERIAL.print("[BulkRead] Success, Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
-    for(i=0; i<recv_cnt; i++){
-      id = dxl_sr.getIDByIndex(i);
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(id);
-      DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(dxl_sr.getError(id));
-      DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(dxl_sr.getDataPtr(id)->present_current);
-      DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(dxl_sr.getDataPtr(id)->present_velocity);
-      DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(dxl_sr.getDataPtr(id)->present_position);
-    }
+
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(DXL_1_ID);
+    DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(dxl_br.getError(DXL_1_ID));
+    DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(br_data_xel_1.present_current);
+    DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(br_data_xel_1.present_velocity);
+
+    DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(DXL_2_ID);
+    DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(dxl_br.getError(DXL_2_ID));   
+    DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(br_data_xel_2.present_position);
   }else{
-    DEBUG_SERIAL.print("[SyncRead] Fail, Lib error code: ");
+    DEBUG_SERIAL.print("[BulkRead] Fail, Lib error code: ");
     DEBUG_SERIAL.println(dxl.getLastLibErrCode());
   }
   DEBUG_SERIAL.println("=======================================================");
@@ -158,7 +165,4 @@ void loop() {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
   delay(750);
 }
-
-
-
 

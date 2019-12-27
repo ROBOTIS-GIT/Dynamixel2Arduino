@@ -180,7 +180,7 @@ void loop() {
   if(dxl.syncWrite(&sw_infos) == true){
     DEBUG_SERIAL.println("[SyncWrite] Success");
     for(i=0; i<sw_infos.xel_count; i++){
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sw_infos.p_xels[i].id);
+      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(sw_infos.p_xels[i].id);
       DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(sw_data[i].goal_velocity);
     }
   }else{
