@@ -153,8 +153,8 @@ void setup() {
 
 
   // Fill the members of structure for bulkWrite using internal packet buffer
-  br_infos.packet.p_buf = nullptr;
-  br_infos.packet.is_completed = false;
+  bw_infos.packet.p_buf = nullptr;
+  bw_infos.packet.is_completed = false;
   bw_infos.p_xels = info_xels_bw;
   bw_infos.xel_count = 0;
 
