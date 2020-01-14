@@ -27,6 +27,67 @@
 #define COMMON_MODEL_NUMBER_ADDR         0
 #define COMMON_MODEL_NUMBER_ADDR_LENGTH  2
 
+// >> Legacy (Deprecated since v0.5.0)
+typedef struct InfoForSyncReadParam{
+  uint8_t id;
+} InfoForSyncReadParam_t;
+
+typedef struct ParamForSyncReadInst{
+  uint16_t addr;
+  uint16_t length;
+  uint8_t id_count;
+  InfoForSyncReadParam_t xel[DXL_MAX_NODE]; //refer to below.
+} ParamForSyncReadInst_t;
+
+typedef struct XelInfoForSyncWriteParam{
+  uint8_t id;
+  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
+} XelInfoForSyncWriteParam_t;
+
+typedef struct ParamForSyncWriteInst{
+  uint16_t addr;
+  uint16_t length;
+  uint8_t id_count;
+  XelInfoForSyncWriteParam_t xel[DXL_MAX_NODE]; //refer to below.
+} ParamForSyncWriteInst_t;
+
+typedef struct XelInfoForBulkReadParam{
+  uint8_t id;
+  uint16_t addr;
+  uint16_t length;
+} XelInfoForBulkReadParam_t;
+
+typedef struct ParamForBulkReadInst{
+  uint8_t id_count;
+  XelInfoForBulkReadParam_t xel[DXL_MAX_NODE]; //refer to below.
+} ParamForBulkReadInst_t;
+
+typedef struct XelInfoForBulkWriteParam{
+  uint8_t id;
+  uint16_t addr;
+  uint16_t length;
+  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
+} XelInfoForBulkWriteParam_t;
+
+typedef struct ParamForBulkWriteInst{
+  uint8_t id_count;
+  XelInfoForBulkWriteParam_t xel[DXL_MAX_NODE]; //refer to below. 
+} ParamForBulkWriteInst_t;
+
+typedef struct XelInfoForStatusInst{
+  uint8_t id;
+  uint16_t length;
+  uint8_t error;
+  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
+} XelInfoForStatusInst_t;
+
+typedef struct RecvInfoFromStatusInst{
+  uint8_t id_count;
+  XelInfoForStatusInst_t xel[DXL_MAX_NODE]; //refer to below.
+} RecvInfoFromStatusInst_t;
+// << Legacy (Deprecated since v0.5.0)
+
+
 
 namespace DYNAMIXEL {
 
@@ -175,6 +236,13 @@ class Master
     // raw APIs
     bool txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t param_len);
     const InfoToParseDXLPacket_t* rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
+
+    // >> Legacy (Deprecated since v0.5.0)
+    bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
+    bool syncWrite(const ParamForSyncWriteInst_t &param_info);
+    bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
+    bool bulkWrite(const ParamForBulkWriteInst_t &param_info);
+    // << Legacy (Deprecated since v0.5.0)
 
   private:
     DXLPortHandler *p_port_;

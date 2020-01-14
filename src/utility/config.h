@@ -46,5 +46,37 @@
 
 
 
+// >> Legacy (Deprecated since v0.5.0)
+#if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
+  || defined (ARDUINO_AVR_INDUSTRIAL101)
+#define DXL_MAX_NODE                   16
+#define DXL_MAX_NODE_BUFFER_SIZE       10
+#elif defined (ARDUINO_AVR_LEONARDO)
+#define DXL_MAX_NODE                   16
+#define DXL_MAX_NODE_BUFFER_SIZE       12
+#elif defined (OpenCR)
+#define DXL_MAX_NODE                  253 // Max number of XEL on DYNAMIXEL protocol
+#define DXL_MAX_NODE_BUFFER_SIZE       32
+#else
+#define DXL_MAX_NODE                   16
+#define DXL_MAX_NODE_BUFFER_SIZE       16
+#endif
+
+#undef DEFAULT_DXL_BUF_LENGTH
+#define DXL_BUF_LENGTH (DXL_MAX_NODE*DXL_MAX_NODE_BUFFER_SIZE + 11) // 11 = Header(3)+Reserved(1)+ID(1)+Length(2)+Instruction(1)+Error(1)+crc(2)
+#define DEFAULT_DXL_BUF_LENGTH  DXL_BUF_LENGTH
+
+#if (DXL_MAX_NODE > 253)
+#error "\r\nError : DXL_MAX_NODE is OVERFLOW! This should be less or equal than 253 by the protocol."
+#endif
+#if (DXL_MAX_NODE_BUFFER_SIZE > 0xFF)
+#error "\r\nError : DXL_MAX_NODE_BUFFER_SIZE is OVERFLOW! This must be a 8 bit range."
+#endif
+#if (DXL_BUF_LENGTH > 0xFFFF)
+#error "\r\nError : DXL_BUF_LENGTH is OVERFLOW! This must be a 16 bit range."
+#endif
+// << Legacy (Deprecated since v0.5.0)
+
+
 
 #endif /* DYNAMIXEL_CONFIG_H_ */
