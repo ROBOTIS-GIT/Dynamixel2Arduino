@@ -1052,7 +1052,7 @@ Master::rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t ti
 
 
 
-// >> Legacy (Deprecated since v0.5.0)
+// >> Legacy (Deprecated since v0.4.0)
 bool Master::syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms)
 {
   bool ret = false;
@@ -1337,4 +1337,4 @@ bool Master::bulkWrite(const ParamForBulkWriteInst_t &param_info)
 
   return ret;
 }
-// << Legacy (Deprecated since v0.5.0)
+// << Legacy (Deprecated since v0.4.0)

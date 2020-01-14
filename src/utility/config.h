@@ -46,7 +46,7 @@
 
 
 
-// >> Legacy (Deprecated since v0.5.0)
+// >> Legacy (Deprecated since v0.4.0)
 #if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
   || defined (ARDUINO_AVR_INDUSTRIAL101)
 #define DXL_MAX_NODE                   16
@@ -77,7 +77,7 @@
 #if (DXL_BUF_LENGTH > 0xFFFF)
 #error "\r\nError : DXL_BUF_LENGTH is OVERFLOW! This must be a 16 bit range."
 #endif
-// << Legacy (Deprecated since v0.5.0)
+// << Legacy (Deprecated since v0.4.0)
 
 
 

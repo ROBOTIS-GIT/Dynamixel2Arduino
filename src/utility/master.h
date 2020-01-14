@@ -27,7 +27,7 @@
 #define COMMON_MODEL_NUMBER_ADDR         0
 #define COMMON_MODEL_NUMBER_ADDR_LENGTH  2
 
-// >> Legacy (Deprecated since v0.5.0)
+// >> Legacy (Deprecated since v0.4.0)
 typedef struct InfoForSyncReadParam{
   uint8_t id;
 } InfoForSyncReadParam_t;
@@ -85,7 +85,7 @@ typedef struct RecvInfoFromStatusInst{
   uint8_t id_count;
   XelInfoForStatusInst_t xel[DXL_MAX_NODE]; //refer to below.
 } RecvInfoFromStatusInst_t;
-// << Legacy (Deprecated since v0.5.0)
+// << Legacy (Deprecated since v0.4.0)
 
 
 
@@ -237,12 +237,12 @@ class Master
     bool txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t param_len);
     const InfoToParseDXLPacket_t* rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
 
-    // >> Legacy (Deprecated since v0.5.0)
+    // >> Legacy (Deprecated since v0.4.0)
     bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);
     bool syncWrite(const ParamForSyncWriteInst_t &param_info);
     bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);
     bool bulkWrite(const ParamForBulkWriteInst_t &param_info);
-    // << Legacy (Deprecated since v0.5.0)
+    // << Legacy (Deprecated since v0.4.0)
 
   private:
     DXLPortHandler *p_port_;
