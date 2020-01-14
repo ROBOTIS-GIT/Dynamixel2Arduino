@@ -62,9 +62,11 @@
 #define DXL_MAX_NODE_BUFFER_SIZE       16
 #endif
 
-#undef DEFAULT_DXL_BUF_LENGTH
 #define DXL_BUF_LENGTH (DXL_MAX_NODE*DXL_MAX_NODE_BUFFER_SIZE + 11) // 11 = Header(3)+Reserved(1)+ID(1)+Length(2)+Instruction(1)+Error(1)+crc(2)
+#if (DXL_BUF_LENGTH > DEFAULT_DXL_BUF_LENGTH)
+#undef DEFAULT_DXL_BUF_LENGTH
 #define DEFAULT_DXL_BUF_LENGTH  DXL_BUF_LENGTH
+#endif
 
 #if (DXL_MAX_NODE > 253)
 #error "\r\nError : DXL_MAX_NODE is OVERFLOW! This should be less or equal than 253 by the protocol."

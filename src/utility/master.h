@@ -238,9 +238,9 @@ class Master
     const InfoToParseDXLPacket_t* rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
 
     // >> Legacy (Deprecated since v0.5.0)
-    bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
+    bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);
     bool syncWrite(const ParamForSyncWriteInst_t &param_info);
-    bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
+    bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);
     bool bulkWrite(const ParamForBulkWriteInst_t &param_info);
     // << Legacy (Deprecated since v0.5.0)
 
