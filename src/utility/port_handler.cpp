@@ -1,29 +1,27 @@
-
-
-
 #include "port_handler.h"
 
-using namespace DYNAMIXEL;
 
-PortHandler::PortHandler()
+DXLPortHandler::DXLPortHandler()
  : open_state_(false)
 {}
 
-/* PortHandler */
-bool PortHandler::getOpenState()
+/* DXLPortHandler */
+bool DXLPortHandler::getOpenState()
 {
   return open_state_;
 }
 
-void PortHandler::setOpenState(bool state)
+void DXLPortHandler::setOpenState(bool state)
 {
   open_state_ = state;
 }
 
 
+using namespace DYNAMIXEL;
+
 /* SerialPortHandler */
 SerialPortHandler::SerialPortHandler(HardwareSerial& port, const int dir_pin)
- : PortHandler(), port_(port), dir_pin_(dir_pin), baud_(57600)
+ : DXLPortHandler(), port_(port), dir_pin_(dir_pin), baud_(57600)
 {}
 
 void SerialPortHandler::begin()
@@ -33,10 +31,16 @@ void SerialPortHandler::begin()
 
 void SerialPortHandler::begin(unsigned long baud)
 {
-#if defined(Arduino_OpenCM904)
-  if(port_ == Serial1){
+#if defined(ARDUINO_OpenCM904)
+  if(port_ == Serial1 && getOpenState() == false){
     Serial1.setDxlMode(true);
   }
+#elif defined(ARDUINO_OpenCR)
+  if(port_ == Serial3 && getOpenState() == false){
+    pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
+    digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
+  }
+  delay(100); // Wait for the DYNAMIXEL to power up normally.
 #endif
 
   baud_ = baud;
@@ -53,6 +57,11 @@ void SerialPortHandler::begin(unsigned long baud)
 
 void SerialPortHandler::end(void)
 {
+#if defined(ARDUINO_OpenCR)
+  if(port_ == Serial3 && getOpenState() == true){
+    digitalWrite(BDPIN_DXL_PWR_EN, LOW);
+  }
+#endif
   port_.end();
   setOpenState(false);
 }
@@ -113,7 +122,7 @@ unsigned long SerialPortHandler::getBaud() const
 
 /* USBSerialPortHandler */
 USBSerialPortHandler::USBSerialPortHandler(USB_SERIAL_CLASS& port)
- : PortHandler(), port_(port)
+ : DXLPortHandler(), port_(port)
 {}
 
 void USBSerialPortHandler::begin()
@@ -155,3 +164,4 @@ size_t USBSerialPortHandler::write(uint8_t *buf, size_t len)
 
   return ret;      
 }
+

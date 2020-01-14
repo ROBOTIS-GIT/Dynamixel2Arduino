@@ -41,6 +41,12 @@ enum ParamUnit{
   UNIT_MILLI_AMPERE
 };
 
+enum D2ALibErrorCode
+{
+  D2A_LIB_ERROR_NULLPTR_PORT_HANDLER = 0x0040,
+  D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION,
+  D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER
+};
 
 class Dynamixel2Arduino : public DYNAMIXEL::Master
 {
@@ -51,7 +57,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * Dynamixel2Arduino dxl;
      * @endcode
      */   
-    Dynamixel2Arduino();
+    Dynamixel2Arduino(uint16_t packet_buf_size = DEFAULT_DXL_BUF_LENGTH);
 
     /**
      * @brief The constructor.
@@ -63,7 +69,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      *          It is automatically initialized baudrate to 57600 by calling the begin () function.
      * @param dir_pin Directional pins for using half-duplex communication. -1 uses full duplex. (default : -1)
      */   
-    Dynamixel2Arduino(HardwareSerial& port, int dir_pin = -1);
+    Dynamixel2Arduino(HardwareSerial& port, int dir_pin = -1, uint16_t packet_buf_size = DEFAULT_DXL_BUF_LENGTH);
     
     /**
      * @brief Initialization function to start communication with DYNAMIXEL.
@@ -112,6 +118,20 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @return If a dynamixel succeeds in pinging, it returns 1, and returns 0 if none succeeds.
      */    
     bool scan();
+
+    /**
+     * @brief It is API for getting model number of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * dxl.setModelNumber(1, 1020);
+     * Serial.print(dxl.getModelNumber(1));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @param model_number DYNAMIXEL Actuator's model number.
+     * @return It returns true(1) on success, false(0) on failure.
+     */  
+    bool setModelNumber(uint8_t id, uint16_t model_number);
 
     /**
      * @brief It is API for getting model number of DYNAMIXEL.
@@ -413,17 +433,12 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
 #endif     
 
   private:
-    typedef struct IdAndModelNum{
-      uint16_t model_num;
-      uint8_t id;
-    } __attribute__((packed)) IdAndModelNum_t;
-
     DYNAMIXEL::SerialPortHandler *p_dxl_port_;
     
-    IdAndModelNum_t registered_dxl_[DXL_MAX_NODE];
-    uint8_t         registered_dxl_cnt_;
-    uint32_t        err_code_;
+    uint8_t model_number_idx_[254];
+    uint8_t model_number_idx_last_index_;
 
+    uint8_t getModelNumberIndex(uint16_t model_num);
     uint16_t getModelNumberFromTable(uint8_t id);
 
     bool setTorqueEnable(uint8_t id, bool enable);

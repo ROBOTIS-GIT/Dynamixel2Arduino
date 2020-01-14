@@ -30,6 +30,25 @@
 
 #if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
   || defined (ARDUINO_AVR_INDUSTRIAL101)
+#define DEFAULT_DXL_BUF_LENGTH       192
+#elif defined (ARDUINO_AVR_LEONARDO)
+#define DEFAULT_DXL_BUF_LENGTH       256
+#elif defined (OpenCR)
+#define DEFAULT_DXL_BUF_LENGTH       2048
+#else
+#define DEFAULT_DXL_BUF_LENGTH       1024
+#endif
+
+
+#if (DEFAULT_DXL_BUF_LENGTH > 0xFFFF)
+#error "\r\nError : DEFAULT_DXL_BUF_LENGTH is OVERFLOW! This must be a 16 bit range."
+#endif
+
+
+
+// >> Legacy (Deprecated since v0.4.0)
+#if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
+  || defined (ARDUINO_AVR_INDUSTRIAL101)
 #define DXL_MAX_NODE                   16
 #define DXL_MAX_NODE_BUFFER_SIZE       10
 #elif defined (ARDUINO_AVR_LEONARDO)
@@ -44,8 +63,10 @@
 #endif
 
 #define DXL_BUF_LENGTH (DXL_MAX_NODE*DXL_MAX_NODE_BUFFER_SIZE + 11) // 11 = Header(3)+Reserved(1)+ID(1)+Length(2)+Instruction(1)+Error(1)+crc(2)
-
-
+#if (DXL_BUF_LENGTH > DEFAULT_DXL_BUF_LENGTH)
+#undef DEFAULT_DXL_BUF_LENGTH
+#define DEFAULT_DXL_BUF_LENGTH  DXL_BUF_LENGTH
+#endif
 
 #if (DXL_MAX_NODE > 253)
 #error "\r\nError : DXL_MAX_NODE is OVERFLOW! This should be less or equal than 253 by the protocol."
@@ -56,7 +77,7 @@
 #if (DXL_BUF_LENGTH > 0xFFFF)
 #error "\r\nError : DXL_BUF_LENGTH is OVERFLOW! This must be a 16 bit range."
 #endif
-
+// << Legacy (Deprecated since v0.4.0)
 
 
 

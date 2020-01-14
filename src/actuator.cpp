@@ -3,13 +3,8 @@
 #include <Arduino.h>
 
 
-#if defined(__arm__) && !defined(PROGMEM)
-#define PROGMEM
-#define PSTR(STR) STR
-#endif
 
 using namespace DYNAMIXEL;
-
 
 typedef struct ModelControlTableInfo{
   uint8_t index;

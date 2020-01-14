@@ -14,36 +14,20 @@
 * limitations under the License.
 *******************************************************************************/
 
-#ifndef DYNAMIXEL_MASTER_H_
-#define DYNAMIXEL_MASTER_H_
+#ifndef DYNAMIXEL_MASTER_HPP_
+#define DYNAMIXEL_MASTER_HPP_
 
 
-#include "packet_handler.h"
-#include "protocol.h"
+#include "dxl_c/protocol.h"
+#include "port_handler.h"
+#include "config.h"
 
-typedef struct InfoFromPing {
-  uint8_t id;
-  uint8_t firmware_version;
-  uint16_t model_number;
-} XelInfoFromPing_t;
 
-typedef struct XelsInfoFromPing {
-  uint8_t id_count;
-  XelInfoFromPing_t xel[DXL_MAX_NODE];
-} RecvInfoFromPing_t;
+#define UNREGISTERED_MODEL  (uint16_t)0xFFFF
+#define COMMON_MODEL_NUMBER_ADDR         0
+#define COMMON_MODEL_NUMBER_ADDR_LENGTH  2
 
-typedef struct XelInfoForStatusInst{
-  uint8_t id;
-  uint16_t length;
-  uint8_t error;
-  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
-} XelInfoForStatusInst_t;
-
-typedef struct RecvInfoFromStatusInst{
-  uint8_t id_count;
-  XelInfoForStatusInst_t xel[DXL_MAX_NODE];
-} RecvInfoFromStatusInst_t;
-
+// >> Legacy (Deprecated since v0.4.0)
 typedef struct InfoForSyncReadParam{
   uint8_t id;
 } InfoForSyncReadParam_t;
@@ -52,7 +36,7 @@ typedef struct ParamForSyncReadInst{
   uint16_t addr;
   uint16_t length;
   uint8_t id_count;
-  InfoForSyncReadParam_t xel[DXL_MAX_NODE];
+  InfoForSyncReadParam_t xel[DXL_MAX_NODE]; //refer to below.
 } ParamForSyncReadInst_t;
 
 typedef struct XelInfoForSyncWriteParam{
@@ -64,7 +48,7 @@ typedef struct ParamForSyncWriteInst{
   uint16_t addr;
   uint16_t length;
   uint8_t id_count;
-  XelInfoForSyncWriteParam_t xel[DXL_MAX_NODE];
+  XelInfoForSyncWriteParam_t xel[DXL_MAX_NODE]; //refer to below.
 } ParamForSyncWriteInst_t;
 
 typedef struct XelInfoForBulkReadParam{
@@ -75,7 +59,7 @@ typedef struct XelInfoForBulkReadParam{
 
 typedef struct ParamForBulkReadInst{
   uint8_t id_count;
-  XelInfoForBulkReadParam_t xel[DXL_MAX_NODE];
+  XelInfoForBulkReadParam_t xel[DXL_MAX_NODE]; //refer to below.
 } ParamForBulkReadInst_t;
 
 typedef struct XelInfoForBulkWriteParam{
@@ -87,27 +71,100 @@ typedef struct XelInfoForBulkWriteParam{
 
 typedef struct ParamForBulkWriteInst{
   uint8_t id_count;
-  XelInfoForBulkWriteParam_t xel[DXL_MAX_NODE];
+  XelInfoForBulkWriteParam_t xel[DXL_MAX_NODE]; //refer to below. 
 } ParamForBulkWriteInst_t;
 
-typedef union
-{
-  ParamForSyncReadInst_t sync_read;
-  ParamForSyncWriteInst_t sync_write;
-  ParamForBulkReadInst_t bulk_read;
-  ParamForBulkWriteInst_t bulk_write;
-} send_param_t;
+typedef struct XelInfoForStatusInst{
+  uint8_t id;
+  uint16_t length;
+  uint8_t error;
+  uint8_t data[DXL_MAX_NODE_BUFFER_SIZE];
+} XelInfoForStatusInst_t;
 
-typedef union
-{
-  RecvInfoFromPing_t ping;
-  RecvInfoFromStatusInst_t read;
-  RecvInfoFromStatusInst_t sync_read;
-  RecvInfoFromStatusInst_t bulk_read;
-} recv_info_t;
+typedef struct RecvInfoFromStatusInst{
+  uint8_t id_count;
+  XelInfoForStatusInst_t xel[DXL_MAX_NODE]; //refer to below.
+} RecvInfoFromStatusInst_t;
+// << Legacy (Deprecated since v0.4.0)
+
 
 
 namespace DYNAMIXEL {
+
+typedef struct InfoFromPing{
+  uint8_t id;
+  uint16_t model_number;
+  uint8_t firmware_version;
+} InfoFromPing_t;
+
+typedef struct InfoSyncBulkBuffer{
+  uint8_t* p_buf;
+  uint16_t buf_capacity;
+  uint16_t gen_length;
+  bool is_completed;
+} __attribute__((packed)) InfoSyncBulkBuffer_t;
+
+/* Sync Instructions */
+typedef struct XELInfoSyncRead{
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoSyncRead_t;
+
+typedef struct InfoSyncReadInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoSyncRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoSyncReadInst_t;
+
+typedef struct XELInfoSyncWrite{
+  uint8_t* p_data;
+  uint8_t id;
+} __attribute__((packed)) XELInfoSyncWrite_t;
+
+typedef struct InfoSyncWriteInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoSyncWrite_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoSyncWriteInst_t;
+
+/* Bulk Instructions */
+typedef struct XELInfoBulkRead{
+  uint16_t addr;
+  uint16_t addr_length;
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoBulkRead_t;
+
+typedef struct InfoBulkReadInst{
+  XELInfoBulkRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoBulkReadInst_t;
+
+typedef struct XELInfoBulkWrite{
+  uint16_t addr;
+  uint16_t addr_length;
+  uint8_t* p_data;
+  uint8_t id;
+} __attribute__((packed)) XELInfoBulkWrite_t;
+
+typedef struct InfoBulkWriteInst{
+  XELInfoBulkWrite_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoBulkWriteInst_t;
+
+
 
 class Master
 {
@@ -120,11 +177,11 @@ class Master
      * DYNAMIXEL::SerialPortHandler dxl_port(Serial1, DXL_DIR_PIN);
      * DYNAMIXEL::Master dxl_master(dxl_port, PROTOCOL_VER);
      * @endcode
-     * @param port The PortHandler instance you want to use on the board to communicate with DYNAMIXELs.
+     * @param port The DXLPortHandler instance you want to use on the board to communicate with DYNAMIXELs.
      *             It can be used not only for Serial but also for other communication port handlers like SerialPortHandler class.
      * @param protocol_ver DYNAMIXEL protocol version used for communications. (default : 2.0)
      */
-    Master(PortHandler &port, float protocol_ver = DXL_PACKET_VER_2_0);
+    Master(DXLPortHandler &port, float protocol_ver = 2.0, uint16_t malloc_buf_size = 256);
 
     /**
      * @brief The constructor.
@@ -135,59 +192,81 @@ class Master
      * @endcode
      * @param protocol_ver DYNAMIXEL protocol version used for communications. (default : 2.0)        
      */    
-    Master(float protocol_ver = DXL_PACKET_VER_2_0);
+    Master(float protocol_ver = 2.0, uint16_t malloc_buf_size = 256);
+
+    bool setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity);
+    uint8_t* getPacketBuffer() const;
+    uint16_t getPacketBufferCapacity() const;
 
     bool setPortProtocolVersion(float version);
     bool setPortProtocolVersionUsingIndex(uint8_t version_idx);
-    float getPortProtocolVersion();
+    float getPortProtocolVersion() const;
 
-    bool setPort(PortHandler &port);
-    bool setPort(PortHandler *p_port);
-    PortHandler* getPort() const;
+    bool setPort(DXLPortHandler &port);
+    bool setPort(DXLPortHandler *p_port);
+    DXLPortHandler* getPort() const;
 
-    uint8_t ping(uint8_t id, 
-      XelInfoFromPing_t *recv_info_array, uint8_t recv_array_cnt, uint32_t timeout = 100);
-    bool ping(uint8_t id,
-      RecvInfoFromPing_t &recv_info, uint32_t timeout = 100);
-          
+    /* Instructions */
+    uint8_t ping(uint8_t id, uint8_t *p_recv_id_array, uint8_t recv_array_capacity,
+      uint32_t timeout_ms = 10);
+    uint8_t ping(uint8_t id, InfoFromPing_t *recv_ping_info_array, uint8_t recv_array_cnt,
+      uint32_t timeout_ms = 10);
     int32_t read(uint8_t id, uint16_t addr, uint16_t addr_length,
-      uint8_t *p_recv_buf, uint16_t recv_buf_length, uint32_t timeout = 100);
-
+      uint8_t *p_recv_buf, uint16_t recv_buf_capacity, uint32_t timeout_ms = 10);
     bool write(uint8_t id, uint16_t addr, 
-      const uint8_t *p_data, uint16_t data_length, uint32_t timeout = 100);
-
+      const uint8_t *p_data, uint16_t data_length, uint32_t timeout_ms = 10);      
     bool writeNoResp(uint8_t id, uint16_t addr, 
       const uint8_t *p_data, uint16_t data_length);
-
-    //TODO: bool regWrite();
-    //TODO: bool action();
-    bool factoryReset(uint8_t id, uint8_t option, uint32_t timeout = 100);
-    bool reboot(uint8_t id, uint32_t timeout);
-
-    //TODO: bool clear();
-
-    bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
-    bool syncWrite(const ParamForSyncWriteInst_t &param_info);
-
-    bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout = 100);
-    bool bulkWrite(const ParamForBulkWriteInst_t &param_info);
+    bool regWrite(uint8_t id, uint16_t addr, 
+      const uint8_t *p_data, uint16_t data_length, uint32_t timeout_ms = 10);
+    bool action(uint8_t id, uint32_t timeout_ms = 10);      
+    bool factoryReset(uint8_t id, uint8_t option, uint32_t timeout_ms = 10);
+    bool reboot(uint8_t id, uint32_t timeout_ms = 10);
+    bool clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_ms = 10);
+    uint8_t syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms = 10);
+    bool syncWrite(InfoSyncWriteInst_t* p_info);
+    uint8_t bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
+    bool bulkWrite(InfoBulkWriteInst_t* p_info);
 
     uint8_t getLastStatusPacketError() const;
-    lib_err_code_t getLastLibErrCode() const;
+    
+    void setLastLibErrCode(DXLLibErrorCode_t err_code);
+    DXLLibErrorCode_t getLastLibErrCode() const;
 
-    void setLastLibErrCode(lib_err_code_t err_code);
+    // raw APIs
+    bool txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t param_len);
+    const InfoToParseDXLPacket_t* rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
 
-    //raw APIs
-    bool  txPacketInst(uint8_t id, uint8_t inst_cmd, uint8_t *p_data, uint16_t length);
-    const dxl_packet_t *rxPacket();
+    // >> Legacy (Deprecated since v0.4.0)
+    bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);
+    bool syncWrite(const ParamForSyncWriteInst_t &param_info);
+    bool bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);
+    bool bulkWrite(const ParamForBulkWriteInst_t &param_info);
+    // << Legacy (Deprecated since v0.4.0)
 
   private:
-    PortHandler *p_port_;
-    dxl_t packet_;
-    uint8_t last_status_packet_error_; 
-    lib_err_code_t last_lib_err_code_;
-  };
-}
+    DXLPortHandler *p_port_;
+
+    uint8_t protocol_ver_idx_;
+
+    bool is_buf_malloced_;
+    uint8_t *p_packet_buf_;
+    uint16_t packet_buf_capacity_;
+    InfoToMakeDXLPacket_t info_tx_packet_;
+    InfoToParseDXLPacket_t info_rx_packet_;
+
+    DXLLibErrorCode_t last_lib_err_;
+};
 
 
-#endif /* DYNAMIXEL_MASTER_H_ */
+} //namespace DYNAMIXEL
+
+
+
+
+
+//legacy
+typedef DYNAMIXEL::InfoFromPing_t XelInfoFromPing_t;
+
+
+#endif /* DYNAMIXEL_MASTER_HPP_ */
