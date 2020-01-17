@@ -608,6 +608,10 @@ Master::syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms)
     packet_buf_cap = packet_buf_capacity_;
   }
 
+  if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_SYNC_READ){
+    p_info->packet.is_completed = false;
+  }
+
   if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_SYNC_READ, 0, p_packet_buf, packet_buf_cap);
@@ -635,9 +639,6 @@ Master::syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms)
         }
       }
     }
-  }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_SYNC_READ){
-    p_info->packet.is_completed = false;
-    err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
   if(err == DXL_LIB_OK){
@@ -699,6 +700,10 @@ Master::syncWrite(InfoSyncWriteInst_t* p_info)
     packet_buf_cap = packet_buf_capacity_;
   }
 
+  if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_SYNC_WRITE){
+    p_info->packet.is_completed = false;
+  }
+
   if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_SYNC_WRITE, 0, p_packet_buf, packet_buf_cap);
@@ -736,9 +741,6 @@ Master::syncWrite(InfoSyncWriteInst_t* p_info)
         }
       }
     }
-  }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_SYNC_WRITE){
-    p_info->packet.is_completed = false;
-    err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
   if(err == DXL_LIB_OK){
@@ -786,6 +788,10 @@ Master::bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms)
     packet_buf_cap = packet_buf_capacity_;
   }
 
+  if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_BULK_READ){
+    p_info->packet.is_completed = false;
+  }
+
   if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_BULK_READ, 0, p_packet_buf, packet_buf_cap);
@@ -822,9 +828,6 @@ Master::bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms)
         }
       }
     }
-  }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_BULK_READ){
-    p_info->packet.is_completed = false;
-    err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
   if(err == DXL_LIB_OK){
@@ -886,6 +889,10 @@ Master::bulkWrite(InfoBulkWriteInst_t* p_info)
     packet_buf_cap = packet_buf_capacity_;
   }
 
+  if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_BULK_WRITE){
+    p_info->packet.is_completed = false;
+  }
+
   if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
     err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
       DXL_INST_BULK_WRITE, 0, p_packet_buf, packet_buf_cap);
@@ -915,9 +922,6 @@ Master::bulkWrite(InfoBulkWriteInst_t* p_info)
         }
       }
     }
-  }else if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_BULK_WRITE){
-    p_info->packet.is_completed = false;
-    err = DXL_LIB_ERROR_NOT_INITIALIZED;
   }
 
   if(err == DXL_LIB_OK){
@@ -1048,7 +1052,7 @@ Master::rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t ti
 
 
 
-// >> Legacy (Deprecated since v0.5.0)
+// >> Legacy (Deprecated since v0.4.0)
 bool Master::syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms)
 {
   bool ret = false;
@@ -1333,4 +1337,4 @@ bool Master::bulkWrite(const ParamForBulkWriteInst_t &param_info)
 
   return ret;
 }
-// << Legacy (Deprecated since v0.5.0)
+// << Legacy (Deprecated since v0.4.0)
