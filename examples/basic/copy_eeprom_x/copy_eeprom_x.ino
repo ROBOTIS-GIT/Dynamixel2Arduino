@@ -48,7 +48,7 @@
 #endif
 
 #define MAX_BAUD  5
-const int32_t buad[MAX_BAUD] = {57600, 115200, 1000000, 2000000, 3000000};
+const uint32_t buad[MAX_BAUD] = {57600, 115200, 1000000, 2000000, 3000000};
 #define INVALID_ID 253
 
 struct DxlList
@@ -86,7 +86,7 @@ int8_t found_dynamixel = 0;
 int MasterString = 0;
 uint8_t saved_index_a = 0;
 uint8_t saved_index_b = 0;
-uint8_t dxl_a = 0
+uint8_t dxl_a = 0;
 uint8_t dxl_b = 0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
@@ -110,7 +110,7 @@ bool scanDynamixel()
   bool result = false;
   int8_t index = 0;
 
-  for(int8_t protocol = 1; protocol < 3; protocol++) 
+  for(uint8_t protocol = 1; protocol < 3; protocol++) 
   {
     // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
     dxl.setPortProtocolVersion((float)protocol);
@@ -123,7 +123,7 @@ bool scanDynamixel()
       DEBUG_SERIAL.print("BAUDRATE ");
       DEBUG_SERIAL.println(buad[index]);
       dxl.begin(buad[index]);
-      for(int id = 0; id < DXL_BROADCAST_ID; id++) 
+      for(uint8_t id = 0; id < DXL_BROADCAST_ID; id++) 
       {
         //iterate until all ID in each buadrate is scanned.
         if(dxl.ping(id)) 
