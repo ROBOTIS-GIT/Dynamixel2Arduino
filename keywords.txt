@@ -21,6 +21,7 @@ begin	KEYWORD2
 getPortBaud	KEYWORD2
 ping	KEYWORD2
 scan	KEYWORD2
+setModelNumber	KEYWORD2
 getModelNumber	KEYWORD2
 setID	KEYWORD2
 setProtocol	KEYWORD2
@@ -42,15 +43,23 @@ readControlTableItem	KEYWORD2
 writeControlTableItem	KEYWORD2
 
 # Master Class
+setPacketBuffer	KEYWORD2
+getPacketBuffer	KEYWORD2
+getPacketBufferCapacity	KEYWORD2
 setPortProtocolVersion	KEYWORD2
+setPortProtocolVersionUsingIndex	KEYWORD2
 getPortProtocolVersion	KEYWORD2
 setPort	KEYWORD2
+getPort	KEYWORD2
 ping	KEYWORD2
 read	KEYWORD2
 write	KEYWORD2
 writeNoResp	KEYWORD2
+regWrite	KEYWORD2
+action	KEYWORD2
 factoryReset	KEYWORD2
 reboot	KEYWORD2
+clear	KEYWORD2
 syncWrite	KEYWORD2
 syncRead	KEYWORD2
 bulkWrite	KEYWORD2
@@ -58,8 +67,13 @@ bulkRead	KEYWORD2
 getLastStatusPacketError	KEYWORD2
 getLastLibErrCode	KEYWORD2
 setLastLibErrCode	KEYWORD2
+txInstPacket	KEYWORD2
+rxStatusPacket	KEYWORD2
 
 # Slave Class
+setPacketBuffer	KEYWORD2
+getPacketBuffer	KEYWORD2
+getPacketBufferCapacity	KEYWORD2
 getModelNumber	KEYWORD2
 setID	KEYWORD2
 getID	KEYWORD2
@@ -67,31 +81,44 @@ setFirmwareVersion	KEYWORD2
 getFirmwareVersion	KEYWORD2
 setPort	KEYWORD2
 setPortProtocolVersion	KEYWORD2
+setPortProtocolVersionUsingIndex	KEYWORD2
 getPortProtocolVersion	KEYWORD2
+getPortProtocolVersionIndex	KEYWORD2
 setWriteCallbackFunc	KEYWORD2
 setReadCallbackFunc	KEYWORD2
+getNumCanBeRegistered	KEYWORD2
+isEnoughSpaceInControlTable	KEYWORD2
 processPacket	KEYWORD2
 getLastStatusPacketError	KEYWORD2
 getLastLibErrCode	KEYWORD2
 addControlItem	KEYWORD2
+txInstPacket	KEYWORD2
+rxStatusPacket	KEYWORD2
+
+# protocol.h
+begin_make_dxl_packet	KEYWORD2
+add_param_to_dxl_packet	KEYWORD2
+end_make_dxl_packet	KEYWORD2
+begin_parse_dxl_packet	KEYWORD2
+parse_dxl_packet	KEYWORD2
 
 ###########################################
 # Structures (KEYWORD3)
 ###########################################
 
 # Master Class
-ParamForSyncReadInst_t	KEYWORD3
-ParamForSyncWriteInst_t	KEYWORD3
-ParamForBulkReadInst_t	KEYWORD3
-ParamForBulkWriteInst_t	KEYWORD3
-RecvInfoFromPing_t	KEYWORD3
-RecvInfoFromStatusInst_t	KEYWORD3
+InfoFromPing_t	KEYWORD3
+
+# protocol.h
+InfoToParseDXLPacket_t	KEYWORD3
+InfoToMakeDXLPacket_t	KEYWORD3
+DXLLibErrorCode_t	KEYWORD3
 
 ###########################################
 # Constants (LITERAL1)
 ###########################################
 
-# Dynamixel2Arduino Class
+# Dynamixel2Arduino Class (Operting mode)
 OP_POSITION	LITERAL1
 OP_EXTENDED_POSITION	LITERAL1
 OP_CURRENT_BASED_POSITION	LITERAL1
@@ -99,12 +126,17 @@ OP_VELOCITY	LITERAL1
 OP_PWM	LITERAL1
 OP_CURRENT	LITERAL1
 
-# Dynamixel2Arduino Class
+# Dynamixel2Arduino Class (Unit)
 UNIT_RAW	LITERAL1
 UNIT_PERCENT	LITERAL1
 UNIT_RPM	LITERAL1
 UNIT_DEGREE	LITERAL1
 UNIT_MILLI_AMPERE	LITERAL1
+
+# Dynamixel2Arduino Class (Library error code)
+D2A_LIB_ERROR_NULLPTR_PORT_HANDLER	LITERAL1
+D2A_LIB_ERROR_NOT_SUPPORT_FUNCTION	LITERAL1
+D2A_LIB_ERROR_UNKNOWN_MODEL_NUMBER	LITERAL1
 
 # Actuator.h
 MODEL_NUMBER	LITERAL1
@@ -198,3 +230,6 @@ EXTERNAL_PORT_DATA_1	LITERAL1
 EXTERNAL_PORT_DATA_2	LITERAL1
 EXTERNAL_PORT_DATA_3	LITERAL1
 EXTERNAL_PORT_DATA_4	LITERAL1
+
+# protocol.h
+DXL_BROADCAST_ID	LITERAL1

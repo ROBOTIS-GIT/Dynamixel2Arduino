@@ -48,46 +48,86 @@
 #endif
  
 
+class NewSerialPortHandler : public DYNAMIXEL::SerialPortHandler
+{
+  public:
+    NewSerialPortHandler(HardwareSerial& port, const int dir_pin = -1)
+    : SerialPortHandler(port, dir_pin), port_(port), dir_pin_(dir_pin)
+    {}
+
+    virtual size_t write(uint8_t c) override
+    {
+      size_t ret = 0;
+      digitalWrite(dir_pin_, HIGH);
+      while(digitalRead(dir_pin_) != HIGH);
+      
+      ret = port_.write(c);
+
+      port_.flush();
+      digitalWrite(dir_pin_, LOW);
+      while(digitalRead(dir_pin_) != LOW);
+      
+      return ret;
+    }
+
+    virtual size_t write(uint8_t *buf, size_t len) override
+    {
+      size_t ret;
+      digitalWrite(dir_pin_, HIGH);
+      while(digitalRead(dir_pin_) != HIGH);
+
+      ret = port_.write(buf, len);
+
+      port_.flush();
+      digitalWrite(dir_pin_, LOW);
+      while(digitalRead(dir_pin_) != LOW);
+
+      return ret;     
+    }
+
+  private:
+    HardwareSerial& port_;
+    const int dir_pin_;
+};
+
 const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
-Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
+Dynamixel2Arduino dxl;
+NewSerialPortHandler dxl_port(DXL_SERIAL, DXL_DIR_PIN);
+
 
 void setup() {
   // put your setup code here, to run once:
-  
-  // Use UART port of DYNAMIXEL Shield to debug.
+
+  // Use Serial to debug.
   DEBUG_SERIAL.begin(115200);
-  
+
+  // Set Port instance
+  dxl.setPort(dxl_port);
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
-  // Get DYNAMIXEL information
-  dxl.ping(DXL_ID);
-
-  // Turn off torque when configuring items in EEPROM area
-  dxl.torqueOff(DXL_ID);
-  dxl.setOperatingMode(DXL_ID, OP_PWM);
-  dxl.torqueOn(DXL_ID);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-   
-  // Please refer to e-Manual(http://emanual.robotis.com) for available range of value. 
-  // Set Goal PWM using RAW unit
-  dxl.setGoalPWM(DXL_ID, 300);
-  delay(1000);
-  // Print present PWM
-  DEBUG_SERIAL.print("Present PWM(raw) : ");
-  DEBUG_SERIAL.println(dxl.getPresentPWM(DXL_ID));
-  delay(1000);
 
-  // Set Goal PWM using percentage (-100.0 [%] ~ 100.0 [%])
-  dxl.setGoalPWM(DXL_ID, -40.8, UNIT_PERCENT);
-  delay(1000);
-  DEBUG_SERIAL.print("Present PWM(ratio) : ");
-  DEBUG_SERIAL.println(dxl.getPresentPWM(DXL_ID, UNIT_PERCENT));
-  delay(1000);
+  DEBUG_SERIAL.print("PROTOCOL ");
+  DEBUG_SERIAL.print(DXL_PROTOCOL_VERSION, 1);
+  DEBUG_SERIAL.print(", ID ");
+  DEBUG_SERIAL.print(DXL_ID);
+  DEBUG_SERIAL.print(": ");
+  if(dxl.ping(DXL_ID) == true){
+    DEBUG_SERIAL.print("ping succeeded!");
+    DEBUG_SERIAL.print(", Model Number: ");
+    DEBUG_SERIAL.println(dxl.getModelNumber(DXL_ID));
+  }else{
+    DEBUG_SERIAL.println("ping failed!");
+  }
+  delay(500);
 }
+
+
+

@@ -14,14 +14,15 @@
 * limitations under the License.
 *******************************************************************************/
 
-#ifndef DYNAMIXEL_SLAVE_H_
-#define DYNAMIXEL_SLAVE_H_
+#ifndef DYNAMIXEL_SLAVE_HPP_
+#define DYNAMIXEL_SLAVE_HPP_
 
-#include "protocol.h"
+#include "dxl_c/protocol.h"
 #include "port_handler.h"
+#include "config.h"
 
 #define CONTROL_ITEM_MAX         64
-#define CONTROL_ITEM_ADDR_LIMIT (DXL_BUF_LENGTH-11)
+#define CONTROL_ITEM_ADDR_LIMIT (DEFAULT_DXL_BUF_LENGTH-11)
 
 
 namespace DYNAMIXEL{
@@ -38,8 +39,12 @@ typedef struct ControlItem{
 class Slave
 {
   public:
-    Slave(PortHandler &port, const uint16_t model_num, float protocol_ver = DXL_PACKET_VER_2_0);
-    Slave(const uint16_t model_num, float protocol_ver = DXL_PACKET_VER_2_0);      
+    Slave(DXLPortHandler &port, const uint16_t model_num, float protocol_ver = 2.0);
+    Slave(const uint16_t model_num, float protocol_ver = 2.0);      
+
+    bool setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity);
+    uint8_t* getPacketBuffer() const;
+    uint16_t getPacketBufferCapacity() const;
 
     uint16_t getModelNumber() const;
     
@@ -49,8 +54,9 @@ class Slave
     void setFirmwareVersion(uint8_t version);
     uint8_t getFirmwareVersion() const;
     
-    bool setPort(PortHandler &port);
-    PortHandler* getPort() const;
+    bool setPort(DXLPortHandler &port);
+    bool setPort(DXLPortHandler *p_port);
+    DXLPortHandler* getPort() const;
     
     bool setPortProtocolVersion(float version);
     bool setPortProtocolVersionUsingIndex(uint8_t version_idx);
@@ -59,12 +65,7 @@ class Slave
 
     void setWriteCallbackFunc(userCallbackFunc callback_func, void* callback_arg = nullptr);
     void setReadCallbackFunc(userCallbackFunc callback_func, void* callback_arg = nullptr);
-
-    bool processPacket();
     
-    uint8_t getLastStatusPacketError() const;
-    lib_err_code_t getLastLibErrCode() const;
-
     uint8_t getNumCanBeRegistered() const;
     bool isEnoughSpaceInControlTable(uint16_t start_addr, uint16_t length);
 
@@ -81,35 +82,49 @@ class Slave
     uint8_t addControlItem(uint16_t start_addr, float &data);
     uint8_t addControlItem(uint16_t start_addr, double &data);
 
+    bool processPacket();
+
+    uint8_t getLastStatusPacketError() const;
+
+    void setLastLibErrCode(DXLLibErrorCode_t err_code);
+    DXLLibErrorCode_t getLastLibErrCode() const;
+
+    // raw APIs
+    bool txStatusPacket(uint8_t id, uint8_t err_code, uint8_t *p_param, uint16_t param_len);
+    const InfoToParseDXLPacket_t* rxInstPacket(uint8_t* p_param_buf, uint16_t param_buf_cap);
+
   private:
-    PortHandler *p_port_;
+    DXLPortHandler *p_port_;
     
     const uint16_t model_num_;
-    uint8_t firmware_ver_;
     uint8_t protocol_ver_idx_;
+    uint8_t firmware_ver_;
     uint8_t id_;
+
+    bool is_buf_malloced_;
+    uint8_t *p_packet_buf_;
+    uint16_t packet_buf_capacity_;
+    InfoToMakeDXLPacket_t info_tx_packet_;
+    InfoToParseDXLPacket_t info_rx_packet_;
+
+    DXLLibErrorCode_t last_lib_err_;
 
     uint8_t registered_item_cnt_;
     ControlItem_t control_table_[CONTROL_ITEM_MAX];
-    
+
     userCallbackFunc user_write_callback_;
     void* user_write_callbakc_arg_;
     userCallbackFunc user_read_callback_;
     void* user_read_callbakc_arg_;
-
-    dxl_t packet_;
-
-    uint8_t last_status_packet_error_; 
-    lib_err_code_t last_lib_err_code_;
 
     virtual bool processInstPing();
     virtual bool processInstRead();
     virtual bool processInstWrite();
     
     bool processInst(uint8_t inst_idx);
-    bool addDefaultControlItem();
+    bool addDefaultControlItem();    
 };
 
 } // namespace DYNAMIXEL
 
-#endif /* DYNAMIXEL_SLAVE_H_ */
+#endif /* DYNAMIXEL_SLAVE_HPP_ */
