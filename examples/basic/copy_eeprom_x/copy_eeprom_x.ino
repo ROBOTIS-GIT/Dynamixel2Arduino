@@ -48,7 +48,7 @@
 #endif
 
 #define MAX_BAUD  5
-const uint32_t buad[MAX_BAUD] = {57600, 115200, 1000000, 2000000, 3000000};
+const uint32_t baud[MAX_BAUD] = {57600, 115200, 1000000, 2000000, 3000000};
 #define INVALID_ID 253
 
 struct DxlList
@@ -121,11 +121,11 @@ bool scanDynamixel()
     {
       // Set Port baudrate.
       DEBUG_SERIAL.print(F("BAUDRATE "));
-      DEBUG_SERIAL.println(buad[index]);
-      dxl.begin(buad[index]);
+      DEBUG_SERIAL.println(baud[index]);
+      dxl.begin(baud[index]);
       for(uint8_t id = 0; id < DXL_BROADCAST_ID; id++) 
       {
-        //iterate until all ID in each buadrate is scanned.
+        //iterate until all ID in each baudrate is scanned.
         if(dxl.ping(id)) 
         {
           DEBUG_SERIAL.print(F("\tID : "));
@@ -133,7 +133,7 @@ bool scanDynamixel()
           DEBUG_SERIAL.print(F(", Model Number: "));
           DEBUG_SERIAL.println(dxl.getModelNumber(id));
           // Save detected DYNAMIXEL info (ID & baudrate) to global variable to access from copyEEPROM()
-          DXLArray[found_dynamixel] = {id, buad[index], protocol};
+          DXLArray[found_dynamixel] = {id, baud[index], protocol};
           found_dynamixel++;
           result = true;
         }
