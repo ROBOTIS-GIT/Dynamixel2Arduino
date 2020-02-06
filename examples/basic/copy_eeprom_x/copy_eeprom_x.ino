@@ -97,15 +97,15 @@ void setup()
   DEBUG_SERIAL.begin(115200);   //set debugging port baudrate to 115200bps
   while(!DEBUG_SERIAL);         //Wait until the serial port is opened
 
-  DEBUG_SERIAL.println("//*********** DYNAMIXEL X Series EEPROM Copy ***********//");
-  DEBUG_SERIAL.println("//*** This example is written for XM/XH Series Only ****//");
-  DEBUG_SERIAL.println("//********* Up to 10 DYNAMIXEL can be detected *********//\n");
+  DEBUG_SERIAL.println(F("//*********** DYNAMIXEL X Series EEPROM Copy ***********//"));
+  DEBUG_SERIAL.println(F("//*** This example is written for XM/XH Series Only ****//"));
+  DEBUG_SERIAL.println(F("//********* Up to 10 DYNAMIXEL can be detected *********//\n"));
   scanDynamixel();
 }
 
 bool scanDynamixel()
 {
-  memset(DXLArray, 0, 10);
+  memset(DXLArray, 0, sizeof(DXLArray));
   found_dynamixel = 0;
   bool result = false;
   int8_t index = 0;
@@ -114,13 +114,13 @@ bool scanDynamixel()
   {
     // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
     dxl.setPortProtocolVersion((float)protocol);
-    DEBUG_SERIAL.print("SCAN PROTOCOL ");
+    DEBUG_SERIAL.print(F("SCAN PROTOCOL "));
     DEBUG_SERIAL.println(protocol);
 
     for(index = 0; index < MAX_BAUD; index++) 
     {
       // Set Port baudrate.
-      DEBUG_SERIAL.print("BAUDRATE ");
+      DEBUG_SERIAL.print(F("BAUDRATE "));
       DEBUG_SERIAL.println(buad[index]);
       dxl.begin(buad[index]);
       for(uint8_t id = 0; id < DXL_BROADCAST_ID; id++) 
@@ -128,9 +128,9 @@ bool scanDynamixel()
         //iterate until all ID in each buadrate is scanned.
         if(dxl.ping(id)) 
         {
-          DEBUG_SERIAL.print("\tID : ");
+          DEBUG_SERIAL.print(F("\tID : "));
           DEBUG_SERIAL.print(id);
-          DEBUG_SERIAL.print(", Model Number: ");
+          DEBUG_SERIAL.print(F(", Model Number: "));
           DEBUG_SERIAL.println(dxl.getModelNumber(id));
           // Save detected DYNAMIXEL info (ID & baudrate) to global variable to access from copyEEPROM()
           DXLArray[found_dynamixel] = {id, buad[index], protocol};
@@ -140,9 +140,9 @@ bool scanDynamixel()
       }
     }
   }
-  DEBUG_SERIAL.print("\nTotal ");
+  DEBUG_SERIAL.print(F("\nTotal "));
   DEBUG_SERIAL.print(found_dynamixel);
-  DEBUG_SERIAL.println(" DYNAMIXEL(s) found!");
+  DEBUG_SERIAL.println(F(" DYNAMIXEL(s) found!"));
 
   return result;
 }
@@ -185,28 +185,28 @@ void safetyCheck(uint8_t id_a, uint8_t id_b)
 
   if(modelNumberA != modelNumberB)
   {
-    DEBUG_SERIAL.println("[ERROR] Please select identical DYNAMIXEL series!");
-    DEBUG_SERIAL.print("ID ");
+    DEBUG_SERIAL.println(F("[ERROR] Please select identical DYNAMIXEL series!"));
+    DEBUG_SERIAL.print(F("ID "));
     DEBUG_SERIAL.print(id_a);
-    DEBUG_SERIAL.print(" model number : ");
+    DEBUG_SERIAL.print(F(" model number : "));
     DEBUG_SERIAL.println(modelNumberA);
-    DEBUG_SERIAL.print("ID ");
+    DEBUG_SERIAL.print(F("ID "));
     DEBUG_SERIAL.print(id_b);
-    DEBUG_SERIAL.print(" model number : ");
+    DEBUG_SERIAL.print(F(" model number : "));
     DEBUG_SERIAL.println(modelNumberB);
   }
   else
   {
     if(fwVersionA != fwVersionB)
     {
-      DEBUG_SERIAL.println("[ERROR] DYNAMIXEL Firmware version do not match!");
-      DEBUG_SERIAL.print("ID ");
+      DEBUG_SERIAL.println(F("[ERROR] DYNAMIXEL Firmware version do not match!"));
+      DEBUG_SERIAL.print(F("ID "));
       DEBUG_SERIAL.print(id_a);
-      DEBUG_SERIAL.print(" firmware version : ");
+      DEBUG_SERIAL.print(F(" firmware version : "));
       DEBUG_SERIAL.println(modelNumberA);
-      DEBUG_SERIAL.print("ID ");
+      DEBUG_SERIAL.print(F("ID "));
       DEBUG_SERIAL.print(id_b);
-      DEBUG_SERIAL.print(" firmware version : ");
+      DEBUG_SERIAL.print(F(" firmware version : "));
       DEBUG_SERIAL.println(modelNumberB);
     }
     // Compare EEPROM Data
@@ -214,7 +214,7 @@ void safetyCheck(uint8_t id_a, uint8_t id_b)
     {
       if((saved_index_a != INVALID_ID) && (saved_index_b != INVALID_ID))
       {
-        for (int i = 0; i < sizeof(itemList); i++)
+        for (uint8_t i = 0; i < sizeof(itemList); i++)
         {
           dxl.setPortProtocolVersion((float)DXLArray[saved_index_a].dxl_protocol);
           dxl.begin(DXLArray[saved_index_a].dxl_baudrate);
@@ -235,16 +235,15 @@ void safetyCheck(uint8_t id_a, uint8_t id_b)
   }
 }
 
-bool copyEEPROM(int start_index)
+void copyEEPROM(uint8_t start_index)
 {
-  int i = start_index;
-  for (; i < sizeof(itemList); i++)
+  for (uint8_t i = start_index; i < sizeof(itemList); i++)
   {
     int32_t data = 0;
     dxl.setPortProtocolVersion((float)DXLArray[saved_index_a].dxl_protocol);
     dxl.begin(DXLArray[saved_index_a].dxl_baudrate);
     
-    DEBUG_SERIAL.print("Copying ");
+    DEBUG_SERIAL.print(F("Copying "));
     DEBUG_SERIAL.print(itemListStr[i]);
     
     data = dxl.readControlTableItem(itemList[i], DXLArray[saved_index_a].dxl_id);
@@ -254,11 +253,11 @@ bool copyEEPROM(int start_index)
 
     if(dxl.writeControlTableItem(itemList[i], DXLArray[saved_index_b].dxl_id, data))
     {
-      DEBUG_SERIAL.println(" Succeeded.");
+      DEBUG_SERIAL.println(F(" Succeeded."));
     }
     else 
     {
-      DEBUG_SERIAL.println(" Failed.");
+      DEBUG_SERIAL.println(F(" Failed."));
     }
   }
 }
@@ -276,55 +275,55 @@ bool copyBaudProtocol()
 
   dxl.setPortProtocolVersion((float)DXLArray[saved_index_b].dxl_protocol);
   dxl.begin(DXLArray[saved_index_b].dxl_baudrate);
-  DEBUG_SERIAL.print("Copying Protocol Version");
+  DEBUG_SERIAL.print(F("Copying Protocol Version"));
   if(dxl.writeControlTableItem(PROTOCOL_VERSION, DXLArray[saved_index_b].dxl_id, protocol))
   {
-    DEBUG_SERIAL.println("\tSucceeded.");
+    DEBUG_SERIAL.println(F("\tSucceeded."));
     ret = true;
   }
   else 
   {
-    DEBUG_SERIAL.println("\tFailed.");
+    DEBUG_SERIAL.println(F("\tFailed."));
   }
 
   dxl.setPortProtocolVersion((float)DXLArray[saved_index_a].dxl_protocol);
-  DEBUG_SERIAL.print("Copying Baud Rate");
+  DEBUG_SERIAL.print(F("Copying Baud Rate"));
   if(dxl.writeControlTableItem(BAUD_RATE, DXLArray[saved_index_b].dxl_id, baudrate))
   {
-    DEBUG_SERIAL.println("\tSucceeded.");
+    DEBUG_SERIAL.println(F("\tSucceeded."));
     ret = true;
   }
   else 
   {
-    DEBUG_SERIAL.println("\tFailed.");
+    DEBUG_SERIAL.println(F("\tFailed."));
   }
 
   if(ret==true)
   {
-    DEBUG_SERIAL.println("Also copy ID? [Y/N]");
-    DEBUG_SERIAL.println("**WARNING** Copying ID will cause communication collision!");
+    DEBUG_SERIAL.println(F("Also copy ID? [Y/N]"));
+    DEBUG_SERIAL.println(F("**WARNING** Copying ID will cause communication collision!"));
     while (!DEBUG_SERIAL.available());
     MasterString = DEBUG_SERIAL.read();
     DEBUG_SERIAL.read();  // This is called just to reset the Serial.available();
 
     if(MasterString == 'y' || MasterString == 'Y')
     {
-      DEBUG_SERIAL.print("Copying ID");
+      DEBUG_SERIAL.print(F("Copying ID"));
       if(!copyId())
       {
-        DEBUG_SERIAL.println("\tFailed.");
+        DEBUG_SERIAL.println(F("\tFailed."));
       }
       else
       {
-        DEBUG_SERIAL.println("\tSucceeded.");
+        DEBUG_SERIAL.println(F("\tSucceeded."));
       }
     }
     else
     {
-      DEBUG_SERIAL.println("Exit without copying ID.");
+      DEBUG_SERIAL.println(F("Exit without copying ID."));
     }
-    
   }
+  return ret;
 }
 
 bool copyId()
@@ -351,7 +350,7 @@ void loop()
   {
     scanDynamixel();
   }
-  DEBUG_SERIAL.print("\n[STEP 1] Please enter the DYNAMIXEL ID to read:  ");
+  DEBUG_SERIAL.print(F("\n[STEP 1] Please enter the DYNAMIXEL ID to read:  "));
 
   while (!DEBUG_SERIAL.available());
   MasterString = DEBUG_SERIAL.parseInt();
@@ -360,7 +359,7 @@ void loop()
 
   if((MasterString < 0) || (MasterString > INVALID_ID)) 
   {
-    DEBUG_SERIAL.println("\tERROR : ID out of range!!!\n");
+    DEBUG_SERIAL.println(F("\tERROR : ID out of range!!!\n"));
   }
   else 
   {
@@ -368,12 +367,12 @@ void loop()
 
     if(validIdCheck(dxl_a) == INVALID_ID)
     {
-      DEBUG_SERIAL.println("\tERROR : Invalid ID!!!\n");
+      DEBUG_SERIAL.println(F("\tERROR : Invalid ID!!!\n"));
     }
     else 
     {
       // compareEEPROM(dxl_a);
-      DEBUG_SERIAL.print("[STEP 2] Please enter the DYNAMIXEL ID to write:  ");
+      DEBUG_SERIAL.print(F("[STEP 2] Please enter the DYNAMIXEL ID to write:  "));
 
       while (!DEBUG_SERIAL.available());
       MasterString = DEBUG_SERIAL.parseInt();
@@ -381,14 +380,14 @@ void loop()
       DEBUG_SERIAL.println(MasterString);
       if((MasterString < 0) || (MasterString > INVALID_ID)) 
       {
-        DEBUG_SERIAL.println("\tERROR : ID out of range!!!\n");
+        DEBUG_SERIAL.println(F("\tERROR : ID out of range!!!\n"));
       }
       else 
       {
         dxl_b = (uint8_t)MasterString;
         if((validIdCheck(dxl_b) == INVALID_ID) || (dxl_b == dxl_a))
         {
-          DEBUG_SERIAL.println("\tERROR : Invalid ID!!!\n");
+          DEBUG_SERIAL.println(F("\tERROR : Invalid ID!!!\n"));
         }
         else
         {
@@ -397,9 +396,9 @@ void loop()
           // Start copying EEPROM data
           if((saved_index_a != INVALID_ID) && (saved_index_b != INVALID_ID))
           {
-            DEBUG_SERIAL.println("Start EEPROM copy? [Y/N/A]");
-            DEBUG_SERIAL.println("WARNING!!! [A] option will also copy ID, Baudrate, Protocol");
-            DEBUG_SERIAL.println("that will cause communication collision of connected DYNAMIXEL.");
+            DEBUG_SERIAL.println(F("Start EEPROM copy? [Y/N/A]"));
+            DEBUG_SERIAL.println(F("WARNING!!! [A] option will also copy ID, Baudrate, Protocol"));
+            DEBUG_SERIAL.println(F("that will cause communication collision of connected DYNAMIXEL."));
             while (!DEBUG_SERIAL.available());
             MasterString = DEBUG_SERIAL.read();
             DEBUG_SERIAL.read();  // This is called just to reset the Serial.available();
@@ -427,7 +426,7 @@ void loop()
     }
   }
 
-  DEBUG_SERIAL.println("\nScan DYNAMIXEL again? [Y/N]");
+  DEBUG_SERIAL.println(F("\nScan DYNAMIXEL again? [Y/N]"));
 
   while (!DEBUG_SERIAL.available());
   MasterString = DEBUG_SERIAL.read();
