@@ -34,6 +34,7 @@ const uint16_t model_number_table[] PROGMEM = {
     XL430_W250,
     XXL430_W250,
     XC430_W150,  XC430_W240,
+    XXC430_W250,
     XM430_W210,  XM430_W350,
     XM540_W150,  XM540_W270, 
     XH430_V210,  XH430_V350, XH430_W210, XH430_W350,
@@ -155,7 +156,7 @@ bool Dynamixel2Arduino::ping(uint8_t id)
   bool ret = false;
  
   if (id != DXL_BROADCAST_ID){
-    XelInfoFromPing_t recv_info;
+    InfoFromPing_t recv_info;
     if(Master::ping(id, &recv_info, 1, 10) > 0){
       if(recv_info.id == id){
         if(getPortProtocolVersion() == 1.0){
@@ -298,9 +299,10 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case MX28_2:
     case MX64_2:
     case MX106_2:
-    case XL430_W250:
     case XC430_W150:
     case XC430_W240:
+    case XXC430_W250:
+    case XL430_W250:
     case XXL430_W250:
     case XM430_W210:
     case XM430_W350:
@@ -595,9 +597,10 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
       break;
 
     case MX28_2:
-    case XL430_W250:
     case XC430_W150:
     case XC430_W240:
+    case XXC430_W250:
+    case XL430_W250:
     case XXL430_W250:
       if(mode == OP_POSITION){
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 3);
@@ -1337,6 +1340,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case MX28_2:
     case XC430_W150:
     case XC430_W240:
+    case XXC430_W250:
     case XL430_W250:
     case XXL430_W250:
       p_common_ctable = dependency_ctable_2_0_common;
