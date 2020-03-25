@@ -76,6 +76,9 @@
 #ifndef XC430_W240
 #define XC430_W240          (uint16_t)1080
 #endif
+#ifndef XXC430_W250
+#define XXC430_W250         (uint16_t)1160
+#endif
 
 #ifndef XL430_W250
 #define XL430_W250          (uint16_t)1060

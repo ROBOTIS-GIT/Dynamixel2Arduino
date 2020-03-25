@@ -17,7 +17,7 @@
 
 #define ENABLE_ACTUATOR_XL320           1
 #define ENABLE_ACTUATOR_XL430           1   //Includes 2XL430
-#define ENABLE_ACTUATOR_XC430           1
+#define ENABLE_ACTUATOR_XC430           1   //Includes 2XC430
 #define ENABLE_ACTUATOR_XM430           1
 #define ENABLE_ACTUATOR_XH430           1
 #define ENABLE_ACTUATOR_XM540           1
