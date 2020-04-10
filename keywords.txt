@@ -108,11 +108,28 @@ parse_dxl_packet	KEYWORD2
 
 # Master Class
 InfoFromPing_t	KEYWORD3
+InfoSyncBulkBuffer_t  KEYWORD3
+XELInfoSyncRead_t KEYWORD3
+InfoSyncReadInst_t  KEYWORD3
+XELInfoSyncWrite_t  KEYWORD3
+InfoSyncWriteInst_t KEYWORD3
+XELInfoBulkRead_t KEYWORD3
+InfoBulkReadInst_t  KEYWORD3
+XELInfoBulkWrite_t  KEYWORD3
+InfoBulkWriteInst_t KEYWORD3
 
 # protocol.h
 InfoToParseDXLPacket_t	KEYWORD3
 InfoToMakeDXLPacket_t	KEYWORD3
 DXLLibErrorCode_t	KEYWORD3
+
+# Master Class (deprecated)
+ParamForSyncReadInst_t	KEYWORD3
+ParamForSyncWriteInst_t	KEYWORD3
+ParamForBulkReadInst_t	KEYWORD3
+ParamForBulkWriteInst_t	KEYWORD3
+RecvInfoFromPing_t	KEYWORD3
+RecvInfoFromStatusInst_t	KEYWORD3
 
 ###########################################
 # Constants (LITERAL1)
