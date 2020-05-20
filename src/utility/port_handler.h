@@ -74,7 +74,10 @@ class SerialPortHandler : public DXLPortHandler
   #define USB_SERIAL_CLASS UARTClass
 #elif defined(ARDUINO_AVR_LEONARDO)
   // Arduino Leonardo USB Serial Port
-  #define USB_SERIAL_CLASS Serial_  
+  #define USB_SERIAL_CLASS Serial_
+#elif defined(ARDUINO_CommXEL)
+  #include "USBSerial.h"
+  #define USB_SERIAL_CLASS USBSerial
 #else
   #define USB_SERIAL_CLASS HardwareSerial
 #endif
