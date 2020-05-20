@@ -65,6 +65,9 @@ enum DXL2_0PacketError{
   DXL2_0_ERR_ACCESS
 };
 
+// To support legacy
+#define DXL_ERR_ACCESS DXL2_0_ERR_ACCESS
+
 enum DXL1_0PacketState{
   DXL1_0_PACKET_PARSING_STATE_IDLE = 0,
   DXL1_0_PACKET_PARSING_STATE_ID,
