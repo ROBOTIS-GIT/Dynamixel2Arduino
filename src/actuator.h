@@ -126,6 +126,12 @@
 #ifndef XH540_V270
 #define XH540_V270          (uint16_t)1140
 #endif
+#ifndef XW540_T140
+#define XW540_T140          (uint16_t)1180
+#endif
+#ifndef XW540_T260
+#define XW540_T260          (uint16_t)1170
+#endif
 
 #ifndef PRO_L42_10_S300_R
 #define PRO_L42_10_S300_R   (uint16_t)35072
