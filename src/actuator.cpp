@@ -171,7 +171,8 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
  || ENABLE_ACTUATOR_XL430 \
  || ENABLE_ACTUATOR_XC430 \
  || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
- || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
+ || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540) \
+ || ENABLE_ACTUATOR_XW540
   {ControlTableItem::MODEL_NUMBER,             0, 2},
   {ControlTableItem::MODEL_INFORMATION,        2, 4},
   {ControlTableItem::FIRMWARE_VERSION,         6, 1},
@@ -279,6 +280,15 @@ const ModelControlTableInfo_t xmh540_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
+const ModelControlTableInfo_t xw540_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XW540)
+  {ControlTableItem::CURRENT_LIMIT,           38, 2},
+
+  {ControlTableItem::GOAL_CURRENT,           102, 2},
+  {ControlTableItem::PRESENT_CURRENT,        126, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
 
 const ModelControlTableInfo_t pro_r_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_PRO_R)
@@ -487,7 +497,13 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case XH540_V270:
       p_common_ctable = control_table_2_0;
       p_dep_ctable = xmh540_control_table;
-      break;            
+      break;    
+
+    case XW540_T140:
+    case XW540_T260:
+      p_common_ctable = control_table_2_0;
+      p_dep_ctable = xw540_control_table;
+      break;
 
     // case PRO_L42_10_S300_R:
     // case PRO_L54_30_S400_R:
