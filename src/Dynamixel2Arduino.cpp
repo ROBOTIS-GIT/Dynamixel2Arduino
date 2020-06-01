@@ -39,6 +39,7 @@ const uint16_t model_number_table[] PROGMEM = {
     XM540_W150,  XM540_W270, 
     XH430_V210,  XH430_V350, XH430_W210, XH430_W350,
     XH540_V150,  XH540_V270, XH540_W150, XH540_W270,
+    XW540_T140,  XW540_T260,
 
     PRO_L42_10_S300_R,   
     PRO_L54_30_S400_R,   PRO_L54_30_S500_R,   PRO_L54_50_S290_R,   PRO_L54_50_S500_R,
@@ -316,6 +317,8 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XW540_T140:
+    case XW540_T260:    
       switch(baudrate)
       {
         case 9600:
@@ -627,6 +630,8 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XW540_T140:
+    case XW540_T260:    
       if(mode == OP_POSITION){
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 3);
       }else if(mode == OP_VELOCITY){
@@ -1092,8 +1097,9 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_v210_v350[] PROGMEM
   {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540_xw540[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540) \
+ || ENABLE_ACTUATOR_XW540
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
 #endif
@@ -1380,9 +1386,11 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XW540_T140:
+    case XW540_T260:
       p_common_ctable = dependency_ctable_2_0_common;
-      p_dep_ctable = dependency_xm540_xh540;
-      break;            
+      p_dep_ctable = dependency_xm540_xh540_xw540;
+      break;
 
     // case PRO_L42_10_S300_R:
     // case PRO_L54_30_S400_R:
