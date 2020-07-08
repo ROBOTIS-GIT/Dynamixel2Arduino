@@ -375,7 +375,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
     float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
     
     /**
-     * @brief It is API for getting present torque of DYNAMIXEL. 0 is on 1 is off
+     * @brief It is API for getting present torque of DYNAMIXEL. 1 is on 0 is off
      * @code
      * const int DXL_DIR_PIN = 2;
      * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
