@@ -15,7 +15,6 @@ script:
   - build_platform mkrzero
   - build_platform mkr1000
   - build_platform mkrwifi1010
-  - build_platform potenta
 
 notifications:
   email:
