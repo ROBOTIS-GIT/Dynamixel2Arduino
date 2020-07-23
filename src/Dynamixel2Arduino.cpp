@@ -920,7 +920,7 @@ float Dynamixel2Arduino::readForRangeDependencyFunc(uint8_t func_idx, uint8_t id
   if(model_num != UNREGISTERED_MODEL){
     item_info = getModelDependencyFuncInfo(model_num, func_idx);
 
-    if(item_info.item_idx != LAST_DUMMY_ITEM){
+    if(item_info.item_idx != ControlTableItem::LAST_DUMMY_ITEM){
       recv_data = readControlTableItem(model_num, item_info.item_idx, id);
       checkAndconvertReadData(recv_data, ret, unit, item_info);
     }else{
@@ -950,7 +950,7 @@ bool Dynamixel2Arduino::writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id
   if(model_num != UNREGISTERED_MODEL){
     item_info = getModelDependencyFuncInfo(model_num, func_idx);
 
-    if(item_info.item_idx == LAST_DUMMY_ITEM)
+    if(item_info.item_idx == ControlTableItem::LAST_DUMMY_ITEM)
       return false;
 
     if(checkAndconvertWriteData(value, data, unit, item_info) == false)
@@ -969,6 +969,7 @@ bool Dynamixel2Arduino::writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id
 
 
 /* Const structure & Static Function */
+using namespace ControlTableItem;
 
 /* AX series, XL320 (DX,RX,EX) */
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_0_common[] PROGMEM = {
@@ -982,7 +983,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_0_common[] PROGM
   {SET_VELOCITY, MOVING_SPEED, UNIT_PERCENT, 0, 2047, 0.1},
   {GET_VELOCITY, PRESENT_SPEED, UNIT_PERCENT, 0, 2047, 0.1},  
 #endif 
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ex[] PROGMEM = {
@@ -990,7 +991,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ex[] PROGMEM = {
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, 0, 4095, 0.06},
   {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, 0, 4095, 0.06},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 /* MX(1.0) series */
@@ -1005,7 +1006,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_1_1_common[] PROGM
   {SET_VELOCITY, MOVING_SPEED, UNIT_RPM, 0, 2047, 0.114},
   {GET_VELOCITY, PRESENT_SPEED, UNIT_RPM, 0, 2047, 0.114},  
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_mx12[] PROGMEM = {
@@ -1013,7 +1014,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx12[] PROGMEM = {
   {SET_VELOCITY, MOVING_SPEED, UNIT_RPM, 0, 2047, 0.916},
   {GET_VELOCITY, PRESENT_SPEED, UNIT_RPM, 0, 2047, 0.916},  
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_mx106[] PROGMEM = {
@@ -1022,7 +1023,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_mx106[] PROGMEM = {
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, 0, 2047, 4.5},
   {GET_CURRENT, CURRENT, UNIT_MILLI_AMPERE, 0, 4095, 4.5},  
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xl320[] PROGMEM = {
@@ -1033,7 +1034,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xl320[] PROGMEM = {
   {SET_VELOCITY, MOVING_SPEED, UNIT_PERCENT, 0, 2047, 0.1},
   {GET_VELOCITY, PRESENT_SPEED, UNIT_PERCENT, 0, 2047, 0.1},  
 #endif 
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 /* MX2.0, X series(without XL320) */
@@ -1054,7 +1055,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGM
   {SET_PWM, GOAL_PWM, UNIT_RAW, -885, 885, 1},
   {GET_PWM, PRESENT_PWM, UNIT_RAW, -885, 885, 1},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_2[] PROGMEM = {
@@ -1062,7 +1063,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_2[] PROGMEM = {
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_mx106_2[] PROGMEM = {
@@ -1070,7 +1071,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx106_2[] PROGMEM = {
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xm430_w210_w350[] PROGMEM = {
@@ -1078,7 +1079,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xm430_w210_w350[] PROGMEM
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_w210_w350[] PROGMEM = {
@@ -1086,7 +1087,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_w210_w350[] PROGMEM
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_v210_v350[] PROGMEM = {
@@ -1094,7 +1095,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_v210_v350[] PROGMEM
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540_xw540[] PROGMEM = {
@@ -1103,7 +1104,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540_xw540[] PROGM
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 
@@ -1119,7 +1120,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m42_10[] PROGMEM = 
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -900, 900, 4.02832},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -900, 900, 4.02832},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m54_40[] PROGMEM = {
@@ -1133,7 +1134,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m54_40[] PROGMEM = 
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -360, 360, 16.11328},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -360, 360, 16.11328},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m54_60[] PROGMEM = {
@@ -1147,7 +1148,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_m54_60[] PROGMEM = 
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -540, 540, 16.11328},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -540, 540, 16.11328},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h42_20[] PROGMEM = {
@@ -1161,7 +1162,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h42_20[] PROGMEM = 
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -1395, 1395, 4.02832},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1395, 1395, 4.02832},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h54_100[] PROGMEM = {
@@ -1175,7 +1176,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h54_100[] PROGMEM =
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -930, 930, 16.11328},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -930, 930, 16.11328},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h54_200[] PROGMEM = {
@@ -1189,7 +1190,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_r_h54_200[] PROGMEM =
   {SET_CURRENT, GOAL_TORQUE, UNIT_MILLI_AMPERE, -1860, 1860, 16.11328},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1860, 1860, 16.11328},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 
@@ -1200,7 +1201,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_pro_ra_pro_plus_mo
   {SET_PWM, GOAL_PWM, UNIT_RAW, -2009, 2009, 1},
   {GET_PWM, PRESENT_PWM, UNIT_RAW, -2009, 2009, 1},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m42_10[] PROGMEM = {
@@ -1215,7 +1216,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m42_10[] PROG
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1461, 1461, 1.0},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1461, 1461, 1.0},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m54_40[] PROGMEM = {
@@ -1230,7 +1231,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m54_40[] PROG
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -4470, 4470, 1.0},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -4470, 4470, 1.0},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m54_60[] PROGMEM = {
@@ -1245,7 +1246,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_m54_60[] PROG
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -7980, 7980, 1.0},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -7980, 7980, 1.0},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h42_20[] PROGMEM = {
@@ -1260,7 +1261,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h42_20[] PROG
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -4500, 4500, 1.0},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -4500, 4500, 1.0},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_100[] PROGMEM = {
@@ -1275,7 +1276,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_100[] PRO
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -15900, 15900, 1.0},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -15900, 15900, 1.0},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_200[] PROGMEM = {
@@ -1290,7 +1291,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_200[] PRO
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -22740, 22740, 1.0},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -22740, 22740, 1.0},
 #endif
-  {LAST_DUMMY_FUNC, LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 
@@ -1302,7 +1303,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
   ItemAndRangeInfo_t item_info;
   
   memset(&item_info, 0, sizeof(item_info));
-  item_info.item_idx = LAST_DUMMY_ITEM;
+  item_info.item_idx = ControlTableItem::LAST_DUMMY_ITEM;
 
   switch(model_num)
   {

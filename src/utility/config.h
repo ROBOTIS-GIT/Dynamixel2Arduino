@@ -80,6 +80,19 @@
 #endif
 // << Legacy (Deprecated since v0.4.0)
 
+#if defined(ARDUINO)
+  #include <Arduino.h>
+  #if !defined(ESP_PLATFORM) && !defined(ARDUINO_ARCH_MBED) 
+    #include <avr/pgmspace.h>
+  #endif
+#endif
 
+#if !defined(PROGMEM)
+  #define PROGMEM
+#endif
+
+#if !defined(pgm_read_word_near)
+  #define pgm_read_word_near(x) (*(uint16_t*)(x))
+#endif
 
 #endif /* DYNAMIXEL_CONFIG_H_ */
