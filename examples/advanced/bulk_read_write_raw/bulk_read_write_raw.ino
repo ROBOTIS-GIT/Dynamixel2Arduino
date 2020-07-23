@@ -117,6 +117,9 @@ DYNAMIXEL::XELInfoBulkWrite_t info_xels_bw[DXL_ID_CNT];
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
+//This namespace is required to use Control table item names
+using namespace ControlTableItem;
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(LED_BUILTIN, OUTPUT);

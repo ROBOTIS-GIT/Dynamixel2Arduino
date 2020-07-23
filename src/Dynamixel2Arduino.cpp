@@ -767,11 +767,18 @@ float Dynamixel2Arduino::getPresentCurrent(uint8_t id, uint8_t unit)
   return readForRangeDependencyFunc(GET_CURRENT, id, unit);
 }
 
-int Dynamixel2Arduino::getPresentTorque(uint8_t id)
+bool Dynamixel2Arduino::getTorqueEnableStat(uint8_t id)
 {
-  return readControlTableItem(ControlTableItem::TORQUE_ENABLE, id);
-}
+  bool ret = false;
 
+  if(readControlTableItem(ControlTableItem::TORQUE_ENABLE, id) == DXL_TORQUE_ON){
+    ret = true;
+  }else{
+    ret = false;
+  }
+
+  return ret;
+}
 
 int32_t Dynamixel2Arduino::readControlTableItem(uint8_t item_idx, uint8_t id, uint32_t timeout)
 {
