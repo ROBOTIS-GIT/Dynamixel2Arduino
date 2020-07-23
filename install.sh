@@ -8,7 +8,9 @@ fi
 
 # associative array for the platforms that will be verified in build_main_platforms()
 # this will be eval'd in the functions below because arrays can't be exported
-export MAIN_PLATFORMS='declare -A main_platforms=([uno]="arduino:avr:uno" [mega2560]="arduino:avr:mega:cpu=atmega2560" [leonardo]="arduino:avr:leonardo" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [mzero]="arduino:samd:mzero_bl" [mzeropro]="arduino:samd:mzero_pro_bl" [opencr]="OpenCR:OpenCR:OpenCR")'
+# For creating a new main platform, please refer to https://arduino.github.io/arduino-cli/latest/platform-specification/#hardware-folders-structure
+# and https://arduino.github.io/arduino-cli/latest/platform-specification/#boardstxt
+export MAIN_PLATFORMS='declare -A main_platforms=([uno]="arduino:avr:uno" [mega2560]="arduino:avr:mega:cpu=atmega2560" [leonardo]="arduino:avr:leonardo" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [mzero]="arduino:samd:mzero_bl" [mzeropro]="arduino:samd:mzero_pro_bl" [opencr]="OpenCR:OpenCR:OpenCR" [potenta]="arduino-beta:mbed:envie_m7")'
 
 # make display available for arduino CLI
 /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
