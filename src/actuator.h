@@ -4,6 +4,8 @@
 #include "stdint.h"
 #include "utility/config.h"
 
+#define DXL_TORQUE_ON  1
+#define DXL_TORQUE_OFF  0
 
 // The reason for checking #ifndef here is to avoid conflict with Dynamixel SDK.
 #ifndef AX12A
