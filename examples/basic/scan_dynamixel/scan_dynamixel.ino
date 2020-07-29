@@ -53,6 +53,9 @@ const int32_t buad[MAX_BAUD] = {57600, 115200, 1000000, 2000000, 3000000};
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
+//This namespace is required to use Control table item names
+using namespace ControlTableItem;
+
 void setup() {
   // put your setup code here, to run once:
   int8_t index = 0;

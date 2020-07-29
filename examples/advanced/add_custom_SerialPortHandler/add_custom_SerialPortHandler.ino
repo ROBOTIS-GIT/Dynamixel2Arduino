@@ -96,6 +96,8 @@ const float DXL_PROTOCOL_VERSION = 2.0;
 Dynamixel2Arduino dxl;
 NewSerialPortHandler dxl_port(DXL_SERIAL, DXL_DIR_PIN);
 
+//This namespace is required to use Control table item names
+using namespace ControlTableItem;
 
 void setup() {
   // put your setup code here, to run once:

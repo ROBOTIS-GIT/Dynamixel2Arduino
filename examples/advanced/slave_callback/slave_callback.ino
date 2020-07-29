@@ -70,6 +70,8 @@ const uint16_t ADDR_CONTROL_ITEM_ANALOG = 20;
 uint8_t control_item_led;
 int16_t control_item_analog;
 
+//This namespace is required to use Control table item names
+using namespace ControlTableItem;
 
 void setup() {
   // put your setup code here, to run once:

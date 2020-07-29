@@ -274,7 +274,7 @@ Master::read(uint8_t id, uint16_t addr, uint16_t addr_length,
     tx_param[param_len++] = (uint8_t)addr&0xFF;
     tx_param[param_len++] = (uint8_t)addr_length&0xFF;
   }
-  if(txInstPacket(id, DXL_INST_READ, (uint8_t*)&tx_param, param_len) == true){
+  if(txInstPacket(id, DXL_INST_READ, (uint8_t*)tx_param, param_len) == true){
     if(rxStatusPacket(p_recv_buf, recv_buf_capacity, timeout_ms) != nullptr){
       ret_param_len = (int32_t)info_rx_packet_.recv_param_len;
     }
@@ -797,7 +797,7 @@ Master::bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms)
       DXL_INST_BULK_READ, 0, p_packet_buf, packet_buf_cap);
     if(protocol_ver_idx_ == 1 && err == DXL_LIB_OK){
       tx_param[0] = 0x00;
-      err = add_param_to_dxl_packet(&info_tx_packet_, (uint8_t*)&tx_param, 1);
+      err = add_param_to_dxl_packet(&info_tx_packet_, (uint8_t*)tx_param, 1);
     }      
     if(err == DXL_LIB_OK){
       for(i=0; i<p_info->xel_count; i++){
@@ -989,8 +989,13 @@ Master::txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t pa
     }
   }
   if(err == DXL_LIB_OK){
-    p_port_->write(info_tx_packet_.p_packet_buf, info_tx_packet_.generated_packet_length);
-    ret = true;
+    if(p_port_->write(info_tx_packet_.p_packet_buf, info_tx_packet_.generated_packet_length)
+        == info_tx_packet_.generated_packet_length)
+    {
+      ret = true;
+    }else{
+      err = DXL_LIB_ERROR_PORT_WRITE;
+    }
   }
 
   last_lib_err_ = err;
@@ -1205,7 +1210,7 @@ bool Master::bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStat
     DXL_INST_BULK_READ, 0, p_packet_buf_, packet_buf_capacity_);
   if(protocol_ver_idx_ == 1 && err == DXL_LIB_OK){
     tx_param[0] = 0x00;
-    err = add_param_to_dxl_packet(&info_tx_packet_, (uint8_t*)&tx_param, 1);
+    err = add_param_to_dxl_packet(&info_tx_packet_, (uint8_t*)tx_param, 1);
   }      
   if(err == DXL_LIB_OK){
     for(i=0; i<param_info.id_count; i++){

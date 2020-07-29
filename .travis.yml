@@ -12,15 +12,17 @@ script:
   - build_platform zero
   - build_platform mzero
   - build_platform mzeropro
+  - build_platform mkrzero
+  - build_platform mkr1000
+  - build_platform mkrwifi1010
+  - build_platform portenta
 
 notifications:
   email:
     on_success: change
     on_failure: always
     recipients:
-      - kkw@robotis.com
-      - chc@robotis.com
-      - pyo@robotis.com
+      - willson@robotis.com
 
 branches:
   only:

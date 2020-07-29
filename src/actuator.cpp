@@ -550,7 +550,7 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
       break;
     }
     i++;
-  }while(item_idx != LAST_DUMMY_ITEM);
+  }while(item_idx != ControlTableItem::LAST_DUMMY_ITEM);
 
   if(p_dep_ctable == nullptr) {
     return item_info;
@@ -565,7 +565,7 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
       break;
     }
     i++;
-  }while(item_idx != LAST_DUMMY_ITEM);
+  }while(item_idx != ControlTableItem::LAST_DUMMY_ITEM);
 
   return item_info;
 }

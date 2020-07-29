@@ -2,7 +2,7 @@
 
 #if defined(ARDUINO)
   #include <Arduino.h>
-  #if !defined(ESP_PLATFORM)
+  #if !defined(ESP_PLATFORM) && !defined(ARDUINO_ARCH_MBED) 
     #include <avr/pgmspace.h>
   #endif
 #endif

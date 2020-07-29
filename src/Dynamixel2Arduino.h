@@ -373,6 +373,19 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastLibErrCode().
      */  
     float getPresentCurrent(uint8_t id, uint8_t unit = UNIT_RAW);    
+    
+    /**
+     * @brief It is API for getting the torque enabled / disabled status of DYNAMIXEL.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getTorqueEnableStat(1));
+     * @endcode
+     * @param id DYNAMIXEL Actuator's ID.
+     * @return It returns the Torque Enable data read from DXL control table item.
+     * If the Torque is On, true(1) is returned. Otherwise false(0) is returned.
+     */  
+    bool getTorqueEnableStat(uint8_t id);   
 
     /**
      * @brief It is API for getting data of a DYNAMIXEL control table item.

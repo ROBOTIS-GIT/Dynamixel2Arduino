@@ -55,6 +55,9 @@ uint32_t NEW_BAUDRATE = 1000000; //1Mbsp
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
+//This namespace is required to use Control table item names
+using namespace ControlTableItem;
+
 void setup() {
   // put your setup code here, to run once:
   

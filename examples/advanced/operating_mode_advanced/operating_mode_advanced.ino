@@ -52,6 +52,9 @@ const uint8_t DXL_ID = 1;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
+//This namespace is required to use Control table item names
+using namespace ControlTableItem;
+
 void setup() {
   // put your setup code here, to run once:
   DEBUG_SERIAL.begin(115200);
