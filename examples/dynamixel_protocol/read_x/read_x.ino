@@ -47,18 +47,21 @@
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
 
+//Please see eManual Control Table section of your DYNAMIXEL.
+//This example is written based on DYNAMIXEL X series(excluding XL-320)
+#define ID_ADDR                 7
+#define ID_ADDR_LEN             1
+#define BAUDRATE_ADDR           8
+#define BAUDRATE_ADDR_LEN       1
+#define PROTOCOL_TYPE_ADDR      13
+#define PROTOCOL_TYPE_ADDR_LEN  1
 #define TIMEOUT 10    //default communication timeout 10ms
-#define BROADCAST_ID  254
-#define MODEL_NUMBER_ADDR  0
-#define MODEL_NUMBER_LENGTH  2
 
-DYNAMIXEL::InfoFromPing_t recv_info[32];  //Set the maximum DYNAMIXEL in the network to 32
+uint8_t returned_id = 0;
+uint8_t returned_baudrate = 0;
+uint8_t returned_protocol = 0;
 
-uint16_t model_num = 0;
-uint8_t ret = 0;
-uint8_t recv_count = 0;
-
-const uint8_t DXL_ID = BROADCAST_ID;
+const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
@@ -75,26 +78,27 @@ void setup() {
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
 
-  DEBUG_SERIAL.print("Ping for PROTOCOL ");
+  DEBUG_SERIAL.println("Refer to eManual for more details.");
+  DEBUG_SERIAL.println("https://emanual.robotis.com/docs/en/dxl/");
+  DEBUG_SERIAL.print("Read for PROTOCOL ");
   DEBUG_SERIAL.print(DXL_PROTOCOL_VERSION, 1);
   DEBUG_SERIAL.print(", ID ");
   DEBUG_SERIAL.println(DXL_ID);
 
-  ret = dxl.ping(DXL_ID, recv_info, sizeof(recv_info), sizeof(recv_info)*3);
-
-  if(ret > 0) {
-    while (recv_count < ret) {
-      DEBUG_SERIAL.print("DYNAMIXEL Detected!");
-      dxl.read(recv_info[recv_count].id, MODEL_NUMBER_ADDR, MODEL_NUMBER_LENGTH, (uint8_t*)&model_num, sizeof(model_num), TIMEOUT);
-      DEBUG_SERIAL.print(", ID: ");
-      DEBUG_SERIAL.print(recv_info[recv_count].id);
-      DEBUG_SERIAL.print(" Model Number: ");
-      DEBUG_SERIAL.println(model_num);
-      recv_count++;
-    }
-  } else {
-    DEBUG_SERIAL.println("ping failed!");
-  }
+  // Read DYNAMIXEL ID
+  dxl.read(DXL_ID, ID_ADDR, ID_ADDR_LEN, (uint8_t*)&returned_id, sizeof(returned_id), TIMEOUT);
+  DEBUG_SERIAL.print("ID : ");
+  DEBUG_SERIAL.println(returned_id);
+  delay(100);
+  // Read DYNAMIXEL Baudrate
+  dxl.read(DXL_ID, BAUDRATE_ADDR, BAUDRATE_ADDR_LEN, (uint8_t*)&returned_baudrate, sizeof(returned_baudrate), TIMEOUT);
+  DEBUG_SERIAL.print("Baud Rate : ");
+  DEBUG_SERIAL.println(returned_baudrate);
+  delay(100);
+  // Read DYNAMIXEL Protocol type
+  dxl.read(DXL_ID, PROTOCOL_TYPE_ADDR, PROTOCOL_TYPE_ADDR_LEN, (uint8_t*)&returned_protocol, sizeof(returned_protocol), TIMEOUT);
+  DEBUG_SERIAL.print("Protocol Type : ");
+  DEBUG_SERIAL.println(returned_protocol);
 }
 
 void loop() {

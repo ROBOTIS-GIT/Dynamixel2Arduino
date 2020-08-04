@@ -51,6 +51,9 @@
 const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
+bool ret = false;
+uint8_t option = 0;
+
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
 void setup() {
@@ -68,11 +71,10 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
-  bool ret = false;
+  ret = false;
 
   // DYNAMIXEL protocol version 2.0 instruction
-  if(DXL_PROTOCOL_VERSION == 2.0){
+  if(DXL_PROTOCOL_VERSION == 2.0) {
     DEBUG_SERIAL.println("Select Reset Option:");
     DEBUG_SERIAL.println("[1] Reset all value");
     DEBUG_SERIAL.println("[2] Reset all value except ID");
@@ -80,7 +82,7 @@ void loop() {
 
     DEBUG_SERIAL.read();
     while(DEBUG_SERIAL.available()==0);
-    uint8_t option = DEBUG_SERIAL.read();
+    option = DEBUG_SERIAL.read();
 
     switch(option) {
       case '1': // reset all value
@@ -98,15 +100,30 @@ void loop() {
     }
   }
   //DYNAMIXEL protocol version 1.0 instruction
-  else if(DXL_PROTOCOL_VERSION == 1.0){ // reset all value
+  else {
     // if DXL_ID is Broadcast ID, this instruction will not work
-    ret = dxl.factoryReset(DXL_ID, 0xFF, TIMEOUT);
+    DEBUG_SERIAL.println();
+    DEBUG_SERIAL.println("Proceed Factory Reset? [y/n]");
+
+    DEBUG_SERIAL.read();
+    while(DEBUG_SERIAL.available()==0);
+    option = DEBUG_SERIAL.read();
+
+    switch(option) {
+      case 'y':
+      case 'Y':
+        ret = dxl.factoryReset(DXL_ID, 0xFF, TIMEOUT);
+        break;
+      default:
+        break;
+    }
   }
 
-  if(ret)
-      DEBUG_SERIAL.println("factory reset succeeded!");
-  else
-      DEBUG_SERIAL.println("factory reset failed!");
+  if(ret) {
+    DEBUG_SERIAL.println("factory reset succeeded!");
+  } else {
+    DEBUG_SERIAL.println("factory reset failed!");
+  }
 
   delay(1000);
 }

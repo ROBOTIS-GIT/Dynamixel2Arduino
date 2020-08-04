@@ -47,20 +47,30 @@
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
 
+//Please see eManual Control Table section of your DYNAMIXEL.
+//This example is written for DYNAMIXEL X series(excluding XL-320)
+#define OPERATING_MODE_ADDR         11
+#define OPERATING_MODE_ADDR_LEN     1
+#define TORQUE_ENABLE_ADDR          64
+#define TORQUE_ENABLE_ADDR_LEN      1
+#define LED_ADDR                    65
+#define LED_ADDR_LEN                1
+#define GOAL_POSITION_ADDR          116
+#define GOAL_POSITION_ADDR_LEN      4
+#define PRESENT_POSITION_ADDR       132
+#define PRESENT_POSITION_ADDR_LEN   4
+#define POSITION_CONTROL_MODE       3
 #define TIMEOUT 10    //default communication timeout 10ms
-#define ID_ADDR                 7
-#define ID_ADDR_LEN             1
-#define BAUDRATE_ADDR           8
-#define BAUDRATE_ADDR_LEN       1
-#define PROTOCOL_TYPE_ADDR      13
-#define PROTOCOL_TYPE_ADDR_LEN  1
 
-int32_t ret = 0;
-uint8_t enable = 1;
-uint8_t disable = 0;
+uint8_t turn_on = 1;
+uint8_t turn_off = 0;
 
 const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
+
+uint8_t operatingMode = POSITION_CONTROL_MODE;
+uint32_t goalPosition1 = 512;
+uint32_t goalPosition2 = 2048;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
@@ -76,23 +86,48 @@ void setup() {
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
 
-  // Read DYNAMIXEL ID
-  DEBUG_SERIAL.print("ID : ");
-  dxl.read(DXL_ID, ID_ADDR, ID_ADDR_LEN, (uint8_t*)&ret, sizeof(ret), TIMEOUT);
-  DEBUG_SERIAL.println(ret);
-  delay(1000);
-  // Read DYNAMIXEL Baudrate
-  DEBUG_SERIAL.print("Baud Rate : ");
-  dxl.read(DXL_ID, BAUDRATE_ADDR, BAUDRATE_ADDR_LEN, (uint8_t*)&ret, sizeof(ret), TIMEOUT);
-  DEBUG_SERIAL.println(ret);
-  delay(1000);
-  // Read DYNAMIXEL Protocol type
-  DEBUG_SERIAL.print("Protocol Type : ");
-  dxl.read(DXL_ID, PROTOCOL_TYPE_ADDR, PROTOCOL_TYPE_ADDR_LEN, (uint8_t*)&ret, sizeof(ret), TIMEOUT);
-  DEBUG_SERIAL.println(ret);
-  delay(1000);
+  // Turn off torque when configuring items in EEPROM area
+  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&turn_off , TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
+    DEBUG_SERIAL.println("DYNAMIXEL Torque off");
+  else
+    DEBUG_SERIAL.println("Error: Torque off failed");
+
+  // Set Operating Mode
+  if(dxl.write(DXL_ID, OPERATING_MODE_ADDR, (uint8_t*)&operatingMode, OPERATING_MODE_ADDR_LEN, TIMEOUT))
+    DEBUG_SERIAL.println("Set operating mode");
+  else
+    DEBUG_SERIAL.println("Error: Set operating mode failed");
+
+  // Turn on torque
+  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&turn_on, TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
+    DEBUG_SERIAL.println("Torque on");
+  else
+    DEBUG_SERIAL.println("Error: Torque on failed");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  // LED On
+  DEBUG_SERIAL.println("LED ON");
+  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&turn_on, LED_ADDR_LEN, TIMEOUT);
+  delay(500);
+  
+  // Please refer to e-Manual(http://emanual.robotis.com/docs/en/parts/interface/dynamixel_shield/) for available range of value. 
+  // Set Goal Position
+  DEBUG_SERIAL.print("Goal Position : ");
+  DEBUG_SERIAL.println(goalPosition1);
+  dxl.write(DXL_ID, GOAL_POSITION_ADDR, (uint8_t*)&goalPosition1, GOAL_POSITION_ADDR_LEN, TIMEOUT);
+  delay(1000);
+  
+  // LED Off
+  DEBUG_SERIAL.println("LED OFF");
+  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&turn_off, LED_ADDR_LEN, TIMEOUT);
+  delay(500);
+
+  // Set Goal Position
+  DEBUG_SERIAL.print("Goal Position : ");
+  DEBUG_SERIAL.println(goalPosition2);
+  dxl.write(DXL_ID, GOAL_POSITION_ADDR, (uint8_t*)&goalPosition2, GOAL_POSITION_ADDR_LEN, TIMEOUT);
+  delay(1000);
 }

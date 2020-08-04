@@ -47,34 +47,38 @@
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
 
-#define TIMEOUT 10    //default communication timeout 10ms
-#define OPERATING_MODE_ADDR         11
-#define OPERATING_MODE_ADDR_LEN     1
-#define TORQUE_ENABLE_ADDR          64
+//Please see eManual Control Table section of your DYNAMIXEL.
+//This example is written for DYNAMIXEL AX & MX series with Protocol 1.0.
+//For MX 2.0 with Protocol 2.0, refer to write_x.ino example.
+#define CW_ANGLE_LIMIT_ADDR         6
+#define CCW_ANGLE_LIMIT_ADDR        8
+#define ANGLE_LIMIT_ADDR_LEN        2
+#define OPERATING_MODE_ADDR_LEN     2
+#define TORQUE_ENABLE_ADDR          24
 #define TORQUE_ENABLE_ADDR_LEN      1
-#define LED_ADDR                    65
+#define LED_ADDR                    25
 #define LED_ADDR_LEN                1
-#define GOAL_POSITION_ADDR          116
-#define GOAL_POSITION_ADDR_LEN      4
-#define PRESENT_POSITION_ADDR       132
-#define PRESENT_POSITION_ADDR_LEN   4
+#define GOAL_POSITION_ADDR          30
+#define GOAL_POSITION_ADDR_LEN      2
+#define PRESENT_POSITION_ADDR       36
+#define PRESENT_POSITION_ADDR_LEN   2
+#define TIMEOUT 10    //default communication timeout 10ms
 
-uint8_t enable = 1;
-uint8_t disable = 0;
+uint8_t turn_on = 1;
+uint8_t turn_off = 0;
 
 const uint8_t DXL_ID = 1;
-const float DXL_PROTOCOL_VERSION = 2.0;
+const float DXL_PROTOCOL_VERSION = 1.0;
 
-uint8_t operatingMode = 3;
-uint32_t goalPosition1 = 512;
-uint32_t goalPosition2 = 2048;
+uint16_t goalPosition1 = 0;
+uint16_t goalPosition2 = 1023;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
 void setup() {
   // put your setup code here, to run once:
   
-  // Use UART port of DYNAMIXEL Shield to debug.
+  // For Uno, Nano, Mini, and Mega, use UART port of DYNAMIXEL Shield to debug.
   DEBUG_SERIAL.begin(115200);   //Set debugging port baudrate to 115200bps
   while(!DEBUG_SERIAL);         //Wait until the serial port for terminal is opened
   
@@ -84,22 +88,23 @@ void setup() {
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
 
   // Turn off torque when configuring items in EEPROM area
-  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&disable , TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
-    DEBUG_SERIAL.println("Torque off");
+  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&turn_off , TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
+    DEBUG_SERIAL.println("DYNAMIXEL Torque off");
   else
-    DEBUG_SERIAL.println("Error : Torque off");
+    DEBUG_SERIAL.println("Error: Torque off failed");
 
-  // Set Operating Mode
-  if(dxl.write(DXL_ID, OPERATING_MODE_ADDR, (uint8_t*)&operatingMode, OPERATING_MODE_ADDR_LEN, TIMEOUT))
+  // Set to Joint Mode
+  if(dxl.write(DXL_ID, CW_ANGLE_LIMIT_ADDR, (uint8_t*)&goalPosition1, ANGLE_LIMIT_ADDR_LEN, TIMEOUT)
+        && dxl.write(DXL_ID, CCW_ANGLE_LIMIT_ADDR, (uint8_t*)&goalPosition2, ANGLE_LIMIT_ADDR_LEN, TIMEOUT))
     DEBUG_SERIAL.println("Set operating mode");
   else
-    DEBUG_SERIAL.println("Error : Set operating mode");
+    DEBUG_SERIAL.println("Error: Set operating mode failed");
 
   // Turn on torque
-  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&enable, TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
+  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&turn_on, TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
     DEBUG_SERIAL.println("Torque on");
   else
-    DEBUG_SERIAL.println("Error : Torque on");
+    DEBUG_SERIAL.println("Error: Torque on failed");
 }
 
 void loop() {
@@ -107,7 +112,7 @@ void loop() {
 
   // LED On
   DEBUG_SERIAL.println("LED ON");
-  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&enable, LED_ADDR_LEN, TIMEOUT);
+  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&turn_on, LED_ADDR_LEN, TIMEOUT);
   delay(500);
   
   // Please refer to e-Manual(http://emanual.robotis.com/docs/en/parts/interface/dynamixel_shield/) for available range of value. 
@@ -119,7 +124,7 @@ void loop() {
   
   // LED Off
   DEBUG_SERIAL.println("LED OFF");
-  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&disable, LED_ADDR_LEN, TIMEOUT);
+  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&turn_off, LED_ADDR_LEN, TIMEOUT);
   delay(500);
 
   // Set Goal Position

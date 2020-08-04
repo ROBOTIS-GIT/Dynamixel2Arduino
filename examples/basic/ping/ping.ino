@@ -105,7 +105,7 @@ void FindServos(void) {
       Serial.print(", Model:");
       Serial.print(ping_info[i].model_number);
       Serial.print(", Ver:");
-      Serial.println(ping_info[i].firmware_version, HEX);
+      Serial.println(ping_info[i].firmware_version, DEC);
       //g_servo_protocol[i] = 2;
     }
   }else{
