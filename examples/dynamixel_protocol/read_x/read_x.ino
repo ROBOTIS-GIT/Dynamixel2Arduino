@@ -46,70 +46,61 @@
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
- 
+
+//Please see eManual Control Table section of your DYNAMIXEL.
+//This example is written based on DYNAMIXEL X series(excluding XL-320)
+#define ID_ADDR                 7
+#define ID_ADDR_LEN             1
+#define BAUDRATE_ADDR           8
+#define BAUDRATE_ADDR_LEN       1
+#define PROTOCOL_TYPE_ADDR      13
+#define PROTOCOL_TYPE_ADDR_LEN  1
+#define TIMEOUT 10    //default communication timeout 10ms
+
+uint8_t returned_id = 0;
+uint8_t returned_baudrate = 0;
+uint8_t returned_protocol = 0;
 
 const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
-//This namespace is required to use Control table item names
-using namespace ControlTableItem;
-
 void setup() {
   // put your setup code here, to run once:
-
-  // Use Serial to debug.
-  DEBUG_SERIAL.begin(115200);
-
+  
+  // Use UART port of DYNAMIXEL Shield to debug.
+  DEBUG_SERIAL.begin(115200);   //Set debugging port baudrate to 115200bps
+  while(!DEBUG_SERIAL);         //Wait until the serial port for terminal is opened
+  
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
+
+  DEBUG_SERIAL.println("Refer to eManual for more details.");
+  DEBUG_SERIAL.println("https://emanual.robotis.com/docs/en/dxl/");
+  DEBUG_SERIAL.print("Read for PROTOCOL ");
+  DEBUG_SERIAL.print(DXL_PROTOCOL_VERSION, 1);
+  DEBUG_SERIAL.print(", ID ");
+  DEBUG_SERIAL.println(DXL_ID);
+
+  // Read DYNAMIXEL ID
+  dxl.read(DXL_ID, ID_ADDR, ID_ADDR_LEN, (uint8_t*)&returned_id, sizeof(returned_id), TIMEOUT);
+  DEBUG_SERIAL.print("ID : ");
+  DEBUG_SERIAL.println(returned_id);
+  delay(100);
+  // Read DYNAMIXEL Baudrate
+  dxl.read(DXL_ID, BAUDRATE_ADDR, BAUDRATE_ADDR_LEN, (uint8_t*)&returned_baudrate, sizeof(returned_baudrate), TIMEOUT);
+  DEBUG_SERIAL.print("Baud Rate : ");
+  DEBUG_SERIAL.println(returned_baudrate);
+  delay(100);
+  // Read DYNAMIXEL Protocol type
+  dxl.read(DXL_ID, PROTOCOL_TYPE_ADDR, PROTOCOL_TYPE_ADDR_LEN, (uint8_t*)&returned_protocol, sizeof(returned_protocol), TIMEOUT);
+  DEBUG_SERIAL.print("Protocol Type : ");
+  DEBUG_SERIAL.println(returned_protocol);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
-  DEBUG_SERIAL.print("PROTOCOL ");
-  DEBUG_SERIAL.print(DXL_PROTOCOL_VERSION, 1);
-  DEBUG_SERIAL.print(", ID ");
-  DEBUG_SERIAL.print(DXL_ID);
-  DEBUG_SERIAL.print(": ");
-  if(dxl.ping(DXL_ID) == true){
-    DEBUG_SERIAL.print("ping succeeded!");
-    DEBUG_SERIAL.print(", Model Number: ");
-    DEBUG_SERIAL.println(dxl.getModelNumber(DXL_ID));
-  }else{
-    DEBUG_SERIAL.print("ping failed!, err code: ");
-    DEBUG_SERIAL.println(dxl.getLastLibErrCode());
-  }
-  delay(500);
-
-  FindServos();
-}
-
-
-DYNAMIXEL::InfoFromPing_t ping_info[32];
-void FindServos(void) {
-  Serial.println("  Try Protocol 2 - broadcast ping: ");
-  Serial.flush(); // flush it as ping may take awhile... 
-      
-  if (uint8_t count_pinged = dxl.ping(DXL_BROADCAST_ID, ping_info, 
-    sizeof(ping_info)/sizeof(ping_info[0]))) {
-    Serial.print("Detected Dynamixel : \n");
-    for (int i = 0; i < count_pinged; i++)
-    {
-      Serial.print("    ");
-      Serial.print(ping_info[i].id, DEC);
-      Serial.print(", Model:");
-      Serial.print(ping_info[i].model_number);
-      Serial.print(", Ver:");
-      Serial.println(ping_info[i].firmware_version, DEC);
-      //g_servo_protocol[i] = 2;
-    }
-  }else{
-    Serial.print("Broadcast returned no items : ");
-    Serial.println(dxl.getLastLibErrCode());
-  }
 }

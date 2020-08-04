@@ -46,70 +46,90 @@
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
- 
+
+//Please see eManual Control Table section of your DYNAMIXEL.
+//This example is written for DYNAMIXEL AX & MX series with Protocol 1.0.
+//For MX 2.0 with Protocol 2.0, refer to write_x.ino example.
+#define CW_ANGLE_LIMIT_ADDR         6
+#define CCW_ANGLE_LIMIT_ADDR        8
+#define ANGLE_LIMIT_ADDR_LEN        2
+#define OPERATING_MODE_ADDR_LEN     2
+#define TORQUE_ENABLE_ADDR          24
+#define TORQUE_ENABLE_ADDR_LEN      1
+#define LED_ADDR                    25
+#define LED_ADDR_LEN                1
+#define GOAL_POSITION_ADDR          30
+#define GOAL_POSITION_ADDR_LEN      2
+#define PRESENT_POSITION_ADDR       36
+#define PRESENT_POSITION_ADDR_LEN   2
+#define TIMEOUT 10    //default communication timeout 10ms
+
+uint8_t turn_on = 1;
+uint8_t turn_off = 0;
 
 const uint8_t DXL_ID = 1;
-const float DXL_PROTOCOL_VERSION = 2.0;
+const float DXL_PROTOCOL_VERSION = 1.0;
+
+uint16_t goalPosition1 = 0;
+uint16_t goalPosition2 = 1023;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
-//This namespace is required to use Control table item names
-using namespace ControlTableItem;
-
 void setup() {
   // put your setup code here, to run once:
-
-  // Use Serial to debug.
-  DEBUG_SERIAL.begin(115200);
-
+  
+  // For Uno, Nano, Mini, and Mega, use UART port of DYNAMIXEL Shield to debug.
+  DEBUG_SERIAL.begin(115200);   //Set debugging port baudrate to 115200bps
+  while(!DEBUG_SERIAL);         //Wait until the serial port for terminal is opened
+  
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
+
+  // Turn off torque when configuring items in EEPROM area
+  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&turn_off , TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
+    DEBUG_SERIAL.println("DYNAMIXEL Torque off");
+  else
+    DEBUG_SERIAL.println("Error: Torque off failed");
+
+  // Set to Joint Mode
+  if(dxl.write(DXL_ID, CW_ANGLE_LIMIT_ADDR, (uint8_t*)&goalPosition1, ANGLE_LIMIT_ADDR_LEN, TIMEOUT)
+        && dxl.write(DXL_ID, CCW_ANGLE_LIMIT_ADDR, (uint8_t*)&goalPosition2, ANGLE_LIMIT_ADDR_LEN, TIMEOUT))
+    DEBUG_SERIAL.println("Set operating mode");
+  else
+    DEBUG_SERIAL.println("Error: Set operating mode failed");
+
+  // Turn on torque
+  if(dxl.write(DXL_ID, TORQUE_ENABLE_ADDR, (uint8_t*)&turn_on, TORQUE_ENABLE_ADDR_LEN, TIMEOUT))
+    DEBUG_SERIAL.println("Torque on");
+  else
+    DEBUG_SERIAL.println("Error: Torque on failed");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  DEBUG_SERIAL.print("PROTOCOL ");
-  DEBUG_SERIAL.print(DXL_PROTOCOL_VERSION, 1);
-  DEBUG_SERIAL.print(", ID ");
-  DEBUG_SERIAL.print(DXL_ID);
-  DEBUG_SERIAL.print(": ");
-  if(dxl.ping(DXL_ID) == true){
-    DEBUG_SERIAL.print("ping succeeded!");
-    DEBUG_SERIAL.print(", Model Number: ");
-    DEBUG_SERIAL.println(dxl.getModelNumber(DXL_ID));
-  }else{
-    DEBUG_SERIAL.print("ping failed!, err code: ");
-    DEBUG_SERIAL.println(dxl.getLastLibErrCode());
-  }
+  // LED On
+  DEBUG_SERIAL.println("LED ON");
+  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&turn_on, LED_ADDR_LEN, TIMEOUT);
+  delay(500);
+  
+  // Please refer to e-Manual(http://emanual.robotis.com/docs/en/parts/interface/dynamixel_shield/) for available range of value. 
+  // Set Goal Position
+  DEBUG_SERIAL.print("Goal Position : ");
+  DEBUG_SERIAL.println(goalPosition1);
+  dxl.write(DXL_ID, GOAL_POSITION_ADDR, (uint8_t*)&goalPosition1, GOAL_POSITION_ADDR_LEN, TIMEOUT);
+  delay(1000);
+  
+  // LED Off
+  DEBUG_SERIAL.println("LED OFF");
+  dxl.write(DXL_ID, LED_ADDR, (uint8_t*)&turn_off, LED_ADDR_LEN, TIMEOUT);
   delay(500);
 
-  FindServos();
-}
-
-
-DYNAMIXEL::InfoFromPing_t ping_info[32];
-void FindServos(void) {
-  Serial.println("  Try Protocol 2 - broadcast ping: ");
-  Serial.flush(); // flush it as ping may take awhile... 
-      
-  if (uint8_t count_pinged = dxl.ping(DXL_BROADCAST_ID, ping_info, 
-    sizeof(ping_info)/sizeof(ping_info[0]))) {
-    Serial.print("Detected Dynamixel : \n");
-    for (int i = 0; i < count_pinged; i++)
-    {
-      Serial.print("    ");
-      Serial.print(ping_info[i].id, DEC);
-      Serial.print(", Model:");
-      Serial.print(ping_info[i].model_number);
-      Serial.print(", Ver:");
-      Serial.println(ping_info[i].firmware_version, DEC);
-      //g_servo_protocol[i] = 2;
-    }
-  }else{
-    Serial.print("Broadcast returned no items : ");
-    Serial.println(dxl.getLastLibErrCode());
-  }
+  // Set Goal Position
+  DEBUG_SERIAL.print("Goal Position : ");
+  DEBUG_SERIAL.println(goalPosition2);
+  dxl.write(DXL_ID, GOAL_POSITION_ADDR, (uint8_t*)&goalPosition2, GOAL_POSITION_ADDR_LEN, TIMEOUT);
+  delay(1000);
 }

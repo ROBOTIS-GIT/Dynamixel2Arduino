@@ -46,22 +46,21 @@
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
- 
 
+#define TIMEOUT 10    //default communication timeout 10ms
 const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
+uint8_t option = 0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
-//This namespace is required to use Control table item names
-using namespace ControlTableItem;
-
 void setup() {
   // put your setup code here, to run once:
-
-  // Use Serial to debug.
-  DEBUG_SERIAL.begin(115200);
-
+  
+  // Use UART port of DYNAMIXEL Shield to debug.
+  DEBUG_SERIAL.begin(115200);   //Set debugging port baudrate to 115200bps
+  while(!DEBUG_SERIAL);         //Wait until the serial port for terminal is opened
+  
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
@@ -71,45 +70,27 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  DEBUG_SERIAL.print("PROTOCOL ");
-  DEBUG_SERIAL.print(DXL_PROTOCOL_VERSION, 1);
-  DEBUG_SERIAL.print(", ID ");
-  DEBUG_SERIAL.print(DXL_ID);
-  DEBUG_SERIAL.print(": ");
-  if(dxl.ping(DXL_ID) == true){
-    DEBUG_SERIAL.print("ping succeeded!");
-    DEBUG_SERIAL.print(", Model Number: ");
-    DEBUG_SERIAL.println(dxl.getModelNumber(DXL_ID));
-  }else{
-    DEBUG_SERIAL.print("ping failed!, err code: ");
-    DEBUG_SERIAL.println(dxl.getLastLibErrCode());
+  bool ret = false;
+  DEBUG_SERIAL.println();
+  DEBUG_SERIAL.println("Reboot DYNAMIXEL? [y/n]");
+
+  DEBUG_SERIAL.read();
+  while(DEBUG_SERIAL.available()==0);
+  option = DEBUG_SERIAL.read();
+
+  switch(option) {
+    case 'y':
+    case 'Y':
+      ret = dxl.reboot(DXL_ID, TIMEOUT);
+      break;
+    default:
+      break;
   }
-  delay(500);
-
-  FindServos();
-}
-
-
-DYNAMIXEL::InfoFromPing_t ping_info[32];
-void FindServos(void) {
-  Serial.println("  Try Protocol 2 - broadcast ping: ");
-  Serial.flush(); // flush it as ping may take awhile... 
-      
-  if (uint8_t count_pinged = dxl.ping(DXL_BROADCAST_ID, ping_info, 
-    sizeof(ping_info)/sizeof(ping_info[0]))) {
-    Serial.print("Detected Dynamixel : \n");
-    for (int i = 0; i < count_pinged; i++)
-    {
-      Serial.print("    ");
-      Serial.print(ping_info[i].id, DEC);
-      Serial.print(", Model:");
-      Serial.print(ping_info[i].model_number);
-      Serial.print(", Ver:");
-      Serial.println(ping_info[i].firmware_version, DEC);
-      //g_servo_protocol[i] = 2;
-    }
-  }else{
-    Serial.print("Broadcast returned no items : ");
-    Serial.println(dxl.getLastLibErrCode());
+  if(ret) {
+    DEBUG_SERIAL.println("Reboot Succeeded!");
+  } else {
+    DEBUG_SERIAL.println("Reboot Failed!");
   }
+
+  delay(1000);
 }

@@ -10,11 +10,7 @@ script:
   - build_platform leonardo
   - build_platform due
   - build_platform zero
-  - build_platform mzero
-  - build_platform mzeropro
   - build_platform mkrzero
-  - build_platform mkr1000
-  - build_platform mkrwifi1010
   - build_platform portenta
 
 notifications:
