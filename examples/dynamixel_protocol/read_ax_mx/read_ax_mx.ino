@@ -67,7 +67,10 @@ const float DXL_PROTOCOL_VERSION = 1.0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
-void setup() {DynamixelShield dxl;MIXEL Shield to debug.
+void setup() {
+  // put your setup code here, to run once:
+  
+  // For Uno, Nano, Mini, and Mega, use UART port of DYNAMIXEL Shield to debug.
   DEBUG_SERIAL.begin(115200);   //Set debugging port baudrate to 115200bps
   while(!DEBUG_SERIAL);         //Wait until the serial port for terminal is opened
   
