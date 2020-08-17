@@ -31,6 +31,8 @@ const uint16_t model_number_table[] PROGMEM = {
     MX28_2, MX64_2, MX106_2,
     
     XL320,
+    XL330_M288,
+    XL330_M077,
     XL430_W250,
     XXL430_W250,
     XC430_W150,  XC430_W240,
@@ -291,6 +293,36 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
           break;
         case 1000000:
           baud_idx = 3;
+          break;
+        default:
+          return false;                    
+      }    
+      break;
+
+    case XL330_M288:
+    case XL330_M077:
+      switch(baudrate)
+      {
+        case 9600:
+          baud_idx = 0;
+          break;
+        case 57600:
+          baud_idx = 1;
+          break;
+        case 115200:
+          baud_idx = 2;
+          break;
+        case 1000000:
+          baud_idx = 3;
+          break;
+        case 2000000:
+          baud_idx = 4;
+          break;
+        case 3000000:
+          baud_idx = 5;
+          break;
+        case 4000000:
+          baud_idx = 6;
           break;
         default:
           return false;                    
@@ -618,6 +650,8 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
 
     case MX64_2:
     case MX106_2:
+    case XL330_M288:
+    case XL330_M077:
     case XM430_W210:
     case XM430_W350:
     case XH430_V210:
@@ -1053,6 +1087,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGM
 #if (ENABLE_ACTUATOR_MX28_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
   || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
+  || ENABLE_ACTUATOR_XL330 \
   || ENABLE_ACTUATOR_XC430 \
   || ENABLE_ACTUATOR_XL430 \
   || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
@@ -1081,6 +1116,17 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx106_2[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX106_PROTOCOL2)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xl330_M288_M077[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XL330)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1150, 1150, 1},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1150, 1150, 1},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2047, 2047, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2047, 2047, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
@@ -1373,6 +1419,12 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       p_common_ctable = dependency_ctable_2_0_common;
       p_dep_ctable = dependency_mx106_2;
       break;     
+
+    case XL330_M288:
+    case XL330_M077:
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xl330_M288_M077;
+      break;
 
     case XM430_W210:
     case XM430_W350:
