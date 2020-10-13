@@ -55,7 +55,7 @@ Slave::Slave(const uint16_t model_num, float protocol_ver)
 bool 
 Slave::setPacketBuffer(uint8_t* p_buf, uint16_t buf_capacity)
 {
-  if(p_packet_buf_ == nullptr){
+  if(p_buf == nullptr){
     last_lib_err_ = DXL_LIB_ERROR_NULLPTR;
     return false;
   }
