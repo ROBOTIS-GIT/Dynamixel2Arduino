@@ -1,13 +1,14 @@
 # Dynamixel2Arduino [![Build Status](https://travis-ci.org/ROBOTIS-GIT/Dynamixel2Arduino.svg?branch=master)](https://travis-ci.org/ROBOTIS-GIT/Dynamixel2Arduino/branches)
 
 ## Serial and Direction Pin definitions by board
- - The examples default to pins based on DynamixelShield. Therefore, when using hardware other than DynamixelShield (eg OpenCM9.04, OpenCR, Custom DXL boards), you need to change the Serial and Direction Pin.
+ - The examples defines GPIO pins based on the use with DYNAMIXEL Shields.
+ - When running DYNAMIXEL without DYNAMIXEL Shields on OpenCM9.04, OpenCR or custom boards, you might need to change the Serial and DYNAMIXEL Direction Pin.
  - We provide the information below to make it easier to define Serial and Direction pins for specific hardware.
 
     |Board Name|Serial|Direction Pin|Note|
     |:-:|:-:|:-:|:-:|
     |OpenCM9.04|Serial1|28|because of the OpenCM 9.04 driver code, you must call Serial1.setDxlMode(true); before dxl.begin();.|
-    |OpenCM9.04 EXP|Serial3|22||
+    |OpenCM485EXP|Serial3|22||
     |OpenCR|Serial3|84|For OpenCR, there is a DXL Power Enable pin, so you must initialize and control it. ([Reference link](https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78))|
 
 
