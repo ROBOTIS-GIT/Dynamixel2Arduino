@@ -40,7 +40,7 @@ void SerialPortHandler::begin(unsigned long baud)
     pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
     digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
   }
-  delay(200); // Wait for the DYNAMIXEL to power up normally.
+  delay(300); // Wait for the DYNAMIXEL to power up normally.
 #endif
 
   baud_ = baud;

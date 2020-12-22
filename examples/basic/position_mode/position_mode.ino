@@ -61,6 +61,7 @@ void setup() {
   
   // Use UART port of DYNAMIXEL Shield to debug.
   DEBUG_SERIAL.begin(115200);
+  while(!DEBUG_SERIAL);
 
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
@@ -73,6 +74,9 @@ void setup() {
   dxl.torqueOff(DXL_ID);
   dxl.setOperatingMode(DXL_ID, OP_POSITION);
   dxl.torqueOn(DXL_ID);
+
+  // Limit the maximum velocity in Position Control Mode. Use 0 for Max speed
+  dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID, 30);
 }
 
 void loop() {
@@ -81,17 +85,28 @@ void loop() {
   // Please refer to e-Manual(http://emanual.robotis.com/docs/en/parts/interface/dynamixel_shield/) for available range of value. 
   // Set Goal Position in RAW value
   dxl.setGoalPosition(DXL_ID, 512);
-  delay(1000);
-  // Print present position in raw value
-  DEBUG_SERIAL.print("Present Position(raw) : ");
-  DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID));
-  delay(1000);
+
+  int i_present_position = 0;
+  float f_present_position = 0.0;
+
+  while (abs(512 - i_present_position) > 10)
+  {
+    f_present_position = dxl.getPresentPosition(DXL_ID, UNIT_DEGREE);
+    i_present_position = dxl.getPresentPosition(DXL_ID);
+    DEBUG_SERIAL.print("Present_Position(raw) : ");
+    DEBUG_SERIAL.println(i_present_position);
+  }
+  delay(500);
 
   // Set Goal Position in DEGREE value
   dxl.setGoalPosition(DXL_ID, 5.7, UNIT_DEGREE);
-  delay(1000);
-  // Print present position in degree value
-  DEBUG_SERIAL.print("Present Position(degree) : ");
-  DEBUG_SERIAL.println(dxl.getPresentPosition(DXL_ID, UNIT_DEGREE));
-  delay(1000);
+  
+  while (abs(5.7 - f_present_position) > 2.0)
+  {
+    f_present_position = dxl.getPresentPosition(DXL_ID, UNIT_DEGREE);
+    i_present_position = dxl.getPresentPosition(DXL_ID);
+    DEBUG_SERIAL.print("Present_Position(raw) : ");
+    DEBUG_SERIAL.println(i_present_position);
+  }
+  delay(500);
 }
