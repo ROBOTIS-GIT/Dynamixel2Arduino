@@ -83,7 +83,7 @@
 
 #if defined(ARDUINO)
   #include <Arduino.h>
-  #if !defined(ESP_PLATFORM) && !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_SAMD)
+  #if !defined(ESP_PLATFORM) && !defined(ARDUINO_ARCH_MBED_PORTENTA) && !defined(ARDUINO_ARCH_SAMD)
     #include <avr/pgmspace.h>
   #endif
 #endif

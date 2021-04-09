@@ -49,6 +49,7 @@
 
 
 /* syncRead
+  DYNAMIXEL PROTOCOL 1.0 does NOT support Sync Read feature.
   Structures containing the necessary information to process the 'syncRead' packet.
 
   typedef struct XELInfoBulkRead{
@@ -68,6 +69,7 @@
 */
 
 /* syncWrite
+  DYNAMIXEL PROTOCOL 1.0 supports Control Table address up to 255.
   Structures containing the necessary information to process the 'syncWrite' packet.
 
   typedef struct XELInfoBulkWrite{
@@ -85,6 +87,8 @@
   } __attribute__((packed)) InfoBulkWriteInst_t;
 */
 
+const uint8_t BROADCAST_ID = 254;
+const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
 const uint8_t DXL_ID_CNT = 2;
 const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
 const uint16_t user_pkt_buf_cap = 128;
@@ -123,12 +127,13 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   DEBUG_SERIAL.begin(115200);
   dxl.begin(57600);
+  dxl.setPortProtocolVersion(DYNAMIXEL_PROTOCOL_VERSION);
   
   for(i=0; i<DXL_ID_CNT; i++){
     dxl.torqueOff(DXL_ID_LIST[i]);
     dxl.setOperatingMode(DXL_ID_LIST[i], OP_VELOCITY);
-    dxl.torqueOn(DXL_ID_LIST[i]);
   }
+  dxl.torqueOn(BROADCAST_ID);
 
   // Fill the members of structure to syncRead using external user packet buffer
   sr_infos.packet.p_buf = user_pkt_buf;
@@ -170,8 +175,8 @@ void loop() {
   static uint32_t try_count = 0;
   uint8_t i, recv_cnt;
   
-  for(i=0; i<DXL_ID_CNT; i++){
-    sw_data[i].goal_velocity+=5;
+  for(i = 0; i < DXL_ID_CNT; i++){
+    sw_data[i].goal_velocity = 5 + sw_data[i].goal_velocity;
     if(sw_data[i].goal_velocity >= 200){
       sw_data[i].goal_velocity = 0;
     }
@@ -214,7 +219,3 @@ void loop() {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
   delay(750);
 }
-
-
-
-

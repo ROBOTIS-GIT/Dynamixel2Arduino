@@ -17,6 +17,7 @@
 #define DYNAMIXEL_PROTOCOL_H_
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 #define DXL_BROADCAST_ID        0xFE

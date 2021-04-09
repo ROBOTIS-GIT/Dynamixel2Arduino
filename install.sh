@@ -10,7 +10,7 @@ fi
 # this will be eval'd in the functions below because arrays can't be exported
 # For creating a new main platform, please refer to https://arduino.github.io/arduino-cli/latest/platform-specification/#hardware-folders-structure
 # and https://arduino.github.io/arduino-cli/latest/platform-specification/#boardstxt
-export MAIN_PLATFORMS='declare -A main_platforms=([uno]="arduino:avr:uno" [mega2560]="arduino:avr:mega:cpu=atmega2560" [leonardo]="arduino:avr:leonardo" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [mzero]="arduino:samd:mzero_bl" [mzeropro]="arduino:samd:mzero_pro_bl" [mkrzero]="arduino:samd:mkrzero" [mkr1000]="arduino:samd:mkr1000" [mkrwifi1010]="arduino:samd:mkrwifi1010" [opencr]="OpenCR:OpenCR:OpenCR" [portenta]="arduino:mbed:envie_m7")'
+export MAIN_PLATFORMS='declare -A main_platforms=([uno]="arduino:avr:uno" [mega2560]="arduino:avr:mega:cpu=atmega2560" [leonardo]="arduino:avr:leonardo" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [mzero]="arduino:samd:mzero_bl" [mzeropro]="arduino:samd:mzero_pro_bl" [mkrzero]="arduino:samd:mkrzero" [mkr1000]="arduino:samd:mkr1000" [mkrwifi1010]="arduino:samd:mkrwifi1010" [opencr]="OpenCR:OpenCR:OpenCR" [portenta]="arduino:mbed_portenta:envie_m7")'
 
 # make display available for arduino CLI
 /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
@@ -55,7 +55,7 @@ DEPENDENCY_OUTPUT=$(arduino --install-boards arduino:samd 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
 echo -n "INSTALL Portenta H7: "
-DEPENDENCY_OUTPUT=$(arduino --install-boards arduino:mbed 2>&1)
+DEPENDENCY_OUTPUT=$(arduino --install-boards arduino:mbed_portenta 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
 echo -n "INSTALL OpenCR: "
