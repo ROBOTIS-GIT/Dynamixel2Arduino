@@ -222,7 +222,7 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
   {ControlTableItem::VELOCITY_TRAJECTORY,    136, 4},
   {ControlTableItem::POSITION_TRAJECTORY,    140, 4},  
   {ControlTableItem::PRESENT_INPUT_VOLTAGE,  144, 2},
-  // {ControlTableItem::PRESENT_VOLTAGE,        144, 2},
+  {ControlTableItem::PRESENT_VOLTAGE,        144, 2},
   {ControlTableItem::PRESENT_TEMPERATURE,    146, 1},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
