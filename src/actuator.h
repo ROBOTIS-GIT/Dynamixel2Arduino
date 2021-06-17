@@ -79,6 +79,20 @@
 #define XL330_M288          (uint16_t)1200
 #endif
 
+#ifndef XC330_M181
+#define XC330_M181          (uint16_t)1230
+#endif
+#ifndef XC330_M288
+#define XC330_M288          (uint16_t)1240
+#endif
+
+#ifndef XC330_T181
+#define XC330_T181          (uint16_t)1210
+#endif
+#ifndef XC330_T288
+#define XC330_T288          (uint16_t)1220
+#endif
+
 #ifndef XC430_W150
 #define XC430_W150          (uint16_t)1070
 #endif

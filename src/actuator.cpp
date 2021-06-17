@@ -169,6 +169,7 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
  || ENABLE_ACTUATOR_MX64_PROTOCOL2 \
  || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
  || ENABLE_ACTUATOR_XL330 \
+ || ENABLE_ACTUATOR_XC330 \
  || ENABLE_ACTUATOR_XL430 \
  || ENABLE_ACTUATOR_XC430 \
  || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
@@ -256,6 +257,7 @@ const ModelControlTableInfo_t xc430_xl430_control_table[] PROGMEM = {
 
 const ModelControlTableInfo_t xmh430_xl330_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XL330 \
+ || ENABLE_ACTUATOR_XC330 \
  || ENABLE_ACTUATOR_XM430 \
  || ENABLE_ACTUATOR_XH430)
   {ControlTableItem::CURRENT_LIMIT,           38, 2},
@@ -484,6 +486,10 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
 
     case XL330_M288:
     case XL330_M077:
+    case XC330_M181:
+    case XC330_M288:
+    case XC330_T181:
+    case XC330_T288:    
     case XM430_W210:
     case XM430_W350:
     case XH430_V210:
