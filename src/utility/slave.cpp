@@ -29,7 +29,7 @@ Slave::Slave(DXLPortHandler &port, const uint16_t model_num, float protocol_ver)
     packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
     is_buf_malloced_ = true;
   }
-  info_tx_packet_.is_init = false;
+  info_tx_packet_.is_init = false;  
   info_rx_packet_.is_init = false;
 }
 
@@ -493,95 +493,131 @@ Slave::processInstWrite()
   p_rx_info = &info_rx_packet_;
   p_rx_param = p_rx_info->p_param_buf;
 
-  if(p_rx_info->id != DXL_BROADCAST_ID){
-    if(p_rx_info->protocol_ver == 2){
-      if(p_rx_info->recv_param_len > 2){ //2 = Address(2)+Data(n)
-        addr = ((uint16_t)p_rx_param[1]<<8) | (uint16_t)p_rx_param[0];
-        p_data = &p_rx_param[2];
-        data_length = p_rx_info->recv_param_len-2;
-        if(data_length+11 > packet_buf_capacity_){
-          err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
-        }
-      }else{
-        err = DXL_LIB_ERROR_WRONG_PACKET;
+  if(p_rx_info->id == DXL_BROADCAST_ID){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  // extract start address and length from the instruction packet
+  switch (p_rx_info->protocol_ver)
+  {
+  case 2:
+    if(p_rx_info->recv_param_len <= 2) { //2 = Address(2)+Data(n)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+    } 
+    else {
+      addr = ((uint16_t)p_rx_param[1]<<8) | (uint16_t)p_rx_param[0];
+      p_data = &p_rx_param[2];
+      data_length = p_rx_info->recv_param_len-2;
+      if(data_length+11 > packet_buf_capacity_){
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
       }
-    }else if(p_rx_info->protocol_ver == 1){
-      if(p_rx_info->recv_param_len > 1){ //1 = Address(1)+Data(n)
-        addr = p_rx_param[0];
-        p_data = &p_rx_param[1];
-        data_length = p_rx_info->recv_param_len-1;
-        if(data_length+6 > packet_buf_capacity_){
-          err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
-        }
-      }else{
-        err = DXL_LIB_ERROR_WRONG_PACKET;
-      }
-    }else{
+    }
+    break;
+  
+  case 1:  
+    if(p_rx_info->recv_param_len <= 1){ //1 = Address(1)+Data(n)
       err = DXL_LIB_ERROR_WRONG_PACKET;
     }
+    else {
+      addr = p_rx_param[0];
+      p_data = &p_rx_param[1];
+      data_length = p_rx_info->recv_param_len-1;
+      if(data_length+6 > packet_buf_capacity_){
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+      }
+    }
+    break;
 
-    if(err == DXL_LIB_OK){
-      uint8_t i, j, backup_data = 0;
-      uint16_t item_start_addr, item_addr_length;
-      ControlItem_t *p_item;
-      for(i=0; i < registered_item_cnt_; i++){
-        p_item = &control_table_[i];
-        item_start_addr = p_item->start_addr;
-        item_addr_length = p_item->length;
-        if(item_start_addr != ADDR_ITEM_MODEL_NUMBER
-        && item_start_addr != ADDR_ITEM_FIRMWARE_VER){
-          if(item_addr_length != 0
-          && p_item->p_data != nullptr
-          && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
-            // Check data for ID, Protocol Version (Act as a system callback)
-            if(item_start_addr == ADDR_ITEM_ID){
-              backup_data = p_data[item_start_addr-addr];
-              if(protocol_ver_idx_ == 2 && backup_data >= 0xFD){
+  default:
+    err = DXL_LIB_ERROR_WRONG_PACKET;
+    break;
+  }
+
+  if(err == DXL_LIB_OK){
+    uint8_t i, j;
+    uint8_t backup_data[32];      // we max support registers of 32 bytes
+    uint16_t item_start_addr, item_addr_length;
+    ControlItem_t *p_item;
+
+    for(i=0; i < registered_item_cnt_; i++){
+
+      p_item = &control_table_[i];
+      item_start_addr = p_item->start_addr;
+      item_addr_length = p_item->length;
+
+      if(item_addr_length != 0 && p_item->p_data != nullptr
+      && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+
+        // backup data, copy new data
+        for(j=0; j<item_addr_length; j++){
+          // backup supported only for registers smaller than 32 bytes
+          if (item_addr_length <= 32) {
+            backup_data[j] = p_item->p_data[j];
+          }
+          p_item->p_data[j] = p_data[item_start_addr - addr + j];
+        }
+        // Check data for ID, Protocol Version (Act as a system callback)
+        switch (item_start_addr) {
+
+          case ADDR_ITEM_ID:      // validate ID
+            if(protocol_ver_idx_ == 2 && id_ >= 0xFD){
+              packet_err = DXL2_0_ERR_DATA_RANGE;
+            }
+            if(protocol_ver_idx_ == 1 && id_ >= 0xFE){
+              packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+            }   
+            break;
+          
+          case ADDR_ITEM_PROTOCOL_VER: // validate Protocol Version 
+            if(protocol_ver_idx_ != 1 && protocol_ver_idx_ != 2){
+              if(backup_data[0] == 2){
                 packet_err = DXL2_0_ERR_DATA_RANGE;
-              }else if(protocol_ver_idx_ == 1 && backup_data >= 0xFE){
+              }
+              else if(backup_data[0] == 1){
                 packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
               }
-              backup_data = id_;             
-            }else if(item_start_addr == ADDR_ITEM_PROTOCOL_VER){  
-              backup_data = p_data[item_start_addr-addr];
-              if(backup_data != 1 && backup_data != 2){
-                if(protocol_ver_idx_ == 2){
-                  packet_err = DXL2_0_ERR_DATA_RANGE;
-                }else if(protocol_ver_idx_ == 1){
-                  packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
-                }                
-              }
-              backup_data = protocol_ver_idx_;        
             }
-            if(packet_err != 0){
-              break;
+            break;
+
+          case ADDR_ITEM_MODEL_NUMBER:  // model number if Read Only
+          case ADDR_ITEM_FIRMWARE_VER:  // firmware is Read Only
+            if(backup_data[0] == 2){
+              packet_err = DXL2_0_ERR_DATA_RANGE;
             }
-            // Copy received data to each item
+            else if(backup_data[0] == 1){
+              packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+            }
+            break;
+          
+        }
+
+        // Run user callback for Write instruction
+        //
+        // NOTE: Slave does not implement EEPROM persistence of data.
+        // If your device needs to persist data to ROM you must implement
+        // `user_write_callback_` and there save the registers to ROM
+        // including the ones implemented in Slave (id, protocol, 
+        // model number, firmware version)
+        if (packet_err == 0 && user_write_callback_ != nullptr){
+          user_write_callback_(item_start_addr, packet_err, user_write_callbakc_arg_);
+        }
+
+        if(packet_err != 0){
+          // If an error occurs restore the previous data.
+          // backup supported only for registers smaller than 32 bytes
+          if (item_addr_length <= 32) {
             for(j=0; j<item_addr_length; j++){
-              p_item->p_data[j] = p_data[item_start_addr-addr+j];
-            }
-            // Run user callback for Write instruction,
-            // then check and handle the returned error.
-            if(user_write_callback_ != nullptr){
-              user_write_callback_(item_start_addr, packet_err, user_write_callbakc_arg_);
-              if(packet_err != 0){
-                // If an error occurs for the ID and Protocol Version,
-                // restore the previous data. (Act as a system callback)
-                if(item_start_addr == ADDR_ITEM_ID){
-                  id_ = backup_data;
-                }else if(item_start_addr == ADDR_ITEM_PROTOCOL_VER){
-                  protocol_ver_idx_ = backup_data;
-                }   
-                break;
-              }
+              p_item->p_data[j] = backup_data[j];
             }
           }
         }
-      }
-      ret = txStatusPacket(id_, packet_err, nullptr, 0);
-    }
-  }else{
-    err = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+
+      } // if
+
+    } // for
+
+    ret = txStatusPacket(id_, packet_err, nullptr, 0);
   }
 
   last_lib_err_ = err;
