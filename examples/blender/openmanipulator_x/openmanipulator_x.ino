@@ -50,56 +50,59 @@
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
-//This namespace is required to use Control table item names
+// This namespace is required to use Control table item names
 using namespace ControlTableItem;
 
+// DYNAMIXEL Configuration
+const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
+// OpenMANIPULATOR has ID of 11 ~ 15 by default
+const uint8_t DYNAMIXEL_ID[] = {1, 2, 3, 4, 5};
+const uint8_t NUMBER_OF_JOINT = sizeof(DYNAMIXEL_ID)/sizeof(uint8_t);
+
+
 // Data struct for SyncRead
-typedef struct sr_data{
+typedef struct sync_read_data {
   int32_t present_position;
-} __attribute__((packed)) sr_data_t;
+} __attribute__((packed)) sync_read_data_t;
+
+// Sync Read Present Position
+const uint16_t ADDRESS_TO_SYNC_READ = 132;
+const uint16_t LENGTH_TO_SYNC_READ = 4;
+
+// Sync Read
+sync_read_data_t sync_read_data[NUMBER_OF_JOINT];
+DYNAMIXEL::InfoSyncReadInst_t sync_read_information;
+DYNAMIXEL::XELInfoSyncRead_t sync_read_dynamixel_info[NUMBER_OF_JOINT];
+
 
 // Data struct for SyncWrite
-typedef struct sw_data{
+typedef struct sync_write_data {
   int32_t goal_position;
-} __attribute__((packed)) sw_data_t;
+} __attribute__((packed)) sync_write_data_t;
 
-//********** SyncWrite*********
-sw_data_t sw_data[5];
-DYNAMIXEL::InfoSyncWriteInst_t sw_infos;
-DYNAMIXEL::XELInfoSyncWrite_t arr_info_xels_sw[5];
+// Sync Write Goal Position
+const uint16_t ADDRESS_TO_SYNC_WRITE = 116; 
+const uint16_t LENGTH_TO_SYNC_WRITE = 4;
 
-//********** SyncRead**********
-sr_data_t sr_data[5];
-DYNAMIXEL::InfoSyncReadInst_t sr_infos;
-DYNAMIXEL::XELInfoSyncRead_t arr_info_xels_sr[5];
+// Sync Write
+sync_write_data_t sync_write_data[NUMBER_OF_JOINT];
+DYNAMIXEL::InfoSyncWriteInst_t sync_write_information;
+DYNAMIXEL::XELInfoSyncWrite_t sync_write_dynamixel_info[NUMBER_OF_JOINT];
 
-const float DXL_PROTOCOL_VERSION = 2.0;
 
-const uint8_t arr_dxl_id[5] = {1,2,3,4,5};
+const uint16_t MAX_PACKET_BUFFER_LENGTH = 128;
+uint8_t packet_buffer[MAX_PACKET_BUFFER_LENGTH];
 
-unsigned long now = 0;
-unsigned long past = 0;
+int loop_counts = 2;  // Number of times to play the motion
+int frame_time = 0;
+unsigned long current_time = 0;
+unsigned long saved_time = 0;
 
-const uint16_t g_user_pkt_buf_cap = 128;
-uint8_t g_user_pkt_buf[g_user_pkt_buf_cap];
+// The number of information in each frame. (Time + Position of each Joint)
+const int MAX_MOTION_DATA_COLUMN_INDEX = 1 + NUMBER_OF_JOINT;
 
-const uint16_t SR_START_ADDR = 132;
-const uint16_t SR_ADDR_LEN = 4;
-
-//Goal Position
-const uint16_t SW_START_ADDR = 116; 
-
-const uint16_t SW_ADDR_LEN = 4;
-
-int loop_counts = 2; // The number of times of loop
-
-int g_frame_time = 0;
-
-// The number of information in frames 
-const int g_total_row = 6; 
-
-// Paste all keyframes. 
-const int arr_trajectory [][g_total_row]{
+// Paste all keyframes.
+const int MOTION_DATA [][MAX_MOTION_DATA_COLUMN_INDEX]{
 //Time[ms],ID1,ID2,ID3,ID4,Hand,
 {100,2047,1535,2957,1649,2039},
 {200,2047,1535,2957,1650,2039},
@@ -605,302 +608,273 @@ const int arr_trajectory [][g_total_row]{
 };
 
 // The number of key frames.
+const int TOTAL_FRAMES = sizeof(MOTION_DATA) / sizeof(MOTION_DATA[0]);
 
-const int g_total_frame = sizeof(arr_trajectory) / sizeof(arr_trajectory[0]);
+void setup()
+{
+  int time_between_frame = (MOTION_DATA[2][0] - MOTION_DATA[1][0]) * 2;
 
-void ReadPresentPosition();
-
-void InitDXL(int time_trajectory){
-
-  int idx;
-  int axes = g_total_row - 1;
-
+  // Open serial port for debugging
   DEBUG_SERIAL.begin(115200);
 
   // Port Baudrate to communicate with connected DYNAMIXELs. If not matched, you will meet communication fail.
   dxl.begin(4000000);
-  
-  // Recommended Protocol Version is "2.0" Note that DYNAMIXEL Protocol for each product may differ depending on your model in use. 
-  dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
-  
-  // Ping DYNAMIXELs. If failed, check your Baudrate and pysical wiring connection.
-  for (idx = 0; idx < axes; idx++)
-  {
-    dxl.ping(arr_dxl_id[idx]);
-      if(dxl.ping(arr_dxl_id[idx]) == true){
-    DEBUG_SERIAL.println("ping succeeded!");
-    }else{
-      DEBUG_SERIAL.println("ping failed!");
-    }
-    
-    delay(20);
-    dxl.torqueOff(arr_dxl_id[idx]);
-    dxl.writeControlTableItem(DRIVE_MODE, arr_dxl_id[idx], 4); // Set Drive Mode as Time-based profile.
-    dxl.writeControlTableItem(RETURN_DELAY_TIME, arr_dxl_id[idx], 0); // Less Return Delay Time enhance the ability of response.  
-    dxl.setOperatingMode(arr_dxl_id[idx], OP_POSITION);
-    dxl.torqueOn(arr_dxl_id[idx]);
-    dxl.writeControlTableItem(PROFILE_VELOCITY, arr_dxl_id[idx], time_trajectory); // Time-based should be larger than set trajectory time.
-  }
-}
 
-//********** Storing packets in SyncRead struct**********
-void MakeSrStruct(){
+  // Recommended Protocol Version is "2.0" Note that DYNAMIXEL Protocol for each product may differ depending on your model in use.
+  dxl.setPortProtocolVersion(DYNAMIXEL_PROTOCOL_VERSION);
 
-  int axes = g_total_row - 1;
-
-  int idx;
- 
-  sr_infos.packet.p_buf = g_user_pkt_buf;
-  sr_infos.packet.buf_capacity = g_user_pkt_buf_cap;
-  sr_infos.packet.is_completed = false;
-  sr_infos.addr = SR_START_ADDR;
-  sr_infos.addr_length = SR_ADDR_LEN;
-  sr_infos.p_xels = arr_info_xels_sr;
-  sr_infos.xel_count = 0;  
-
-  for(idx=0; idx < axes ; idx++){
-    arr_info_xels_sr[idx].id = arr_dxl_id[idx];
-    arr_info_xels_sr[idx].p_recv_buf = (uint8_t*)&sr_data[idx];
-    sr_infos.xel_count++;
-  }
-  
-  sr_infos.is_info_changed = true;
-  
-  ReadPresentPosition();
-
-}
-
-void MakeSwStruct(const int arr[][g_total_row]){
-
-  int axes = g_total_row - 1;
-  
-  int idx;
-  
-  //********** Storing packets in SyncWrite struct**********
-  sw_infos.packet.p_buf = nullptr;
-  sw_infos.packet.is_completed = false;
-  sw_infos.addr = SW_START_ADDR;
-  sw_infos.addr_length = SW_ADDR_LEN;
-  sw_infos.p_xels = arr_info_xels_sw;
-  sw_infos.xel_count = 0;
-
-  for(idx=0; idx < axes; idx++){
-    sw_data[idx].goal_position = arr[0][idx+1];  
-    }
-
-  for(idx=0; idx < axes; idx++){
-    arr_info_xels_sw[idx].id = arr_dxl_id[idx];
-    arr_info_xels_sw[idx].p_data = (uint8_t*)&sw_data[idx].goal_position;
-    sw_infos.xel_count++;
-    } 
-  
-  sw_infos.is_info_changed = true;
-
-}  
-
-void InitPose(const int init_pose[][g_total_row], int time_trajectory) // Init pose, 
-{  
-  
-   int idx;
-
-   int axes = g_total_row - 1; 
-   
-   int arr_position_margin[axes] = {}; // Store margin between Goal and Present Position. This detemines the DYNAMIXEL where to rotate in either CW or CCW. 
-   
-   int arr_dxl_ready_state[axes] = {};
-
-   int init_steps = 1 ;
-
-   int dxl_ready_count; 
-
-   int position_tolerance = 5;
-
-    for (idx = 0; idx < axes; idx++){
-
-      if (idx == 0){
-        DEBUG_SERIAL.println("[Present Position] ");
-      }
-      
-      arr_position_margin[idx] = init_pose[0][idx+1] - sr_data[idx].present_position;
-  
-      DEBUG_SERIAL.print("[Present Position_Setup] ID");DEBUG_SERIAL.print(sr_infos.p_xels[idx].id);DEBUG_SERIAL.print(": ");DEBUG_SERIAL.println(sr_data[idx].present_position);  
-      
-      DEBUG_SERIAL.print("[Goal Position - Present Position] ID");DEBUG_SERIAL.print(sr_infos.p_xels[idx].id);DEBUG_SERIAL.print(": ");DEBUG_SERIAL.println(arr_position_margin[idx]);        
-    
-    }DEBUG_SERIAL.println("");
-
-     while(true){
-
-      for (idx = 0; idx < axes; idx++){ // Count the number of ready DYNAMIXEL. 
-        if (arr_dxl_ready_state[idx] == 1){
-          dxl_ready_count++;
-        }else{
-          dxl_ready_count = 0;
-          break;
-        }
-      }
-      
-      if(dxl_ready_count == axes){
-      
-        delay(1000);
-      
-        for (idx = 0; idx < axes; idx++){
-          sw_data[idx].goal_position = init_pose[0][idx+1];
-          dxl.ledOff(arr_dxl_id[idx]);
-          }
-          
-        sw_infos.is_info_changed = true;
-                         
-        dxl.syncWrite(&sw_infos);
-       
-        g_frame_time +=1;     
-           
-        DEBUG_SERIAL.println("========================[Play Motion]===========================");
-        
-        break; 
-    }
-
-      now = millis(); 
-
-      if (now - past >= time_trajectory-10){
-        for (idx=0; idx < axes; idx++){
-          
-          if (idx == 0){
-            DEBUG_SERIAL.println("[Moving to the init pose...]"); 
-            }
-            
-          if (arr_position_margin[idx] >= position_tolerance ){ // If result in Goal Position - Present Position is positive number, movement direction is in CCW. 
-            DEBUG_SERIAL.print("DIR :CCW, ");
-            DEBUG_SERIAL.print("ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[idx].id);
-            arr_position_margin[idx] = arr_position_margin[idx] - init_steps ; //set position every 20 ms 
-            DEBUG_SERIAL.print("\t Target Pose: "); DEBUG_SERIAL.print(init_pose[0][idx+1]);
-            DEBUG_SERIAL.print("\t Present Pose: "); DEBUG_SERIAL.println(init_pose[0][idx+1] - arr_position_margin[idx]);
-          }else if (arr_position_margin[idx] <= -position_tolerance ){ // If result in Goal Position - Present Position is negative number, movement direction is in CW. 
-            DEBUG_SERIAL.print("DIR : CW, ");
-            DEBUG_SERIAL.print("ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[idx].id);
-            arr_position_margin[idx] = arr_position_margin[idx] + init_steps ; 
-            DEBUG_SERIAL.print("\t Target Pose: "); DEBUG_SERIAL.print(init_pose[0][idx+1]);
-            DEBUG_SERIAL.print("\t Present Pose: "); DEBUG_SERIAL.println(init_pose[0][idx+1] - arr_position_margin[idx]);
-          }else{ //
-            arr_dxl_ready_state[idx] = 1; 
-            dxl.ledOn(arr_dxl_id[idx]);
-            DEBUG_SERIAL.print("ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[idx].id);
-            DEBUG_SERIAL.println(" is ready to go.");
-          }
-        
-          sw_data[idx].goal_position = init_pose[0][idx+1] - arr_position_margin[idx];
-          
-          }
-        }
-
-    if (now - past >= time_trajectory){ 
-      
-      sw_infos.is_info_changed = true;
-      
-      dxl.syncWrite(&sw_infos);
-      DEBUG_SERIAL.println(" SyncWrite.");
-      past = now;
-    }
-  } 
-}
-  
-
-void setup() {
-
-  int profile_time = (arr_trajectory[2][0] - arr_trajectory[1][0])*2; // 0;
-  
-  InitDXL(profile_time); // Initialize the DYNAMIXEL 
-  
-  MakeSrStruct();
-  
-  MakeSwStruct(arr_trajectory);
-
+  InitDXL(time_between_frame);  // Initialize the DYNAMIXEL
+  InitSyncRead();
+  InitSyncWrite();
   delay(2000);
-  
-  InitPose(arr_trajectory, profile_time); // Pass a pose, 
+  InitPose(MOTION_DATA, time_between_frame);  // Pass a pose
 }
 
-void loop() { 
-
-  now = millis(); 
-
-  PlayMotion(arr_trajectory); // Pass the trajectory information to a motion generator (PlayMotion). 
-
+void loop()
+{ 
+  // Pass the motion data
+  PlayMotion(MOTION_DATA);
 }
 
-void PlayMotion(const int arr[][g_total_row]){ 
-  
-  int axes = g_total_row - 1;
+void InitDXL(int frame_time)
+{
+  uint8_t index = 0;
 
-  if(now - past >= arr[g_frame_time+1][0] - arr[g_frame_time][0]){ // Time difference between the past and current time.   
-    
-//    DisplayTime();
-//    ReadPresentPosition();
-  
-  int idx;
-    
-  for (idx = 0; idx < axes; idx++) {
-    
-    if (idx == 0){
-      DEBUG_SERIAL.print("[Goal Position]\t    ");
+  // Ping DYNAMIXELs. If failed, check your Baudrate and pysical wiring connection.
+  for (index = 0; index < NUMBER_OF_JOINT; index++)
+  {
+    if (!dxl.ping(DYNAMIXEL_ID[index])) {
+      DEBUG_SERIAL.print("[ERROR] DYNAMIXEL ID ");
+      DEBUG_SERIAL.print(index);
+      DEBUG_SERIAL.println(" is not detected.");
+    } else {
+      dxl.torqueOff(DYNAMIXEL_ID[index]);
+      // Set the Drive Mode as Time-based mode.
+      dxl.writeControlTableItem(DRIVE_MODE, DYNAMIXEL_ID[index], 4);
+      // Lower Return Delay Time enhances the responsiveness.
+      dxl.writeControlTableItem(RETURN_DELAY_TIME, DYNAMIXEL_ID[index], 0);
+      dxl.setOperatingMode(DYNAMIXEL_ID[index], OP_POSITION);
+      dxl.torqueOn(DYNAMIXEL_ID[index]);
+      // Time-based should be larger than frame time.
+      dxl.writeControlTableItem(PROFILE_VELOCITY, DYNAMIXEL_ID[index], frame_time);
     }
-    
-    DEBUG_SERIAL.print("ID");DEBUG_SERIAL.print(arr_dxl_id[idx]);
-    sw_data[idx].goal_position = arr[g_frame_time+1][idx+1];
-    DEBUG_SERIAL.print(": ");DEBUG_SERIAL.print(sw_data[idx].goal_position);DEBUG_SERIAL.print(" ");
-     
-    }DEBUG_SERIAL.println("");
-  
-    sw_infos.is_info_changed = true;
-                     
-    dxl.syncWrite(&sw_infos); 
-    
-    past = now;
-    
-    g_frame_time +=1;
+  }
+}
 
-    if (g_frame_time >= g_total_frame -1 ){ // Trajectory Point at 0 excluded.
-      
-      DEBUG_SERIAL.println("=============================================================================");    
-      DEBUG_SERIAL.println("++++++++++++++++++++++++++ Motion Complete ++++++++++++++++++++++++++++++++++"); 
-      DEBUG_SERIAL.print("Total Frames = ");DEBUG_SERIAL.println(g_frame_time + 1); 
-      DEBUG_SERIAL.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");    
-      DEBUG_SERIAL.println("=============================================================================");    
-      
-      g_frame_time = 1;
-      
-      loop_counts--; 
-      
+// Initialize SyncRead packet in the structure
+void InitSyncRead()
+{
+  uint8_t index = 0;
+
+  sync_read_information.packet.p_buf = packet_buffer;
+  sync_read_information.packet.buf_capacity = MAX_PACKET_BUFFER_LENGTH;
+  sync_read_information.packet.is_completed = false;
+  sync_read_information.addr = ADDRESS_TO_SYNC_READ;
+  sync_read_information.addr_length = LENGTH_TO_SYNC_READ;
+  sync_read_information.p_xels = sync_read_dynamixel_info;
+  sync_read_information.xel_count = 0;  
+
+  for (index = 0; index < NUMBER_OF_JOINT ; index++) {
+    sync_read_dynamixel_info[index].id = DYNAMIXEL_ID[index];
+    sync_read_dynamixel_info[index].p_recv_buf = (uint8_t*)&sync_read_data[index];
+    sync_read_information.xel_count++;
+  }
+  sync_read_information.is_info_changed = true;
+
+  ReadPresentPosition();
+}
+
+// Initialize SyncWrite packet frame in the structure
+void InitSyncWrite()
+{
+  uint8_t index = 0;
+  
+  sync_write_information.packet.p_buf = nullptr;
+  sync_write_information.packet.is_completed = false;
+  sync_write_information.addr = ADDRESS_TO_SYNC_WRITE;
+  sync_write_information.addr_length = LENGTH_TO_SYNC_WRITE;
+  sync_write_information.p_xels = sync_write_dynamixel_info;
+  sync_write_information.xel_count = 0;
+
+  for (index = 0; index < NUMBER_OF_JOINT; index++) {
+    sync_write_dynamixel_info[index].id = DYNAMIXEL_ID[index];
+    sync_write_dynamixel_info[index].p_data = (uint8_t*)&sync_write_data[index].goal_position;
+    sync_write_information.xel_count++;
+  }
+}
+
+void InitPose(const int init_pose[][MAX_MOTION_DATA_COLUMN_INDEX], int frame_time)
+{
+  uint8_t index = 0;
+  // Store margin between Goal and Present Position.
+  // This determines the DYNAMIXEL where to rotate in either CW or CCW.
+  int arr_position_margin[NUMBER_OF_JOINT] = {};
+  int arr_dxl_ready_state[NUMBER_OF_JOINT] = {};
+  int init_steps = 1;
+  int dxl_ready_count = 0;
+  int position_tolerance = 5;
+
+  for (index = 0; index < NUMBER_OF_JOINT; index++){
+    if (index == 0) {
+      DEBUG_SERIAL.println("[Present Position] ");
+    }
+
+    arr_position_margin[index] = init_pose[0][index+1] - sync_read_data[index].present_position;
+    DEBUG_SERIAL.print("[Present Position_Setup] ID");
+    DEBUG_SERIAL.print(sync_read_information.p_xels[index].id);
+    DEBUG_SERIAL.print(": ");
+    DEBUG_SERIAL.println(sync_read_data[index].present_position);
+    DEBUG_SERIAL.print("[Goal Position - Present Position] ID");
+    DEBUG_SERIAL.print(sync_read_information.p_xels[index].id);
+    DEBUG_SERIAL.print(": ");
+    DEBUG_SERIAL.println(arr_position_margin[index]);
+  }
+
+  DEBUG_SERIAL.println("");
+
+  while(true) {
+    // Count the number of ready DYNAMIXEL.
+    for (index = 0; index < NUMBER_OF_JOINT; index++) {
+      if (arr_dxl_ready_state[index] == 1) {
+        dxl_ready_count++;
+      } else {
+        dxl_ready_count = 0;
+        break;
       }
-   }
-}
-
-void DisplayTime(){ // Display current time, past time, and elapsed time in two trajectory points. If not needed, comment out. 
-
-  DEBUG_SERIAL.println("========================[Keyframe is ongoing]===========================");
-  DEBUG_SERIAL.print("Now: ");DEBUG_SERIAL.print(now);DEBUG_SERIAL.print(" ms");
-  DEBUG_SERIAL.print("\t Past: ");DEBUG_SERIAL.print(past);DEBUG_SERIAL.print(" ms");
-  DEBUG_SERIAL.print("\t Elapsed Time:");DEBUG_SERIAL.print(now - past);DEBUG_SERIAL.println(" ms");
-  DEBUG_SERIAL.print("[Trajectory Point] :");DEBUG_SERIAL.println(arr_trajectory[g_frame_time+1][0]);
-}
-
-void ReadPresentPosition(){
-
-  int idx;
-
-  int axes = g_total_row - 1;
-  
-  for (idx = 0; idx < axes; idx++){
-    
-    if (idx ==0){
-      DEBUG_SERIAL.print("[Present Position] ");
     }
+
+    if(dxl_ready_count == NUMBER_OF_JOINT) {
+      delay(1000);
+
+      for (index = 0; index < NUMBER_OF_JOINT; index++) {
+        sync_write_data[index].goal_position = init_pose[0][index+1];
+        dxl.ledOff(DYNAMIXEL_ID[index]);
+      }
+
+      sync_write_information.is_info_changed = true;
+      dxl.syncWrite(&sync_write_information);
+      frame_time +=1;
+      DEBUG_SERIAL.println("=== [Play Motion] ===");
+      break;
+    }
+
+    if ( ElapsedTime() >= (unsigned long)(frame_time - 10)) {
+      for (index=0; index < NUMBER_OF_JOINT; index++) {
+        if (index == 0) {
+          DEBUG_SERIAL.println("[Moving to the init pose...]");
+        }
+
+        // If result in Goal Position - Present Position is positive number, movement direction is in CCW.
+        if (arr_position_margin[index] >= position_tolerance) {
+          DEBUG_SERIAL.print("DIR :CCW, ");
+          DEBUG_SERIAL.print("ID: ");
+          DEBUG_SERIAL.print(sync_read_information.p_xels[index].id);
+          //set position every 20 ms
+          arr_position_margin[index] = arr_position_margin[index] - init_steps ;
+          DEBUG_SERIAL.print("\t Target Pose: ");
+          DEBUG_SERIAL.print(init_pose[0][index+1]);
+          DEBUG_SERIAL.print("\t Present Pose: ");
+          DEBUG_SERIAL.println(init_pose[0][index+1] - arr_position_margin[index]);
+        } else if (arr_position_margin[index] <= -position_tolerance ) {
+          // If result in Goal Position - Present Position is negative number, movement direction is in CW.
+          DEBUG_SERIAL.print("DIR : CW, ");
+          DEBUG_SERIAL.print("ID: ");
+          DEBUG_SERIAL.print(sync_read_information.p_xels[index].id);
+          arr_position_margin[index] = arr_position_margin[index] + init_steps ; 
+          DEBUG_SERIAL.print("\t Target Pose: ");
+          DEBUG_SERIAL.print(init_pose[0][index+1]);
+          DEBUG_SERIAL.print("\t Present Pose: ");
+          DEBUG_SERIAL.println(init_pose[0][index+1] - arr_position_margin[index]);
+        } else {
+          arr_dxl_ready_state[index] = 1; 
+          dxl.ledOn(DYNAMIXEL_ID[index]);
+          DEBUG_SERIAL.print("ID: ");
+          DEBUG_SERIAL.print(sync_read_information.p_xels[index].id);
+          DEBUG_SERIAL.println(" is ready to go.");
+        }
+
+        sync_write_data[index].goal_position = init_pose[0][index+1] - arr_position_margin[index];
+      }
+    }
+
+    if ( ElapsedTime() >= (unsigned long)(frame_time)) {
+      sync_write_information.is_info_changed = true;
+      dxl.syncWrite(&sync_write_information);
+      DEBUG_SERIAL.println(" SyncWrite.");
+      saved_time = current_time;
+    }
+  }
+}
+
+void PlayMotion(const int MOTION_DATA[][MAX_MOTION_DATA_COLUMN_INDEX])
+{
+  // Time difference between the saved_time and current time.
+  if ( ElapsedTime() >= (unsigned long)(MOTION_DATA[frame_time + 1][0] - MOTION_DATA[frame_time][0]) ) {
+    // DisplayTime();
+    // ReadPresentPosition();
+
+    uint8_t index = 0;
+
+    DEBUG_SERIAL.print("[Goal Position] : ");
+    for (index = 0; index < NUMBER_OF_JOINT; index++) {
+      sync_write_data[index].goal_position = MOTION_DATA[frame_time + 1][index + 1];
+      DEBUG_SERIAL.print(sync_write_data[index].goal_position);
+      DEBUG_SERIAL.print("\t");
+    }
+    DEBUG_SERIAL.println("");
+
+    sync_write_information.is_info_changed = true;
     
-    DEBUG_SERIAL.print(" ID");DEBUG_SERIAL.print(sr_infos.p_xels[idx].id);
-    DEBUG_SERIAL.print(": ");DEBUG_SERIAL.print(sr_data[idx].present_position);      
-      
-  }DEBUG_SERIAL.println("");
-  
-  dxl.syncRead(&sr_infos);
-  
+    if(!dxl.syncWrite(&sync_write_information)) {
+      DEBUG_SERIAL.println("[ERROR] Failed to Sync Write.");
+    }
+
+    saved_time = current_time;
+    frame_time += 1;
+
+    // When reached at the end of the motion frame array
+    if (frame_time >= TOTAL_FRAMES -1 ) {
+      DEBUG_SERIAL.println("=== [Motion Play Completed] ===");
+      DEBUG_SERIAL.print("Total Played Frames = ");
+      DEBUG_SERIAL.println(frame_time + 1);
+      frame_time = 1;
+      loop_counts--;
+    }
+  }
+}
+
+void DisplayTime()
+{
+  // Display current time, saved_time time, and elapsed time in two trajectory points. If not needed, comment out. 
+  DEBUG_SERIAL.println("=== [Print Time (ms)] ===");
+  DEBUG_SERIAL.print("Current: ");
+  DEBUG_SERIAL.print(current_time);
+  DEBUG_SERIAL.print("\t Saved: ");
+  DEBUG_SERIAL.print(saved_time);
+  DEBUG_SERIAL.print("\t Elapsed:");
+  DEBUG_SERIAL.print(current_time - saved_time);
+  DEBUG_SERIAL.print("\t Motion Frame:");
+  DEBUG_SERIAL.println(MOTION_DATA[frame_time+1][0]);
+}
+
+void ReadPresentPosition()
+{
+  uint8_t index = 0;
+
+  if(dxl.syncRead(&sync_read_information) > 0) {
+    DEBUG_SERIAL.print("[Present Position] : ");
+    for (index = 0; index < NUMBER_OF_JOINT; index++) {
+      DEBUG_SERIAL.print(sync_read_data[index].present_position);
+      DEBUG_SERIAL.print("\t");
+    }
+    DEBUG_SERIAL.println("");
+  } else {
+    DEBUG_SERIAL.println("[ERROR] Sync Read Failed");
+  }
+}
+
+unsigned long ElapsedTime()
+{
+  current_time = millis();
+  return (current_time - saved_time);
 }
