@@ -616,9 +616,12 @@ void setup()
 
   // Open serial port for debugging
   DEBUG_SERIAL.begin(115200);
+  while(!DEBUG_SERIAL);
 
   // Port Baudrate to communicate with connected DYNAMIXELs. If not matched, you will meet communication fail.
   dxl.begin(4000000);
+  
+  delay(100);  // Allow time for DYNAMIXEL to finish boot up
 
   // Recommended Protocol Version is "2.0" Note that DYNAMIXEL Protocol for each product may differ depending on your model in use.
   dxl.setPortProtocolVersion(DYNAMIXEL_PROTOCOL_VERSION);
@@ -644,9 +647,8 @@ void InitDXL(int frame_time)
   for (index = 0; index < NUMBER_OF_JOINT; index++)
   {
     if (!dxl.ping(DYNAMIXEL_ID[index])) {
-      DEBUG_SERIAL.print("[ERROR] DYNAMIXEL ID ");
-      DEBUG_SERIAL.print(index);
-      DEBUG_SERIAL.println(" is not detected.");
+      DEBUG_SERIAL.print("[ERROR] Failed to connect DYNAMIXEL ");
+      DEBUG_SERIAL.println(DYNAMIXEL_ID[index]);
     } else {
       dxl.torqueOff(DYNAMIXEL_ID[index]);
       // Set the Drive Mode as Time-based mode.
