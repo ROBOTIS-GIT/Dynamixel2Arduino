@@ -22,6 +22,8 @@
 #include "utility/slave.h"
 #include "actuator.h"
 
+// TODO: Match the OP Mode to the actual value
+// https://github.com/ROBOTIS-GIT/Dynamixel2Arduino/issues/73
 enum OperatingMode{
   OP_POSITION = 0,
   OP_EXTENDED_POSITION,
@@ -443,6 +445,9 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
     bool setFeedForwardGain(uint8_t id, uint16_t fisrt_gain, uint16_t second_gain);
 
     uint8_t getHardwareError(uint8_t id);
+    
+    // https://github.com/ROBOTIS-GIT/Dynamixel2Arduino/issues/73
+    uint8_t getOperatingMode(uint8_t id);
 #endif     
 
   private:
