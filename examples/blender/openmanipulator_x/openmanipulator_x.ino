@@ -1,18 +1,28 @@
-/*******************************************************************************
-* Copyright 2016 ROBOTIS CO., LTD.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+// Copyright 2021 ROBOTIS CO., LTD.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Example Environment
+//
+// - DYNAMIXEL: X series (except XL-320)
+//              ID = 11, 12, 13, 14, 15, Baudrate = 4000000bps, Protocol 2.0
+// - Controller: OpenCR 1.0
+// - Library: DYNAMIXEL2Arduino
+// - Software: Blender 2.93.1
+//             Arduino IDE
+// - https://emanual.robotis.com/docs/en/parts/interface/mkr_shield/#examples
+//
+// Author: David Park
 
 #include <Dynamixel2Arduino.h>
 
@@ -66,7 +76,7 @@ typedef struct sync_read_data {
 } __attribute__((packed)) sync_read_data_t;
 
 // Sync Read Present Position
-const uint16_t ADDRESS_TO_SYNC_READ = 132;
+const uint16_t PRESENT_POSITION_ADDRESS = 132;
 const uint16_t LENGTH_TO_SYNC_READ = 4;
 
 // Sync Read
@@ -81,7 +91,7 @@ typedef struct sync_write_data {
 } __attribute__((packed)) sync_write_data_t;
 
 // Sync Write Goal Position
-const uint16_t ADDRESS_TO_SYNC_WRITE = 116; 
+const uint16_t GOAL_POSITION_ADDRESS = 116; 
 const uint16_t LENGTH_TO_SYNC_WRITE = 4;
 
 // Sync Write
@@ -642,6 +652,7 @@ void loop()
 void InitDXL(int frame_time)
 {
   uint8_t index = 0;
+  dxl.torqueOff(DXL_BROADCAST_ID);
 
   // Ping DYNAMIXELs. If failed, check your Baudrate and pysical wiring connection.
   for (index = 0; index < NUMBER_OF_JOINT; index++)
@@ -650,17 +661,17 @@ void InitDXL(int frame_time)
       DEBUG_SERIAL.print("[ERROR] Failed to connect DYNAMIXEL ");
       DEBUG_SERIAL.println(DYNAMIXEL_ID[index]);
     } else {
-      dxl.torqueOff(DYNAMIXEL_ID[index]);
       // Set the Drive Mode as Time-based mode.
       dxl.writeControlTableItem(DRIVE_MODE, DYNAMIXEL_ID[index], 4);
       // Lower Return Delay Time enhances the responsiveness.
       dxl.writeControlTableItem(RETURN_DELAY_TIME, DYNAMIXEL_ID[index], 0);
       dxl.setOperatingMode(DYNAMIXEL_ID[index], OP_POSITION);
-      dxl.torqueOn(DYNAMIXEL_ID[index]);
       // Time-based should be larger than frame time.
       dxl.writeControlTableItem(PROFILE_VELOCITY, DYNAMIXEL_ID[index], frame_time);
     }
   }
+  dxl.torqueOn(DXL_BROADCAST_ID);
+  delay(100);
 }
 
 // Initialize SyncRead packet in the structure
@@ -671,7 +682,7 @@ void InitSyncRead()
   sync_read_information.packet.p_buf = packet_buffer;
   sync_read_information.packet.buf_capacity = MAX_PACKET_BUFFER_LENGTH;
   sync_read_information.packet.is_completed = false;
-  sync_read_information.addr = ADDRESS_TO_SYNC_READ;
+  sync_read_information.addr = PRESENT_POSITION_ADDRESS;
   sync_read_information.addr_length = LENGTH_TO_SYNC_READ;
   sync_read_information.p_xels = sync_read_dynamixel_info;
   sync_read_information.xel_count = 0;  
@@ -693,7 +704,7 @@ void InitSyncWrite()
   
   sync_write_information.packet.p_buf = nullptr;
   sync_write_information.packet.is_completed = false;
-  sync_write_information.addr = ADDRESS_TO_SYNC_WRITE;
+  sync_write_information.addr = GOAL_POSITION_ADDRESS;
   sync_write_information.addr_length = LENGTH_TO_SYNC_WRITE;
   sync_write_information.p_xels = sync_write_dynamixel_info;
   sync_write_information.xel_count = 0;
