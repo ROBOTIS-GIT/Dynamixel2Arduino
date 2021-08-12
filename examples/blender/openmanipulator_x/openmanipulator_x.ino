@@ -20,7 +20,6 @@
 // - Library: DYNAMIXEL2Arduino
 // - Software: Blender 2.93.1
 //             Arduino IDE
-// - https://emanual.robotis.com/docs/en/parts/interface/mkr_shield/#examples
 //
 // Author: David Park
 
