@@ -25,14 +25,12 @@
 // TODO: Match the OP Mode to the actual value
 // https://github.com/ROBOTIS-GIT/Dynamixel2Arduino/issues/73
 enum OperatingMode{
-  OP_POSITION = 0,
-  OP_EXTENDED_POSITION,
-  OP_CURRENT_BASED_POSITION,
-  OP_VELOCITY,
-  OP_PWM,
-  OP_CURRENT,
-
-  UNKNOWN_OP
+  OP_CURRENT = 0,
+  OP_VELOCITY = 1,
+  OP_POSITION = 3,
+  OP_EXTENDED_POSITION = 4,
+  OP_CURRENT_BASED_POSITION = 5,
+  OP_PWM = 16,
 };
 
 enum ParamUnit{
