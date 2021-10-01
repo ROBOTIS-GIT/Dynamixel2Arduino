@@ -24,6 +24,7 @@
 #define ENABLE_ACTUATOR_XH430           1
 #define ENABLE_ACTUATOR_XM540           1
 #define ENABLE_ACTUATOR_XH540           1
+#define ENABLE_ACTUATOR_XW430           1
 #define ENABLE_ACTUATOR_XW540           1
 
 #define ENABLE_ACTUATOR_PRO_R           1

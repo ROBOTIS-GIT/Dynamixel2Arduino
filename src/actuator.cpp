@@ -173,8 +173,8 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
  || ENABLE_ACTUATOR_XL430 \
  || ENABLE_ACTUATOR_XC430 \
  || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
- || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540) \
- || ENABLE_ACTUATOR_XW540
+ || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540 \
+ || ENABLE_ACTUATOR_XW540 || ENABLE_ACTUATOR_XW430)
   {ControlTableItem::MODEL_NUMBER,             0, 2},
   {ControlTableItem::MODEL_INFORMATION,        2, 4},
   {ControlTableItem::FIRMWARE_VERSION,         6, 1},
@@ -284,10 +284,9 @@ const ModelControlTableInfo_t xmh540_control_table[] PROGMEM = {
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
 
-const ModelControlTableInfo_t xw540_control_table[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XW540)
+const ModelControlTableInfo_t xw430_540_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XW540 || ENABLE_ACTUATOR_XW430 )
   {ControlTableItem::CURRENT_LIMIT,           38, 2},
-
   {ControlTableItem::GOAL_CURRENT,           102, 2},
   {ControlTableItem::PRESENT_CURRENT,        126, 2},
 #endif
@@ -512,8 +511,10 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
 
     case XW540_T140:
     case XW540_T260:
+    case XW430_T200:
+    case XW430_T333:
       p_common_ctable = control_table_2_0;
-      p_dep_ctable = xw540_control_table;
+      p_dep_ctable = xw430_540_control_table;
       break;
 
     // case PRO_L42_10_S300_R:
