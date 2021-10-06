@@ -149,6 +149,21 @@
 #ifndef XH540_V270
 #define XH540_V270          (uint16_t)1140
 #endif
+
+#ifndef XD430_T210
+#define XD430_T210          (uint16_t)1011
+#endif
+#ifndef XD430_T350
+#define XD430_T350          (uint16_t)1001
+#endif
+
+#ifndef XD540_T150
+#define XD540_T150          (uint16_t)1111
+#endif
+#ifndef XD540_T270
+#define XD540_T270          (uint16_t)1101
+#endif
+
 #ifndef XW430_T200
 #define XW430_T200          (uint16_t)1280
 #endif

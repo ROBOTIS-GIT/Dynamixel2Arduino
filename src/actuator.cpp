@@ -172,8 +172,8 @@ const ModelControlTableInfo_t control_table_2_0[] PROGMEM = {
  || ENABLE_ACTUATOR_XC330 \
  || ENABLE_ACTUATOR_XL430 \
  || ENABLE_ACTUATOR_XC430 \
- || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
- || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540 \
+ || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 || ENABLE_ACTUATOR_XD430 \
+ || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540 || ENABLE_ACTUATOR_XD540 \
  || ENABLE_ACTUATOR_XW540 || ENABLE_ACTUATOR_XW430)
   {ControlTableItem::MODEL_NUMBER,             0, 2},
   {ControlTableItem::MODEL_INFORMATION,        2, 4},
@@ -495,6 +495,8 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case XH430_V350:
     case XH430_W210:
     case XH430_W350:
+    case XD430_T210:
+    case XD430_T350:
       p_common_ctable = control_table_2_0;    
       p_dep_ctable = xmh430_xl330_control_table;
       break;
@@ -505,6 +507,8 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XD540_T150:
+    case XD540_T270:
       p_common_ctable = control_table_2_0;
       p_dep_ctable = xmh540_control_table;
       break;    
