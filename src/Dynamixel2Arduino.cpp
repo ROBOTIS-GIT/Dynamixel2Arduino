@@ -45,6 +45,9 @@ const uint16_t model_number_table[] PROGMEM = {
     XM540_W150,  XM540_W270, 
     XH430_V210,  XH430_V350, XH430_W210, XH430_W350,
     XH540_V150,  XH540_V270, XH540_W150, XH540_W270,
+    XD430_T210,  XD430_T350,
+    XD540_T150,  XD540_T270,
+    XW430_T200,  XW430_T333,
     XW540_T140,  XW540_T260,
 
     PRO_L42_10_S300_R,   
@@ -350,12 +353,18 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case XH430_V350:
     case XH430_W210:
     case XH430_W350:
+    case XD430_T210:
+    case XD430_T350:
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XD540_T150:
+    case XD540_T270:
+    case XW430_T200:
+    case XW430_T333:
     case XW540_T140:
     case XW540_T260:    
       switch(baudrate)
@@ -669,12 +678,18 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
     case XH430_V350:
     case XH430_W210:
     case XH430_W350:
+    case XD430_T210:
+    case XD430_T350:
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XD540_T150:
+    case XD540_T270:
+    case XW430_T200:
+    case XW430_T333:
     case XW540_T140:
     case XW540_T260:    
       if(mode == OP_POSITION){
@@ -1174,8 +1189,16 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xm430_w210_w350[] PROGMEM
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_w210_w350[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XH430)
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_wt210_wt350[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XH430 || ENABLE_ACTUATOR_XD430)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xw430_t200_t333[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XW430)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
 #endif
@@ -1190,9 +1213,9 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_v210_v350[] PROGMEM
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540_xw540[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540) \
- || ENABLE_ACTUATOR_XW540
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540_xt540_xw540[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540 \
+ || ENABLE_ACTUATOR_XD540 || ENABLE_ACTUATOR_XW540)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
 #endif
@@ -1487,20 +1510,30 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
 
     case XH430_W210:
     case XH430_W350:
+    case XD430_T210:
+    case XD430_T350:
       p_common_ctable = dependency_ctable_2_0_common;
-      p_dep_ctable = dependency_xh430_w210_w350;
+      p_dep_ctable = dependency_xh430_wt210_wt350;
       break;    
+
+    case XW430_T200:
+    case XW430_T333:
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xw430_t200_t333;
+      break;   
 
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
-    case XH540_W270:
+    case XH540_W270:    
     case XH540_V150:
     case XH540_V270:
+    case XD540_T150:
+    case XD540_T270:    
     case XW540_T140:
     case XW540_T260:
       p_common_ctable = dependency_ctable_2_0_common;
-      p_dep_ctable = dependency_xm540_xh540_xw540;
+      p_dep_ctable = dependency_xm540_xh540_xt540_xw540;
       break;
 
     // case PRO_L42_10_S300_R:
