@@ -1162,6 +1162,14 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xl330_M288_M077[] PROGMEM
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xl430_xc430[] PROGMEM = {
+#if (ENABLE_ACTUATOR_MX28_PROTOCOL2 || ENABLE_ACTUATOR_XL430 || ENABLE_ACTUATOR_XC430)
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xc330_m181_m288[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XC330)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2352, 2352, 1},
@@ -1495,6 +1503,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case XL430_W250:
     case XXL430_W250:
       p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xl430_xc430;
       break;
 
     case MX64_2:
@@ -1752,5 +1761,3 @@ static float f_map(float x, float in_min, float in_max, float out_min, float out
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
-
