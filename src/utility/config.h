@@ -18,12 +18,15 @@
 #define ENABLE_ACTUATOR_XL320           1
 #define ENABLE_ACTUATOR_XL330           1
 #define ENABLE_ACTUATOR_XC330           1
-#define ENABLE_ACTUATOR_XL430           1   //Includes 2XL430
-#define ENABLE_ACTUATOR_XC430           1   //Includes 2XC430
+#define ENABLE_ACTUATOR_XL430           1  // includes 2XL430
+#define ENABLE_ACTUATOR_XC430           1  // includes 2XC430
 #define ENABLE_ACTUATOR_XM430           1
-#define ENABLE_ACTUATOR_XH430           1
+#define ENABLE_ACTUATOR_XH430           1  // includes V lineup
+#define ENABLE_ACTUATOR_XD430           1
 #define ENABLE_ACTUATOR_XM540           1
-#define ENABLE_ACTUATOR_XH540           1
+#define ENABLE_ACTUATOR_XH540           1  // includes V lineup
+#define ENABLE_ACTUATOR_XD540           1
+#define ENABLE_ACTUATOR_XW430           1
 #define ENABLE_ACTUATOR_XW540           1
 
 #define ENABLE_ACTUATOR_PRO_R           1

@@ -45,6 +45,9 @@ const uint16_t model_number_table[] PROGMEM = {
     XM540_W150,  XM540_W270, 
     XH430_V210,  XH430_V350, XH430_W210, XH430_W350,
     XH540_V150,  XH540_V270, XH540_W150, XH540_W270,
+    XD430_T210,  XD430_T350,
+    XD540_T150,  XD540_T270,
+    XW430_T200,  XW430_T333,
     XW540_T140,  XW540_T260,
 
     PRO_L42_10_S300_R,   
@@ -350,12 +353,18 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case XH430_V350:
     case XH430_W210:
     case XH430_W350:
+    case XD430_T210:
+    case XD430_T350:
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XD540_T150:
+    case XD540_T270:
+    case XW430_T200:
+    case XW430_T333:
     case XW540_T140:
     case XW540_T260:    
       switch(baudrate)
@@ -669,12 +678,18 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
     case XH430_V350:
     case XH430_W210:
     case XH430_W350:
+    case XD430_T210:
+    case XD430_T350:
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
     case XH540_W270:
     case XH540_V150:
     case XH540_V270:
+    case XD540_T150:
+    case XD540_T270:
+    case XW430_T200:
+    case XW430_T333:
     case XW540_T140:
     case XW540_T260:    
       if(mode == OP_POSITION){
@@ -1102,13 +1117,11 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGM
   || ENABLE_ACTUATOR_XC330 \
   || ENABLE_ACTUATOR_XC430 \
   || ENABLE_ACTUATOR_XL430 \
-  || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 \
-  || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540)
+  || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 || ENABLE_ACTUATOR_XD430 \
+  || ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540 || ENABLE_ACTUATOR_XD540 \
+  || ENABLE_ACTUATOR_XW540 || ENABLE_ACTUATOR_XW430)
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -1048575, 1048575, 0.088},
   {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483647 , 2147483647, 0.088},
-
-  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
-  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},  
 
   {SET_PWM, GOAL_PWM, UNIT_RAW, -885, 885, 1},
   {GET_PWM, PRESENT_PWM, UNIT_RAW, -885, 885, 1},
@@ -1120,6 +1133,9 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx64_2[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX64_PROTOCOL2)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 3.36},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
@@ -1128,17 +1144,28 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_mx106_2[] PROGMEM = {
 #if (ENABLE_ACTUATOR_MX106_PROTOCOL2)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 3.36},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xl330_M288_M077[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XL330)
-  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1150, 1150, 1},
-  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1150, 1150, 1},
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1750, 1750, 1},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1750, 1750, 1},
 
   {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2047, 2047, 0.229},
   {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2047, 2047, 0.229},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xl430_xc430[] PROGMEM = {
+#if (ENABLE_ACTUATOR_MX28_PROTOCOL2 || ENABLE_ACTUATOR_XL430 || ENABLE_ACTUATOR_XC430)
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
@@ -1165,19 +1192,35 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xc330_t181_t288[] PROGMEM
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xm430_w210_w350[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XM430)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1193, 1193, 2.69},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_w210_w350[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XH430)
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_wt210_wt350[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XH430 || ENABLE_ACTUATOR_XD430)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -648, 648, 2.69},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xw430_t200_t333[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XW430)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
@@ -1186,15 +1229,32 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xh430_v210_v350[] PROGMEM
 #if (ENABLE_ACTUATOR_XH430)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -689, 689, 1.34},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
-const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540_xw540[] PROGMEM = {
-#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540) \
- || ENABLE_ACTUATOR_XW540
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xm540_xh540_xt540_xw540[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XM540 || ENABLE_ACTUATOR_XH540 \
+ || ENABLE_ACTUATOR_XD540 || ENABLE_ACTUATOR_XW540)
   {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
   {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2047, 2047, 2.69},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xh540_v150_v270[] PROGMEM = {
+#if (ENABLE_ACTUATOR_XH540 || ENABLE_ACTUATOR_XD540)
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -1188, 1188, 2.69},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -1188, 1188, 2.69},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -1023, 1023, 0.229},
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
@@ -1443,6 +1503,7 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case XL430_W250:
     case XXL430_W250:
       p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xl430_xc430;
       break;
 
     case MX64_2:
@@ -1487,20 +1548,34 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
 
     case XH430_W210:
     case XH430_W350:
+    case XD430_T210:
+    case XD430_T350:
       p_common_ctable = dependency_ctable_2_0_common;
-      p_dep_ctable = dependency_xh430_w210_w350;
+      p_dep_ctable = dependency_xh430_wt210_wt350;
       break;    
+
+    case XW430_T200:
+    case XW430_T333:
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xw430_t200_t333;
+      break;   
 
     case XM540_W150:
     case XM540_W270:
     case XH540_W150:
-    case XH540_W270:
-    case XH540_V150:
-    case XH540_V270:
+    case XH540_W270:    
+    case XD540_T150:
+    case XD540_T270:    
     case XW540_T140:
     case XW540_T260:
       p_common_ctable = dependency_ctable_2_0_common;
-      p_dep_ctable = dependency_xm540_xh540_xw540;
+      p_dep_ctable = dependency_xm540_xh540_xt540_xw540;
+      break;
+
+    case XH540_V150:
+    case XH540_V270:
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xh540_v150_v270;
       break;
 
     // case PRO_L42_10_S300_R:
@@ -1686,5 +1761,3 @@ static float f_map(float x, float in_min, float in_max, float out_min, float out
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
-
