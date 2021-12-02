@@ -1,18 +1,26 @@
-/*******************************************************************************
-* Copyright 2016 ROBOTIS CO., LTD.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+// Copyright 2021 ROBOTIS CO., LTD.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Example Environment
+//
+// - DYNAMIXEL: X series
+//              ID = 1 & 2, Baudrate = 57600bps, DYNAMIXEL Protocol 2.0
+// - Controller: Arduino MKR ZERO
+//               DYNAMIXEL Shield for Arduino MKR
+// - https://emanual.robotis.com/docs/en/parts/interface/mkr_shield/
+//
+// Author: David Park
 
 #include <Dynamixel2Arduino.h>
 
@@ -51,38 +59,38 @@
 /* syncRead
   Structures containing the necessary information to process the 'syncRead' packet.
 
-  typedef struct XELInfoBulkRead{
-    uint16_t addr;
-    uint16_t addr_length;
+  typedef struct XELInfoSyncRead{
     uint8_t *p_recv_buf;
     uint8_t id;
     uint8_t error;
-  } __attribute__((packed)) XELInfoBulkRead_t;
+  } __attribute__((packed)) XELInfoSyncRead_t;
 
-  typedef struct InfoBulkReadInst{
-    XELInfoBulkRead_t* p_xels;
+  typedef struct InfoSyncReadInst{
+    uint16_t addr;
+    uint16_t addr_length;
+    XELInfoSyncRead_t* p_xels;
     uint8_t xel_count;
     bool is_info_changed;
     InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkReadInst_t;
+  } __attribute__((packed)) InfoSyncReadInst_t;
 */
 
 /* syncWrite
   Structures containing the necessary information to process the 'syncWrite' packet.
 
-  typedef struct XELInfoBulkWrite{
-    uint16_t addr;
-    uint16_t addr_length;
+  typedef struct XELInfoSyncWrite{
     uint8_t* p_data;
     uint8_t id;
-  } __attribute__((packed)) XELInfoBulkWrite_t;
+  } __attribute__((packed)) XELInfoSyncWrite_t;
 
-  typedef struct InfoBulkWriteInst{
-    XELInfoBulkWrite_t* p_xels;
+  typedef struct InfoSyncWriteInst{
+    uint16_t addr;
+    uint16_t addr_length;
+    XELInfoSyncWrite_t* p_xels;
     uint8_t xel_count;
     bool is_info_changed;
     InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkWriteInst_t;
+  } __attribute__((packed)) InfoSyncWriteInst_t;
 */
 
 const uint8_t BROADCAST_ID = 254;
@@ -92,9 +100,13 @@ const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
 const uint16_t user_pkt_buf_cap = 128;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
 
-const uint16_t SR_START_ADDR = 132; // Starting Data Addr, Can differ Depending on what address to access
-const uint16_t SR_ADDR_LEN = 4; // Data Length, Can differ depending on how many address to access. 
-const uint16_t SW_START_ADDR = 116; 
+// Starting address of the Data to read; Present Position = 132
+const uint16_t SR_START_ADDR = 132;
+// Length of the Data to read; Length of Position data of X series is 4 byte
+const uint16_t SR_ADDR_LEN = 4;
+// Starting address of the Data to write; Goal Position = 116
+const uint16_t SW_START_ADDR = 116;
+// Length of the Data to write; Length of Position data of X series is 4 byte
 const uint16_t SW_ADDR_LEN = 4;
 typedef struct sr_data{
   int32_t present_position;
@@ -114,11 +126,11 @@ DYNAMIXEL::XELInfoSyncWrite_t info_xels_sw[DXL_ID_CNT];
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
-//This namespace is required to use Control table item names
+//This namespace is required to use DYNAMIXEL Control table item name definitions
 using namespace ControlTableItem;
 
 int32_t goal_position[2] = {1024, 2048};
-uint8_t direction = 0;
+uint8_t goal_position_index = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -128,7 +140,8 @@ void setup() {
   dxl.begin(57600);
   dxl.setPortProtocolVersion(DYNAMIXEL_PROTOCOL_VERSION);
 
-  for(i=0; i<DXL_ID_CNT; i++){
+// Prepare the SyncRead structure
+  for(i = 0; i < DXL_ID_CNT; i++){
     dxl.torqueOff(DXL_ID_LIST[i]);
     dxl.setOperatingMode(DXL_ID_LIST[i], OP_POSITION);
   }
@@ -143,7 +156,7 @@ void setup() {
   sr_infos.p_xels = info_xels_sr;
   sr_infos.xel_count = 0;  
 
-  for(i=0; i<DXL_ID_CNT; i++){
+  for(i = 0; i < DXL_ID_CNT; i++){
     info_xels_sr[i].id = DXL_ID_LIST[i];
     info_xels_sr[i].p_recv_buf = (uint8_t*)&sr_data[i];
     sr_infos.xel_count++;
@@ -158,7 +171,7 @@ void setup() {
   sw_infos.p_xels = info_xels_sw;
   sw_infos.xel_count = 0;
 
-  for(i=0; i<DXL_ID_CNT; i++){
+  for(i = 0; i < DXL_ID_CNT; i++){
     info_xels_sw[i].id = DXL_ID_LIST[i];
     info_xels_sw[i].p_data = (uint8_t*)&sw_data[i].goal_position;
     sw_infos.xel_count++;
@@ -171,24 +184,29 @@ void loop() {
   static uint32_t try_count = 0;
   uint8_t i, recv_cnt;
   
-  for(i=0; i<DXL_ID_CNT; i++){
-    sw_data[i].goal_position = goal_position[direction];
+  // Insert a new Goal Position to the SyncWrite Packet
+  for(i = 0; i < DXL_ID_CNT; i++){
+    sw_data[i].goal_position = goal_position[goal_position_index];
   }
+
+  // Update the SyncWrite packet status
   sw_infos.is_info_changed = true;
 
   DEBUG_SERIAL.print("\n>>>>>> Sync Instruction Test : ");
   DEBUG_SERIAL.println(try_count++);
+  
+  // Build a SyncWrite Packet and transmit to DYNAMIXEL  
   if(dxl.syncWrite(&sw_infos) == true){
     DEBUG_SERIAL.println("[SyncWrite] Success");
-    for(i=0; i<sw_infos.xel_count; i++){
+    for(i = 0; i<sw_infos.xel_count; i++){
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(sw_infos.p_xels[i].id);
       DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(sw_data[i].goal_position);
     }
-    if(direction == 0)
-      direction = 1;
+    if(goal_position_index == 0)
+      goal_position_index = 1;
     else
-      direction = 0;
-  }else{
+      goal_position_index = 0;
+  } else {
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
     DEBUG_SERIAL.print(dxl.getLastLibErrCode());
   }
@@ -196,14 +214,20 @@ void loop() {
 
   delay(250);
 
+
+  // Transmit predefined SyncRead instruction packet
+  // and receive a status packet from each DYNAMIXEL
   recv_cnt = dxl.syncRead(&sr_infos);
-  if(recv_cnt > 0){
+  if(recv_cnt > 0) {
     DEBUG_SERIAL.print("[SyncRead] Success, Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
-    for(i=0; i<recv_cnt; i++){
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
-      DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(sr_infos.p_xels[i].error);
-      DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(sr_data[i].present_position);
+    for(i = 0; i<recv_cnt; i++){
+      DEBUG_SERIAL.print("  ID: ");
+      DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
+      DEBUG_SERIAL.print(", Error: ");
+      DEBUG_SERIAL.println(sr_infos.p_xels[i].error);
+      DEBUG_SERIAL.print("\t Present Position: ");
+      DEBUG_SERIAL.println(sr_data[i].present_position);
     }
   }else{
     DEBUG_SERIAL.print("[SyncRead] Fail, Lib error code: ");
