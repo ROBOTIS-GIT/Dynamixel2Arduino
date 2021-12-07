@@ -164,7 +164,7 @@ DXLLibErrorCode_t end_make_dxl_packet(InfoToMakeDXLPacket_t* p_make_packet);
 DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
   uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_cap);
 DXLLibErrorCode_t parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data);
-
+DXLLibErrorCode_t fast_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data);
 
 #ifdef __cplusplus
 }
