@@ -328,8 +328,6 @@ static DXLLibErrorCode_t end_make_dxl2_0_packet(InfoToMakeDXLPacket_t* p_make_pa
   return DXL_LIB_OK;
 }
 
-
-
 DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
   uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_capacity)
 {
@@ -346,6 +344,26 @@ DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet,
   p_parse_packet->param_buf_capacity = param_buf_capacity;
   // p_parse_packet->recv_param_len = 0;
   // p_parse_packet->parse_state = 0;
+  p_parse_packet->is_init = true;
+
+  return DXL_LIB_OK;
+}
+
+DXLLibErrorCode_t fast_begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
+  uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_capacity, uint8_t xel_count)
+{
+  if(param_buf_capacity > 0 && p_param_buf == NULL){
+    return DXL_LIB_ERROR_NULLPTR;
+  }
+  
+  if(protocol_ver != 1 && protocol_ver != 2){
+    return DXL_LIB_ERROR_INVAILD_PROTOCOL_VERSION;
+  }
+
+  p_parse_packet->protocol_ver = protocol_ver;
+  p_parse_packet->p_param_buf = p_param_buf;
+  p_parse_packet->param_buf_capacity = param_buf_capacity;
+  p_parse_packet->xel_count = xel_count;
   p_parse_packet->is_init = true;
 
   return DXL_LIB_OK;
@@ -677,7 +695,6 @@ static DXLLibErrorCode_t parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_parse_pac
   return ret;  
 }
 
-
 //fast_parse_dxl2_0_packet
 static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data)
 {
@@ -685,188 +702,150 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
   uint16_t byte_stuffing_cnt = 0;
 
   switch(p_parse_packet->parse_state)
-  {
-    case DXL2_0_PACKET_PARSING_STATE_IDLE:
-      if(p_parse_packet->header_cnt >= 3){
-        p_parse_packet->header_cnt = 0;
-      }
-      p_parse_packet->header[p_parse_packet->header_cnt++] = recv_data;
-      if(p_parse_packet->header_cnt == 3){
-        if(p_parse_packet->header[0] == 0xFF
-        && p_parse_packet->header[1] == 0xFF
-        && p_parse_packet->header[2] == 0xFD){
-          p_parse_packet->recv_param_len = 0;
-          p_parse_packet->calculated_crc = 0;
-          update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
-          update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
-          update_dxl_crc(&p_parse_packet->calculated_crc, 0xFD);          
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_RESERVED;
-        }else{
-          p_parse_packet->header[0] = p_parse_packet->header[1];
-          p_parse_packet->header[1] = p_parse_packet->header[2];
-          p_parse_packet->header_cnt--;
+    {
+      case DXL2_0_PACKET_PARSING_STATE_IDLE:
+        p_parse_packet->xel_cnt = 0;
+        if(p_parse_packet->header_cnt >= 3){
+          p_parse_packet->header_cnt = 0;
         }
-      }
-      break;
+        p_parse_packet->header[p_parse_packet->header_cnt++] = recv_data;
+        if(p_parse_packet->header_cnt == 3){
+          if(p_parse_packet->header[0] == 0xFF
+          && p_parse_packet->header[1] == 0xFF
+          && p_parse_packet->header[2] == 0xFD){
+            p_parse_packet->recv_param_len = 0;
+            p_parse_packet->calculated_crc = 0;
+            update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
+            update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
+            update_dxl_crc(&p_parse_packet->calculated_crc, 0xFD);          
+            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_RESERVED;
+          }else{
+            p_parse_packet->header[0] = p_parse_packet->header[1];
+            p_parse_packet->header[1] = p_parse_packet->header[2];
+            p_parse_packet->header_cnt--;
+          }
+        }
+        break;
 
-    case DXL2_0_PACKET_PARSING_STATE_RESERVED:
-      if(recv_data != 0xFD){ // http://emanual.robotis.com/docs/en/dxl/protocol2/#reserved
-        p_parse_packet->reserved = recv_data;
+      case DXL2_0_PACKET_PARSING_STATE_RESERVED:
+        if(recv_data != 0xFD){ // http://emanual.robotis.com/docs/en/dxl/protocol2/#reserved
+          p_parse_packet->reserved = recv_data;
+          update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ID;
+        }else{
+          ret = DXL_LIB_ERROR_WRONG_PACKET;
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+        }
+        break;
+
+      case DXL2_0_PACKET_PARSING_STATE_ID:
+        if(recv_data < 0xFD || recv_data == DXL_BROADCAST_ID){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
+          p_parse_packet->id = recv_data;
+          update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_LENGTH_L;
+        }else{
+          ret = DXL_LIB_ERROR_INVAILD_ID;
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+        }
+        break;
+
+      case DXL2_0_PACKET_PARSING_STATE_LENGTH_L:
+        p_parse_packet->packet_len = recv_data;
         update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ID;
-      }else{
-        ret = DXL_LIB_ERROR_WRONG_PACKET;
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-      }
-      break;
+        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_LENGTH_H;
+        break;
 
-    case DXL2_0_PACKET_PARSING_STATE_ID:
-      if(recv_data < 0xFD || recv_data == DXL_BROADCAST_ID){ //http://emanual.robotis.com/docs/en/dxl/protocol2/#packet-id
-        p_parse_packet->id = recv_data;
+      case DXL2_0_PACKET_PARSING_STATE_LENGTH_H:
+        p_parse_packet->packet_len |= recv_data<<8;
         update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_LENGTH_L;
-      }else{
-        ret = DXL_LIB_ERROR_INVAILD_ID;
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-      }
-      break;
-
-    case DXL2_0_PACKET_PARSING_STATE_LENGTH_L:
-      p_parse_packet->packet_len = recv_data;
-      update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-      p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_LENGTH_H;
-      break;
-
-    case DXL2_0_PACKET_PARSING_STATE_LENGTH_H:
-      p_parse_packet->packet_len |= recv_data<<8;
-      update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-      if(p_parse_packet->packet_len < 3){ // 3 = Instruction(1)+CRC(2)
-        ret = DXL_LIB_ERROR_LENGTH;
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-      }else{
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_INST;
-      }
-      break;
-
-    case DXL2_0_PACKET_PARSING_STATE_INST:
-      p_parse_packet->inst_idx = recv_data;
-      update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-      p_parse_packet->recv_param_len = 0;
-      p_parse_packet->err_idx = 0;
-      if(recv_data == DXL_INST_STATUS){
-        if(p_parse_packet->packet_len < 4){ // 4 = Instruction(1)+Error(1)+CRC(2)
+        if(p_parse_packet->packet_len < 3){ // 3 = Instruction(1)+CRC(2)
           ret = DXL_LIB_ERROR_LENGTH;
           p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-        }else if(p_parse_packet->packet_len > p_parse_packet->param_buf_capacity+4){ // 4 = Instruction(1)+Error(1)+CRC(2)
-          ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
         }else{
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_INST;
         }
-      }else{
-        if(p_parse_packet->packet_len > p_parse_packet->param_buf_capacity+3){ // 3 = Instruction(1)+CRC(2)
-          ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-        }else if(p_parse_packet->packet_len == 3){ // 3 = Instruction(1)+CRC(2)
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
-        }else{
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
-        }
-      }
-      break;
-
-    case DXL2_0_PACKET_PARSING_STATE_ERROR:
-      p_parse_packet->err_idx = recv_data;
-      update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-      if(p_parse_packet->packet_len == 4){ // 4 = Instruction(1)+Error(1)+CRC(2)
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
         break;
-      }
-      p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
-      break;
 
-    case DXL2_0_PACKET_PARSING_STATE_PARAM:
-      if(p_parse_packet->p_param_buf == NULL){
-        ret = DXL_LIB_ERROR_NULLPTR;
+      case DXL2_0_PACKET_PARSING_STATE_INST:
+        p_parse_packet->inst_idx = recv_data;
+        update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
+        p_parse_packet->recv_param_len = 0;
+        p_parse_packet->err_idx = 0;
+        if(recv_data == DXL_INST_STATUS){
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
+          if(p_parse_packet->packet_len < 4){ // 4 = Instruction(1)+Error(1)+CRC(2)
+            ret = DXL_LIB_ERROR_LENGTH;
+            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+          }else if(p_parse_packet->packet_len > ((p_parse_packet->param_buf_capacity+4) * p_parse_packet->xel_count) + 1 ){ // 4 = Instruction(1)+Error(1)+CRC(2)
+            ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
+            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+          }else{
+            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
+          }
+        }else{
+          if(p_parse_packet->packet_len > p_parse_packet->param_buf_capacity+3){ // 3 = Instruction(1)+CRC(2)
+            ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
+            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+          }else if(p_parse_packet->packet_len == 3){ // 3 = Instruction(1)+CRC(2)
+            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
+          }else{
+            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
+          }
+        }
+        break;
+
+      case DXL2_0_PACKET_PARSING_STATE_ERROR:
+        p_parse_packet->err_idx = recv_data;
+        update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
+        if(p_parse_packet->packet_len == 4){ // 4 = Instruction(1)+Error(1)+CRC(2)
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
+          break;
+        }
+        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
+        break;
+
+      case DXL2_0_PACKET_PARSING_STATE_PARAM:
+        if(p_parse_packet->p_param_buf == NULL){
+          ret = DXL_LIB_ERROR_NULLPTR;
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+        }
+        p_parse_packet->p_param_buf[(p_parse_packet->xel_cnt * 4) + p_parse_packet->recv_param_len++] = recv_data;
+        update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
+
+        if(p_parse_packet->recv_param_len == p_parse_packet->param_buf_capacity){ // 4 = Instruction(1)+Error(1)+CRC(2)
+          p_parse_packet->recv_param_len = 0;
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
+        } 
+        break;
+
+      case DXL2_0_PACKET_PARSING_STATE_CRC_L:
+        p_parse_packet->recv_crc = recv_data;
+        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_H;
+        break;
+
+      case DXL2_0_PACKET_PARSING_STATE_CRC_H:
+        p_parse_packet->xel_cnt += 1;
+
+        if(p_parse_packet->xel_cnt < p_parse_packet->xel_count) {
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
+          break;
+        } else if (p_parse_packet->xel_cnt == p_parse_packet->xel_count) {
+          p_parse_packet->recv_crc |= recv_data<<8;
+          ret = p_parse_packet->xel_cnt;
+          if (p_parse_packet->calculated_crc == p_parse_packet->recv_crc){
+            ret = DXL_LIB_OK;
+          }else{
+            // ret = DXL_LIB_ERROR_CRC;
+            ret = DXL_LIB_OK;
+          }
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+          break;
+        }
+
+      default:
         p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-      }
-
-      p_parse_packet->p_param_buf[p_parse_packet->recv_param_len++] = recv_data;
-      update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-
-      //Remove byte stuffing (http://emanual.robotis.com/docs/en/dxl/protocol2/#processing-order-of-reception)
-      if(p_parse_packet->inst_idx == DXL_INST_STATUS){
-        if(p_parse_packet->recv_param_len >= 4){
-          if(p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-4] == 0xFF
-          && p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-3] == 0xFF
-          && p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-2] == 0xFD
-          && p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-1] == 0xFD){
-            p_parse_packet->recv_param_len--;
-            byte_stuffing_cnt++;
-          }
-        }else if(p_parse_packet->recv_param_len == 3){
-          if(p_parse_packet->err_idx == 0xFF
-          && p_parse_packet->p_param_buf[0] == 0xFF
-          && p_parse_packet->p_param_buf[1] == 0xFD
-          && p_parse_packet->p_param_buf[2] == 0xFD){
-            p_parse_packet->recv_param_len--;
-            byte_stuffing_cnt++;
-          }
-        }else if(p_parse_packet->recv_param_len == 2){
-          if(p_parse_packet->inst_idx == 0xFF
-          && p_parse_packet->err_idx == 0xFF
-          && p_parse_packet->p_param_buf[0] == 0xFD
-          && p_parse_packet->p_param_buf[1] == 0xFD){
-            p_parse_packet->recv_param_len--;
-            byte_stuffing_cnt++;
-          }
-        }
-        if(p_parse_packet->recv_param_len+byte_stuffing_cnt+4 == p_parse_packet->packet_len){ // 4 = Instruction(1)+Error(1)+CRC(2)
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
-        }
-      }else{
-        if(p_parse_packet->recv_param_len >= 4){
-          if(p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-4] == 0xFF
-          && p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-3] == 0xFF
-          && p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-2] == 0xFD
-          && p_parse_packet->p_param_buf[p_parse_packet->recv_param_len-1] == 0xFD){
-            p_parse_packet->recv_param_len--;
-            byte_stuffing_cnt++;
-          }
-        }else if(p_parse_packet->recv_param_len == 3){
-          if(p_parse_packet->inst_idx == 0xFF
-          && p_parse_packet->p_param_buf[0] == 0xFF
-          && p_parse_packet->p_param_buf[1] == 0xFD
-          && p_parse_packet->p_param_buf[2] == 0xFD){
-            p_parse_packet->recv_param_len--;
-            byte_stuffing_cnt++;
-          }
-        }
-        if(p_parse_packet->recv_param_len+byte_stuffing_cnt+3 == p_parse_packet->packet_len){ // 3 = Instruction(1)+CRC(2)
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
-        }
-      }
-      break;
-
-    case DXL2_0_PACKET_PARSING_STATE_CRC_L:
-      p_parse_packet->recv_crc = recv_data;
-      p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_H;
-      break;
-
-    case DXL2_0_PACKET_PARSING_STATE_CRC_H:
-      p_parse_packet->recv_crc |= recv_data<<8;
-      if (p_parse_packet->calculated_crc == p_parse_packet->recv_crc){
-        ret = DXL_LIB_OK;
-      }else{
-        ret = DXL_LIB_ERROR_CRC;
-      }
-      p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-      break;
-
-    default:
-      p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-      break;
-  }
+        break;
+    }
 
   return ret;  
 }

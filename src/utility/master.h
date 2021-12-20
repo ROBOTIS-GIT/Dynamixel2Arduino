@@ -252,7 +252,7 @@ class Master
     // raw APIs
     bool txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t param_len);
     const InfoToParseDXLPacket_t* rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
-    const InfoToParseDXLPacket_t* fastRxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
+    const InfoToParseDXLPacket_t* fastRxStatusPacket(XELInfoFastSyncRead_t* p_xel_info, uint16_t param_buf_cap, uint8_t xel_count, uint32_t timeout_ms = 10);
 
     // >> Legacy (Deprecated since v0.4.0)
     bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);

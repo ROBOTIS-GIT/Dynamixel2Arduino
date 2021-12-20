@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+// Author: Ashe Kim
+
 #include <Dynamixel2Arduino.h>
 
 
@@ -95,14 +97,12 @@ const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
 const uint16_t user_pkt_buf_cap = 128;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
 
-const uint16_t SR_START_ADDR = 126;
-const uint16_t SR_ADDR_LEN = 10; //2+4+4
+const uint16_t SR_START_ADDR = 132; //Present position
+const uint16_t SR_ADDR_LEN = 4;
 const uint16_t SW_START_ADDR = 116; //Goal position
 const uint16_t SW_ADDR_LEN = 4;
 
 typedef struct sr_data{
-  int16_t present_current;
-  int32_t present_velocity;
   int32_t present_position;
 } __attribute__((packed)) sr_data_t;
 typedef struct sw_data{
@@ -120,12 +120,13 @@ DYNAMIXEL::XELInfoSyncWrite_t info_xels_sw[DXL_ID_CNT];
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
-
 //This namespace is required to use Control table item names
 using namespace ControlTableItem;
 
+int32_t goal_position[2] = {1024, 2048};
+uint8_t goal_position_index = 0;
+
 void setup() {
-  // put your setup code here, to run once:
   uint8_t i;
   pinMode(LED_BUILTIN, OUTPUT);
   DEBUG_SERIAL.begin(115200);
@@ -175,15 +176,11 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   static uint32_t try_count = 0;
   uint8_t i, recv_cnt;
 
   for(i = 0; i < DXL_ID_CNT; i++){
-    sw_data[i].goal_position = 255 + sw_data[i].goal_position;
-    if(sw_data[i].goal_position >= 1023){
-      sw_data[i].goal_position = 0;
-    }
+    sw_data[i].goal_position = goal_position[goal_position_index];
   }
 
   sw_infos.is_info_changed = true;
@@ -193,9 +190,13 @@ void loop() {
   if(dxl.syncWrite(&sw_infos) == true){
     DEBUG_SERIAL.println("[SyncWrite] Success");
     for(i=0; i<sw_infos.xel_count; i++){
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(sw_infos.p_xels[i].id);
-      DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(sw_data[i].goal_position);
+      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sw_infos.p_xels[i].id);
+      DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(sw_data[i].goal_position);
     }
+    if(goal_position_index == 0)
+      goal_position_index = 1;
+    else
+      goal_position_index = 0;    
   }else{
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
     DEBUG_SERIAL.print(dxl.getLastLibErrCode());
@@ -205,17 +206,11 @@ void loop() {
   delay(250);
 
   recv_cnt = dxl.fastSyncRead(&sr_infos);
-
-  // DEBUG_SERIAL.print("\t dxl.fastSyncRead(&sr_infos) : ");DEBUG_SERIAL.println(recv_cnt);
-
   if(recv_cnt > 0){
     DEBUG_SERIAL.print("[fastSyncRead] Success, Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
     for(i=0; i<recv_cnt; i++){
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
-      DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(sr_infos.p_xels[i].error);
-      DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(sr_data[i].present_current);
-      DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(sr_data[i].present_velocity);
       DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(sr_data[i].present_position);
     }
   } else{
