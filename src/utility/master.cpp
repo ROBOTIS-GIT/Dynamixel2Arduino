@@ -733,8 +733,6 @@ Master::fastSyncRead(InfoFastSyncReadInst_t* p_info, uint32_t timeout_ms)
 
   if(err == DXL_LIB_OK){
     p_port_->write(p_packet_buf, p_info->packet.gen_length);
-    p_xel = p_info->p_xels;
-
     if(fastRxStatusPacket(p_info->p_xels, p_info->addr_length, p_info->xel_count, timeout_ms) != nullptr){
         recv_cnt = p_info->xel_count;
     }else{
@@ -746,8 +744,6 @@ Master::fastSyncRead(InfoFastSyncReadInst_t* p_info, uint32_t timeout_ms)
   last_lib_err_ = err;
   return recv_cnt;
 }
-
-
 
 // (Protocol 1.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol1/#sync-write
 // (Protocol 2.0) Refer to http://emanual.robotis.com/docs/en/dxl/protocol2/#sync-write
