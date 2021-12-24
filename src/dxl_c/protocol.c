@@ -700,8 +700,8 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
 {
   DXLLibErrorCode_t ret = DXL_LIB_PROCEEDING;
   uint16_t byte_stuffing_cnt = 0;
-  uint8_t size = ((p_parse_packet->param_buf_capacity+4) * p_parse_packet->xel_count) - 3;
-  uint8_t* param_array = (uint8_t *)malloc(sizeof(uint8_t) * size); // 4 = Instruction(1)+Error(1)+CRC(2)
+  uint8_t size = ((p_parse_packet->param_buf_capacity+4) * p_parse_packet->xel_count) - 3; // 4 = Instruction(1)+Error(1)+CRC(2)
+  uint8_t* param_array = (uint8_t *)malloc(sizeof(uint8_t) * size); 
 
   switch(p_parse_packet->parse_state)
     {
@@ -773,6 +773,7 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
         p_parse_packet->err_idx = 0;
         p_parse_packet->recv_param_len = 0;
         p_parse_packet->param_count = 0;
+        p_parse_packet->check_xel_count = 0;
 
         if(recv_data == DXL_INST_STATUS){
           p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
@@ -817,12 +818,21 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
         update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
 
 
-        if(0 < p_parse_packet->recv_param_len && p_parse_packet->recv_param_len < 1 + p_parse_packet->param_buf_capacity) {
-          p_parse_packet->p_param_buf[p_parse_packet->param_count] = recv_data;
-          p_parse_packet->param_count += 1;
-        } else if(8 < p_parse_packet->recv_param_len && p_parse_packet->recv_param_len < 9 + p_parse_packet->param_buf_capacity) {
-          p_parse_packet->p_param_buf[p_parse_packet->param_count] = recv_data;
-          p_parse_packet->param_count += 1;
+        /////TODO/////
+        // https://emanual.robotis.com/docs/en/dxl/protocol2/#parameter
+        for(p_parse_packet->check_xel_count=0; p_parse_packet->check_xel_count < p_parse_packet->xel_count; p_parse_packet->check_xel_count++){
+          if(p_parse_packet->check_xel_count == 0) {
+            if(0 < p_parse_packet->recv_param_len && p_parse_packet->recv_param_len <= p_parse_packet->param_buf_capacity) {
+              p_parse_packet->p_param_buf[p_parse_packet->param_count] = recv_data;
+              p_parse_packet->param_count += 1;
+            }
+          } else {
+            if((p_parse_packet->check_xel_count * (p_parse_packet->param_buf_capacity + 4)) < p_parse_packet->recv_param_len 
+                && p_parse_packet->recv_param_len <= ((p_parse_packet->check_xel_count + 1) * p_parse_packet->param_buf_capacity) + 4) {
+              p_parse_packet->p_param_buf[p_parse_packet->param_count] = recv_data;
+              p_parse_packet->param_count += 1;
+            }
+          }
         }
 
         p_parse_packet->recv_param_len += 1;

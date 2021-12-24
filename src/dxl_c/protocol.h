@@ -135,8 +135,9 @@ typedef struct InfoToParseDXLPacket{
   uint8_t recv_check_sum;
   uint8_t reserved;
   uint8_t parse_state;
-  uint8_t xel_count;
   uint8_t param_count;
+  uint8_t xel_count;
+  uint8_t check_xel_count;
   bool is_init;
 }InfoToParseDXLPacket_t;
 
