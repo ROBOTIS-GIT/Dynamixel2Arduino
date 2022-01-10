@@ -40,6 +40,7 @@ enum DXLInstruction{
   DXL_INST_CLEAR = 0x10, //ONLY Protocol2.0
   DXL_INST_STATUS = 0x55, //ONLY Protocol2.0
   DXL_INST_SYNC_READ = 0x82, //ONLY Protocol2.0
+  DXL_INST_FAST_SYNC_READ = 0x8A, //ONLY Protocol2.0
   DXL_INST_SYNC_WRITE = 0x83,
   DXL_INST_BULK_READ = 0x92,
   DXL_INST_BULK_WRITE = 0x93 //ONLY Protocol2.0
@@ -134,6 +135,9 @@ typedef struct InfoToParseDXLPacket{
   uint8_t recv_check_sum;
   uint8_t reserved;
   uint8_t parse_state;
+  uint8_t param_count;
+  uint8_t xel_count;
+  uint8_t check_xel_count;
   bool is_init;
 }InfoToParseDXLPacket_t;
 
@@ -162,8 +166,10 @@ DXLLibErrorCode_t end_make_dxl_packet(InfoToMakeDXLPacket_t* p_make_packet);
 
 DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
   uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_cap);
+DXLLibErrorCode_t fast_begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
+  uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_cap, uint8_t xel_count);
 DXLLibErrorCode_t parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data);
-
+DXLLibErrorCode_t fast_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data);
 
 #ifdef __cplusplus
 }

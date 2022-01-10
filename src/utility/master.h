@@ -120,6 +120,21 @@ typedef struct InfoSyncReadInst{
   InfoSyncBulkBuffer_t packet;
 } __attribute__((packed)) InfoSyncReadInst_t;
 
+typedef struct XELInfoFastSyncRead{
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoFastSyncRead_t;
+
+typedef struct InfoFastSyncReadInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoFastSyncRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoFastSyncReadInst_t;
+
 typedef struct XELInfoSyncWrite{
   uint8_t* p_data;
   uint8_t id;
@@ -224,6 +239,7 @@ class Master
     bool reboot(uint8_t id, uint32_t timeout_ms = 10);
     bool clear(uint8_t id, uint8_t option, uint32_t ex_option, uint32_t timeout_ms = 10);
     uint8_t syncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms = 10);
+    uint8_t fastSyncRead(InfoFastSyncReadInst_t* p_info, uint32_t timeout_ms = 10);
     bool syncWrite(InfoSyncWriteInst_t* p_info);
     uint8_t bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
     bool bulkWrite(InfoBulkWriteInst_t* p_info);
@@ -236,6 +252,7 @@ class Master
     // raw APIs
     bool txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t param_len);
     const InfoToParseDXLPacket_t* rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
+    const InfoToParseDXLPacket_t* fastRxStatusPacket(XELInfoFastSyncRead_t* p_xel_info, uint16_t param_buf_cap, uint8_t xel_count, uint32_t timeout_ms = 10);
 
     // >> Legacy (Deprecated since v0.4.0)
     bool syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms = 100);
