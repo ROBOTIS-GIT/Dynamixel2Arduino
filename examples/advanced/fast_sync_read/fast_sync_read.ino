@@ -18,7 +18,6 @@
 
 #include <Dynamixel2Arduino.h>
 
-
 // Please modify it to suit your hardware.
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560) // When using DynamixelShield
   #include <SoftwareSerial.h>
@@ -49,7 +48,7 @@
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
-
+#define DXL_MOVING_STATUS_THRESHOLD  10
 
 /* FastsyncRead
   DYNAMIXEL PROTOCOL 1.0 does NOT support Sync Read feature.
@@ -123,8 +122,8 @@ Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 //This namespace is required to use Control table item names
 using namespace ControlTableItem;
 
-int32_t goal_position[2] = {1024, 2048};
-uint8_t goal_position_index = 0;
+int32_t dxl_goal_position = 1024;
+char keyboard;
 
 void setup() {
   uint8_t i;
@@ -164,9 +163,11 @@ void setup() {
   sw_infos.p_xels = info_xels_sw;
   sw_infos.xel_count = 0;
 
-  sw_data[0].goal_position = 0; 
-  sw_data[1].goal_position = 0; 
-
+  // Insert a initial Position to the syncWrite Packet
+  for(i = 0; i < DXL_ID_CNT; i++){
+    sw_data[i].goal_position = dxl_goal_position;
+  }
+  
   for(i=0; i<DXL_ID_CNT; i++){
     info_xels_sw[i].id = DXL_ID_LIST[i];
     info_xels_sw[i].p_data = (uint8_t*)&sw_data[i].goal_position;
@@ -179,47 +180,63 @@ void loop() {
   static uint32_t try_count = 0;
   uint8_t i, recv_cnt;
 
-  for(i = 0; i < DXL_ID_CNT; i++){
-    sw_data[i].goal_position = goal_position[goal_position_index];
+  if (Serial.available()) {
+    keyboard = Serial.read();
+    if (keyboard == 'u') { // position increase
+      dxl_goal_position = dxl_goal_position + 256;
+    }
+    else if (keyboard == 'd') { // position decrease
+      dxl_goal_position = dxl_goal_position - 256;
+    }
+    else if (keyboard == 'r') { // position reset
+      dxl_goal_position = 1024;
+    }
   }
 
+  // Insert a new Goal Position to the syncWrite Packet
+  for(i = 0; i < DXL_ID_CNT; i++){
+    sw_data[i].goal_position = dxl_goal_position;
+  }
+
+  // Update the SyncWrite packet status
   sw_infos.is_info_changed = true;
 
   DEBUG_SERIAL.print("\n>>>>>> Sync Instruction Test : ");
   DEBUG_SERIAL.println(try_count++);
+
+  // Build a syncWrite Packet and transmit to DYNAMIXEL
   if(dxl.syncWrite(&sw_infos) == true){
     DEBUG_SERIAL.println("[SyncWrite] Success");
     for(i=0; i<sw_infos.xel_count; i++){
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sw_infos.p_xels[i].id);
       DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(sw_data[i].goal_position);
-    }
-    if(goal_position_index == 0)
-      goal_position_index = 1;
-    else
-      goal_position_index = 0;    
+    }   
   }else{
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
     DEBUG_SERIAL.print(dxl.getLastLibErrCode());
   }
   DEBUG_SERIAL.println();
 
-  delay(250);
+  delay(300);
 
+  // Transmit predefined fastSyncRead instruction packet
+  // and receive a status packet from each DYNAMIXEL
   recv_cnt = dxl.fastSyncRead(&sr_infos);
   if(recv_cnt > 0){
     DEBUG_SERIAL.print("[fastSyncRead] Success, Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
-    for(i=0; i<recv_cnt; i++){
+    for(i=0; i<recv_cnt; i++) {
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
       DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(sr_data[i].present_position);
     }
-  } else{
+  } else {
     DEBUG_SERIAL.print("[fastSyncRead] Fail, Lib error code: ");
     DEBUG_SERIAL.println(dxl.getLastLibErrCode());
   }
 
+  DEBUG_SERIAL.println();
   DEBUG_SERIAL.println("=======================================================");
 
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  delay(750);
+  delay(1000);
 }
