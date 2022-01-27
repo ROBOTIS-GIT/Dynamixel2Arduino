@@ -31,7 +31,7 @@ void SerialPortHandler::begin()
 
 void SerialPortHandler::begin(unsigned long baud)
 {
-#if defined(ARDUINO_OpenCM904)
+#if defined(ARDUINO_OpenCM904) || defined(ARDUINO_OpenCM_X_MKR)
   if(port_ == Serial1 && getOpenState() == false){
     Serial1.setDxlMode(true);
   }

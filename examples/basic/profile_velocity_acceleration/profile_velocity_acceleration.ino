@@ -45,7 +45,11 @@
   // Reference link : https://github.com/ROBOTIS-GIT/OpenCR/blob/master/arduino/opencr_arduino/opencr/libraries/DynamixelSDK/src/dynamixel_sdk/port_handler_arduino.cpp#L78
   #define DXL_SERIAL   Serial3
   #define DEBUG_SERIAL Serial
-  const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.    
+  const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.
+#elif defined(ARDUINO_OpenCM_X_MKR)  // When using official ROBOTIS OpenCM-X MKR board.
+  //OpenCM-X MKR does not require the DIR control pin.
+  #define DXL_SERIAL Serial1
+  #define DEBUG_SERIAL Serial
 #else // Other boards when using DynamixelShield
   #define DXL_SERIAL   Serial1
   #define DEBUG_SERIAL Serial
