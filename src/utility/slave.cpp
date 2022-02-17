@@ -479,6 +479,106 @@ Slave::processInstRead()
   return ret;
 }
 
+bool 
+Slave::processInstSyncRead()
+{
+  bool ret = false;
+  uint8_t slave_id_order = DXL_MAX_NODE;
+  uint8_t status_return_order = 0;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t packet_err = 0;
+  uint8_t *p_rx_param, *p_tx_param;
+  uint16_t addr, addr_length = 0;
+  uint8_t sync_id[DXL_MAX_NODE] = {0xFF};
+
+  // Parameter exception handling
+  if(p_port_ == nullptr){
+    err = DXL_LIB_ERROR_NULLPTR;
+  }else if(p_port_->getOpenState() != true){
+    err = DXL_LIB_ERROR_PORT_NOT_OPEN;
+  }
+  if(err != DXL_LIB_OK){
+    last_lib_err_ = err;
+    return false;
+  }
+
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if (p_rx_info->id == DXL_BROADCAST_ID) {
+    if (p_rx_info->protocol_ver == 2) {
+      // received param length : 4 = Addr(2) + Addr_Length(2) + IDs(n)
+      addr = ((uint16_t)p_rx_param[1] << 8) | (uint16_t)p_rx_param[0];
+      addr_length = ((uint16_t)p_rx_param[3] << 8) | (uint16_t)p_rx_param[2];
+      
+      if (addr_length + 11 > packet_buf_capacity_) {
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+      }
+
+      for (uint8_t index = 4; index < p_rx_info->recv_param_len; index++) {
+        sync_id[index - 4] = p_rx_param[index];
+        if (p_rx_param[index] == id_) {
+          slave_id_order = index - 4;
+        }
+      }
+
+      p_tx_param = &p_packet_buf_[9];
+    } else {
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+    }
+
+    if(err == DXL_LIB_OK && slave_id_order != DXL_MAX_NODE){
+      uint8_t i, j;
+      uint16_t item_start_addr, item_addr_length;
+      ControlItem_t *p_item;
+      memset(p_packet_buf_, 0, packet_buf_capacity_);
+      for(i=0; i < registered_item_cnt_; i++){
+        p_item = &control_table_[i];
+        item_start_addr = p_item->start_addr;
+        item_addr_length = p_item->length;
+        if(item_addr_length != 0
+        && p_item->p_data != nullptr
+        && isAddrInRange(item_start_addr, item_addr_length, addr, addr_length) == true){
+          if(user_read_callback_ != nullptr){
+            user_read_callback_(item_start_addr, packet_err, user_read_callbakc_arg_);
+            if(packet_err != 0){      
+              break;
+            }
+          }
+          for(j=0; j<item_addr_length; j++){
+            p_tx_param[item_start_addr-addr+j] = p_item->p_data[j];
+          }
+        }
+      }
+
+      while(status_return_order < slave_id_order) {
+        // parse return packets of other slave modules
+        // Receive Instruction Packet
+        InfoToParseDXLPacket_t *p_ret = nullptr;
+        begin_parse_dxl_packet(&info_rx_packet_, protocol_ver_idx_, p_packet_buf_, packet_buf_capacity_);
+        while(p_port_->available() > 0) 
+        {
+          err = parse_dxl_packet(&info_rx_packet_, p_port_->read());
+          if (err == DXL_LIB_OK && info_rx_packet_.inst_idx != DXL_INST_STATUS) {
+            continue;
+          }else if(err != DXL_LIB_PROCEEDING){
+            break;
+          }
+        }
+        // Parse done
+        status_return_order++;
+      }
+      ret = txStatusPacket(id_, packet_err, p_tx_param, addr_length);
+    }
+  } else {
+    err = DXL_LIB_ERROR_WRONG_PACKET;
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
 
 bool
 Slave::processInstWrite()
@@ -657,6 +757,23 @@ Slave::processInst(uint8_t inst_idx)
       ret = processInstWrite();
       break;
 
+    case DXL_INST_SYNC_READ:
+      ret = processInstSyncRead();
+      break;
+
+    // Todo
+    // case DXL_INST_SYNC_WRITE:
+    //   ret = processInstSyncWrite();
+    //   break;
+
+    // case DXL_INST_BULK_READ:
+    //   ret = processInstBulkRead();
+    //   break;
+    
+    // case DXL_INST_BULK_WRITE:
+    //   ret = processInstBulkWrite();
+    //   break;
+
     default:
       last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORTED;
       break;  
@@ -723,8 +840,7 @@ Slave::rxInstPacket(uint8_t* p_param_buf, uint16_t param_buf_cap)
   {
     err = parse_dxl_packet(&info_rx_packet_, p_port_->read());
     if(err == DXL_LIB_OK){
-      if((protocol_ver_idx_ == 2 && info_rx_packet_.inst_idx != DXL_INST_STATUS)
-      || protocol_ver_idx_ == 1){
+      if((protocol_ver_idx_ == 2 && info_rx_packet_.inst_idx != DXL_INST_STATUS) || protocol_ver_idx_ == 1){
         if(info_rx_packet_.id == id_ || info_rx_packet_.id == DXL_BROADCAST_ID){
           p_ret = &info_rx_packet_;
         }
@@ -739,7 +855,6 @@ Slave::rxInstPacket(uint8_t* p_param_buf, uint16_t param_buf_cap)
 
   return p_ret;
 }
-
 
 
 static bool isAddrInRange(uint16_t addr, uint16_t length,
