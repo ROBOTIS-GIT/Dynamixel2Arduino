@@ -552,23 +552,23 @@ Slave::processInstSyncRead()
         }
       }
 
-      while(status_return_order < slave_id_order) {
-        // parse return packets of other slave modules
-        // Receive Instruction Packet
-        InfoToParseDXLPacket_t *p_ret = nullptr;
-        begin_parse_dxl_packet(&info_rx_packet_, protocol_ver_idx_, p_packet_buf_, packet_buf_capacity_);
-        while(p_port_->available() > 0) 
-        {
-          err = parse_dxl_packet(&info_rx_packet_, p_port_->read());
-          if (err == DXL_LIB_OK && info_rx_packet_.inst_idx != DXL_INST_STATUS) {
-            continue;
-          }else if(err != DXL_LIB_PROCEEDING){
-            break;
-          }
-        }
-        // Parse done
-        status_return_order++;
-      }
+      // Read the Slave device first
+      // while(status_return_order < slave_id_order) {
+      //   // parse return packets of other slave modules
+      //   // Receive Instruction Packet
+      //   begin_parse_dxl_packet(&info_rx_packet_, protocol_ver_idx_, p_packet_buf_, packet_buf_capacity_);
+      //   while(p_port_->available() > 0) 
+      //   {
+      //     err = parse_dxl_packet(&info_rx_packet_, p_port_->read());
+      //     if (err == DXL_LIB_OK && info_rx_packet_.inst_idx != DXL_INST_STATUS) {
+      //       continue;
+      //     }else if(err != DXL_LIB_PROCEEDING){
+      //       break;
+      //     }
+      //   }
+      //   // Parse done
+      //   status_return_order++;
+      // }
       ret = txStatusPacket(id_, packet_err, p_tx_param, addr_length);
     }
   } else {
