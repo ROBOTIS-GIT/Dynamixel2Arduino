@@ -41,8 +41,8 @@
   #define DXL_SERIAL   Serial3
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.
-#elif defined(ARDUINO_OpenCM_X_MKR)  // When using official ROBOTIS OpenCM-X MKR board.
-  //OpenCM-X MKR does not require the DIR control pin.
+#elif defined(ARDUINO_OpenRB)  // When using official ROBOTIS OpenCM-X MKR board.
+  //OpenRB does not require the DIR control pin.
   #define DXL_SERIAL Serial1
   #define DEBUG_SERIAL Serial
 #else // Other boards when using DynamixelShield
@@ -55,7 +55,7 @@
 const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
-Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
+Dynamixel2Arduino dxl(DXL_SERIAL);
 
 //This namespace is required to use Control table item names
 using namespace ControlTableItem;
@@ -80,7 +80,7 @@ void setup() {
   dxl.torqueOn(DXL_ID);
 
   // Limit the maximum velocity in Position Control Mode. Use 0 for Max speed
-  dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID, 30);
+  // dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID, 30);
 }
 
 void loop() {
@@ -88,7 +88,7 @@ void loop() {
   
   // Please refer to e-Manual(http://emanual.robotis.com/docs/en/parts/interface/dynamixel_shield/) for available range of value. 
   // Set Goal Position in RAW value
-  dxl.setGoalPosition(DXL_ID, 512);
+  dxl.setGoalPosition(DXL_ID, 4000);
 
   int i_present_position = 0;
   float f_present_position = 0.0;
