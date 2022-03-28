@@ -31,9 +31,14 @@ void SerialPortHandler::begin()
 
 void SerialPortHandler::begin(unsigned long baud)
 {
-#if defined(ARDUINO_OpenCM904) || defined(ARDUINO_OpenRB)
+#if defined(ARDUINO_OpenCM904)
   if(port_ == Serial1 && getOpenState() == false){
     Serial1.setDxlMode(true);
+  }
+#elif defined(ARDUINO_OpenRB)
+  if(port_ == Serial1 && getOpenState() == false){
+    pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
+    digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
   }
 #elif defined(ARDUINO_OpenCR)
   if(port_ == Serial3 && getOpenState() == false){
