@@ -103,7 +103,7 @@ class Slave
 
     bool is_buf_malloced_;
     uint8_t *p_packet_buf_;
-    uint16_t packet_buf_capacity_;
+    uint16_t packet_buf_capacity_;  // DEFAULT_DXL_BUF_LENGTH
     InfoToMakeDXLPacket_t info_tx_packet_;
     InfoToParseDXLPacket_t info_rx_packet_;
 
@@ -121,9 +121,10 @@ class Slave
     virtual bool processInstRead();
     virtual bool processInstWrite();
     virtual bool processInstSyncRead();
+    virtual bool processInstBulkRead();
+
     // Todo
     // virtual bool processInstSyncWrite();
-    // virtual bool processInstBulkRead();
     // virtual bool processInstBulkWrite();
     
     bool processInst(uint8_t inst_idx);

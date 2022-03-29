@@ -484,7 +484,6 @@ Slave::processInstSyncRead()
 {
   bool ret = false;
   uint8_t slave_id_order = DXL_MAX_NODE;
-  uint8_t status_return_order = 0;
   DXLLibErrorCode_t err = DXL_LIB_OK;
   InfoToParseDXLPacket_t *p_rx_info;
   uint8_t packet_err = 0;
@@ -537,12 +536,12 @@ Slave::processInstSyncRead()
         p_item = &control_table_[i];
         item_start_addr = p_item->start_addr;
         item_addr_length = p_item->length;
-        if(item_addr_length != 0
-        && p_item->p_data != nullptr
-        && isAddrInRange(item_start_addr, item_addr_length, addr, addr_length) == true){
-          if(user_read_callback_ != nullptr){
+        if (item_addr_length != 0
+          && p_item->p_data != nullptr
+          && isAddrInRange(item_start_addr, item_addr_length, addr, addr_length) == true) {
+          if (user_read_callback_ != nullptr) {
             user_read_callback_(item_start_addr, packet_err, user_read_callbakc_arg_);
-            if(packet_err != 0){      
+            if (packet_err != 0) {
               break;
             }
           }
@@ -570,6 +569,97 @@ Slave::processInstSyncRead()
       //   status_return_order++;
       // }
       ret = txStatusPacket(id_, packet_err, p_tx_param, addr_length);
+    }
+  } else {
+    err = DXL_LIB_ERROR_WRONG_PACKET;
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
+
+bool 
+Slave::processInstBulkRead()
+{
+  bool ret = false;
+  uint8_t slave_id_index = 0;
+  uint8_t status_return_order = 0;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t packet_err = 0;
+  uint8_t *p_rx_param, *p_tx_param;
+  uint8_t bulk_id[DXL_MAX_NODE] = {0xFF};
+  uint16_t bulk_addr[DXL_MAX_NODE] = {0};
+  uint16_t bulk_addr_len[DXL_MAX_NODE] = {0};
+
+  // Parameter exception handling
+  if(p_port_ == nullptr){
+    err = DXL_LIB_ERROR_NULLPTR;
+  }else if(p_port_->getOpenState() != true){
+    err = DXL_LIB_ERROR_PORT_NOT_OPEN;
+  }
+  if(err != DXL_LIB_OK){
+    last_lib_err_ = err;
+    return false;
+  }
+
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if (p_rx_info->id == DXL_BROADCAST_ID) {
+    if (p_rx_info->protocol_ver == 2) {
+
+      // received param length : 5n = {ID(1) + Addr(2) + Addr_Length(2)} * n
+      for (uint8_t index = 0; index < p_rx_info->recv_param_len; )
+      {
+        bulk_id[slave_id_index] = p_rx_param[index];
+        
+        if (p_rx_param[index] == id_) {
+          status_return_order = slave_id_index;
+        }
+
+        bulk_addr[slave_id_index] = (uint16_t)p_rx_param[index+1] | ((uint16_t)p_rx_param[index+2] << 8);
+        bulk_addr_len[slave_id_index] = (uint16_t)p_rx_param[index+3] + ((uint16_t)p_rx_param[index+4] << 8);
+
+        slave_id_index++;
+        index = index + 5;
+      }
+
+      if (bulk_addr_len[status_return_order] + 11 > packet_buf_capacity_) {
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+      }
+
+      p_tx_param = &p_packet_buf_[9];
+    } else {
+      // Bulk Read in the slave does not support Protocol 1.0 for now.
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+    }
+
+    if (err == DXL_LIB_OK && slave_id_index < DXL_MAX_NODE) {
+      uint8_t i, j;
+      // uint16_t item_start_addr, item_addr_length;
+      ControlItem_t *p_item;
+      memset(p_packet_buf_, 0, packet_buf_capacity_);
+      for (i = 0; i < registered_item_cnt_; i++) {
+        p_item = &control_table_[i];
+        if (p_item->start_addr == bulk_addr[status_return_order]
+          && bulk_addr_len[status_return_order] != 0
+          && p_item->p_data != nullptr) {
+          if (user_read_callback_ != nullptr) {
+            user_read_callback_(p_item->start_addr, packet_err, user_read_callbakc_arg_);
+            if (packet_err != 0) {
+              break;
+            }
+          }
+
+          for (j = 0; j < bulk_addr_len[status_return_order]; j++) {
+            p_tx_param[j] = p_item->p_data[j];
+          }
+        }
+      }
+
+      ret = txStatusPacket(id_, packet_err, p_tx_param, bulk_addr_len[status_return_order]);
     }
   } else {
     err = DXL_LIB_ERROR_WRONG_PACKET;
@@ -761,14 +851,15 @@ Slave::processInst(uint8_t inst_idx)
       ret = processInstSyncRead();
       break;
 
+    case DXL_INST_BULK_READ:
+      ret = processInstBulkRead();
+      break;
+
     // Todo
     // case DXL_INST_SYNC_WRITE:
     //   ret = processInstSyncWrite();
     //   break;
 
-    // case DXL_INST_BULK_READ:
-    //   ret = processInstBulkRead();
-    //   break;
     
     // case DXL_INST_BULK_WRITE:
     //   ret = processInstBulkWrite();
