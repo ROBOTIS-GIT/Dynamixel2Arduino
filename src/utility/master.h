@@ -134,6 +134,21 @@ typedef struct InfoSyncWriteInst{
   InfoSyncBulkBuffer_t packet;
 } __attribute__((packed)) InfoSyncWriteInst_t;
 
+typedef struct XELInfoIndirectAddress{
+  uint16_t p_data;
+  uint8_t id;
+} __attribute__((packed)) XELInfoIndirectAddress_t;
+
+typedef struct InfoIndirectAddressInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoIndirectAddress_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoIndirectAddressInst_t;
+
+
 /* Bulk Instructions */
 typedef struct XELInfoBulkRead{
   uint16_t addr;
@@ -227,6 +242,7 @@ class Master
     bool syncWrite(InfoSyncWriteInst_t* p_info);
     uint8_t bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
     bool bulkWrite(InfoBulkWriteInst_t* p_info);
+    bool setIndirectAddress(InfoIndirectAddressInst_t* p_info);
 
     uint8_t getLastStatusPacketError() const;
     

@@ -1056,6 +1056,101 @@ Master::rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t ti
 
 
 
+bool 
+Master::setIndirectAddress(InfoIndirectAddressInst_t* p_info)
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  uint8_t i, tx_param[4], param_len = 0;
+  uint8_t data_param[2], data_len = 0;
+  uint8_t* p_packet_buf = nullptr;
+  uint16_t packet_buf_cap;
+  XELInfoIndirectAddress_t* p_xel;
+
+  // Parameter exception handling
+  if(p_port_ == nullptr){
+    err = DXL_LIB_ERROR_NULLPTR;
+  }else if(p_port_->getOpenState() != true){
+    err = DXL_LIB_ERROR_PORT_NOT_OPEN;
+  }else if(protocol_ver_idx_ != 2 && protocol_ver_idx_ != 1){
+    err = DXL_LIB_ERROR_NOT_SUPPORTED;
+  }
+  if(err != DXL_LIB_OK){
+    last_lib_err_ = err;
+    return false;
+  }
+
+  if(p_info->packet.p_buf != nullptr){
+    p_packet_buf = p_info->packet.p_buf;
+    packet_buf_cap = p_info->packet.buf_capacity;
+  }else{
+    p_packet_buf = p_packet_buf_;
+    packet_buf_cap = packet_buf_capacity_;
+  }
+
+  if(p_info->packet.p_buf == nullptr && info_tx_packet_.inst_idx != DXL_INST_SYNC_WRITE){
+    p_info->packet.is_completed = false;
+  }
+
+  if(p_info->packet.is_completed == false || p_info->is_info_changed == true){
+    err = begin_make_dxl_packet(&info_tx_packet_, DXL_BROADCAST_ID, protocol_ver_idx_,
+      DXL_INST_SYNC_WRITE, 0, p_packet_buf, packet_buf_cap);
+    if(err == DXL_LIB_OK){
+      if(protocol_ver_idx_ == 2){
+        tx_param[param_len++] = p_info->addr >> 0;
+        tx_param[param_len++] = p_info->addr >> 8;
+        tx_param[param_len++] = p_info->addr_length >> 0;
+        tx_param[param_len++] = p_info->addr_length >> 8;
+      }else if(protocol_ver_idx_ == 1){
+        tx_param[param_len++] = p_info->addr & 0xFF;
+        tx_param[param_len++] = p_info->addr_length & 0xFF;
+      }
+      err = add_param_to_dxl_packet(&info_tx_packet_, tx_param, param_len);
+      if(err == DXL_LIB_OK){
+        for(i=0; i<p_info->xel_count; i++){
+          p_xel = &p_info->p_xels[i];
+          err = add_param_to_dxl_packet(&info_tx_packet_, &p_xel->id, 1);
+          if(err == DXL_LIB_OK){
+            for(i=0; i<(p_info->addr_length)/2; i++){
+              data_param[data_len++] = p_xel->p_data >> 0;
+              data_param[data_len++] = p_xel->p_data >> 8;
+              err = add_param_to_dxl_packet(&info_tx_packet_, data_param, data_len);
+
+              data_param[0]= 0;
+              data_param[1]= 0;              
+              data_len = 0;              
+            }
+            if(err != DXL_LIB_OK){
+              break;
+            }
+          }else{
+            break;
+          }
+        }
+        if(err == DXL_LIB_OK){
+          err = end_make_dxl_packet(&info_tx_packet_);
+          if(err == DXL_LIB_OK){
+            p_info->packet.gen_length = info_tx_packet_.generated_packet_length;
+            p_info->packet.is_completed = true;      
+            p_info->is_info_changed = false;
+          }
+        }
+      }
+    }
+  }
+
+  if(err == DXL_LIB_OK){
+    p_port_->write(p_packet_buf, p_info->packet.gen_length);
+    ret = true;
+  }else{
+    p_info->packet.is_completed = false;
+  }
+  last_lib_err_ = err;
+
+  return ret;
+}
+
+
 
 // >> Legacy (Deprecated since v0.4.0)
 bool Master::syncRead(const ParamForSyncReadInst_t &param_info, RecvInfoFromStatusInst_t &recv_info, uint32_t timeout_ms)
