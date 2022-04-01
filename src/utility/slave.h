@@ -94,6 +94,8 @@ class Slave
     const InfoToParseDXLPacket_t* rxInstPacket(uint8_t* p_param_buf, uint16_t param_buf_cap);
 
   private:
+    uint8_t status_return_order_;
+    uint8_t slave_id_index_;
     DXLPortHandler *p_port_;
     
     const uint16_t model_num_;
@@ -122,6 +124,7 @@ class Slave
     virtual bool processInstWrite();
     virtual bool processInstSyncRead();
     virtual bool processInstBulkRead();
+    virtual bool processStatusPacket();
 
     // Todo
     // virtual bool processInstSyncWrite();
