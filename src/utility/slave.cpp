@@ -119,6 +119,12 @@ Slave::getPortProtocolVersion() const
   return (float)protocol_ver_idx_;
 }
 
+void
+Slave::begin(void)
+{
+  p_port_->begin(); 
+}
+
 uint8_t 
 Slave::getPortProtocolVersionIndex() const
 {
