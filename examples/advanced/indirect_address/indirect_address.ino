@@ -56,83 +56,43 @@
 #endif
 
 
-/* syncRead
-  DYNAMIXEL PROTOCOL 1.0 does NOT support Sync Read feature.
-  Structures containing the necessary information to process the 'syncRead' packet.
-
-  typedef struct XELInfoBulkRead{
-    uint16_t addr;
-    uint16_t addr_length;
-    uint8_t *p_recv_buf;
-    uint8_t id;
-    uint8_t error;
-  } __attribute__((packed)) XELInfoBulkRead_t;
-
-  typedef struct InfoBulkReadInst{
-    XELInfoBulkRead_t* p_xels;
-    uint8_t xel_count;
-    bool is_info_changed;
-    InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkReadInst_t;
-*/
-
-/* syncWrite
-  DYNAMIXEL PROTOCOL 1.0 supports Control Table address up to 255.
-  Structures containing the necessary information to process the 'syncWrite' packet.
-
-  typedef struct XELInfoBulkWrite{
-    uint16_t addr;
-    uint16_t addr_length;
-    uint8_t* p_data;
-    uint8_t id;
-  } __attribute__((packed)) XELInfoBulkWrite_t;
-
-  typedef struct InfoBulkWriteInst{
-    XELInfoBulkWrite_t* p_xels;
-    uint8_t xel_count;
-    bool is_info_changed;
-    InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkWriteInst_t;
-*/
-
 const uint8_t BROADCAST_ID = 254;
 const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
+
 const uint8_t DXL_ID_CNT = 2;
 const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
 
 const uint16_t user_pkt_buf_cap = 128;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
 
-const uint16_t SW_START_ADDR = 168; // Indirect Address1 Address. Starting Data Addr, Can differ Depending on what address to access
-const uint16_t SW_ADDR_LEN = 2; // Data Length 2*(1+4), Can differ depending on how many address to access. 
+const uint16_t INDIRECT_ADDR_NUM = 5;
+uint16_t INDIRECT_ADDR_ARRY[INDIRECT_ADDR_NUM] = {65, 116, 117, 118, 119};
 
+const uint16_t ID_ADDR_LEN = INDIRECT_ADDR_NUM * 2; // Data Length 2*INDIRECT_ADDR_NUM, Can differ depending on how many address to access. 
+const uint16_t ID_START_ADDR = 168; // Indirect Address1 Address. Starting Data Addr, Can differ Depending on what address to access
+
+const uint16_t SW_ADDR_LEN = 5; // Data Length (1+4), Can differ depending on how many address to access. 
+const uint16_t SW_START_ADDR = 224; // Indirect Data1 Address. Starting Data Addr, Can differ Depending on what address to access
+uint16_t SYNC_WRITE_ARRY[SW_ADDR_LEN];
+
+const uint16_t SR_ADDR_LEN = 5; // Data Length (1+4), Can differ depending on how many address to access. 
 const uint16_t SR_START_ADDR = 224; // Indirect Data1 Address. Starting Data Addr, Can differ Depending on what address to access
-const uint16_t SR_ADDR_LEN = 1; // Data Length (1+4), Can differ depending on how many address to access. 
 
-const uint16_t LED_ADDR = 65; // LED Address. Starting Data Addr
-const uint16_t LED_LEN = 1; // LED Data Length. 
-
-const uint16_t GOAL_POSITION_ADDR = 116; // Goal position Address. Starting Data Addr
-const uint16_t GOAL_POSITION_LEN = 4; // Goal position Data Length. 
-
-uint8_t do_once = false;
-
-typedef struct id_data{
-  int16_t led;
-  // int32_t goal_position[4];
-} __attribute__((packed)) id_data_t;
+// typedef struct id_data{
+//   uint8_t data_param[INDIRECT_ADDR_NUM][2]; 
+// } __attribute__((packed)) id_data_t;
 
 typedef struct sw_data{
-  int16_t led;
-  // int32_t goal_position;
+  int8_t led;
+  int32_t goal_position;
 } __attribute__((packed)) sw_data_t;
 
 typedef struct sr_data{
-  int16_t led;
+  int8_t led;
   int32_t present_position;
 } __attribute__((packed)) sr_data_t;
 
-id_data_t id_data[DXL_ID_CNT];
+// id_data_t id_data[DXL_ID_CNT];
 DYNAMIXEL::InfoIndirectAddressInst_t id_infos;
 DYNAMIXEL::XELInfoIndirectAddress_t info_xels_id[DXL_ID_CNT];
 
@@ -149,8 +109,9 @@ Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 //This namespace is required to use Control table item names
 using namespace ControlTableItem;
 
-int32_t led_state[2] = {0, 1};
-uint8_t led_index = 0;
+int16_t led_state[2] = {0, 1};
+int32_t position_state[2] = {1024, 2048};
+uint8_t state_index = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -166,33 +127,26 @@ void setup() {
   }
   dxl.torqueOn(BROADCAST_ID);
 
-  // IndirectAddress 
-  // dxl.setIndirectAddress(uint8_t dynamixel_id, uint8_t item_index, uint16_t target_indirect_address)
+  ////////////////////////////////////////////////////////////////////////////////////
+  // IndirectAddress                                                                //
   ////////////////////////////////////////////////////////////////////////////////////
   id_infos.packet.p_buf = nullptr;
   id_infos.packet.is_completed = false;
-  id_infos.addr = SW_START_ADDR;
-  id_infos.addr_length = SW_ADDR_LEN;
+  id_infos.addr = ID_START_ADDR;
+  id_infos.addr_length = ID_ADDR_LEN;
   id_infos.p_xels = info_xels_id;
   id_infos.xel_count = 0;
 
-  id_data[0].led = LED_ADDR;
-  id_data[1].led = LED_ADDR;  
-
-  // for(i=0; i<DXL_ID_CNT; i++){
-  //   id_data[0].goal_position[i] = GOAL_POSITION_ADDR + i;
-  //   id_data[1].goal_position[i] = GOAL_POSITION_ADDR + i;
-  // }  
-  
   for(i=0; i<DXL_ID_CNT; i++){
     info_xels_id[i].id = DXL_ID_LIST[i];
-    // info_xels_id[i].p_data = (uint8_t*)&id_data[i].goal_position;
-    info_xels_id[i].p_data = id_data[i].led;
+    // info_xels_id[i].p_data = dxl.uint16_to_uint8(INDIRECT_ADDR_ARRY, INDIRECT_ADDR_NUM);
+    info_xels_id[i].p_data = (uint8_t*)&INDIRECT_ADDR_ARRY;
     id_infos.xel_count++;
   }
   id_infos.is_info_changed = true;
 
-  // Fill the members of structure to syncWrite using internal packet buffer
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Fill the members of structure to syncWrite using internal packet buffer        //
   ////////////////////////////////////////////////////////////////////////////////////
   sw_infos.packet.p_buf = nullptr;
   sw_infos.packet.is_completed = false;
@@ -201,21 +155,23 @@ void setup() {
   sw_infos.p_xels = info_xels_sw;
   sw_infos.xel_count = 0;
 
-  sw_data[0].led = led_state[led_index];
-  sw_data[1].led = led_state[led_index];  
+  sw_data[0].led = led_state[state_index];
+  sw_data[1].led = led_state[state_index];  
 
-  // sw_data[0].goal_position = 0;
-  // sw_data[1].goal_position = 100;
+  sw_data[0].goal_position = position_state[state_index];
+  sw_data[1].goal_position = position_state[state_index];
+
+  // SYNC_WRITE_ARRY
   
   for(i=0; i<DXL_ID_CNT; i++){
     info_xels_sw[i].id = DXL_ID_LIST[i];
-    // info_xels_sw[i].p_data = (uint8_t*)&sw_data[i].goal_position;
     info_xels_sw[i].p_data = (uint8_t*)&sw_data[i].led;
     sw_infos.xel_count++;
   }
   sw_infos.is_info_changed = true;
 
-  // Fill the members of structure to syncRead using external user packet buffer
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Fill the members of structure to syncRead using external user packet buffer    //
   ////////////////////////////////////////////////////////////////////////////////////
   sr_infos.packet.p_buf = user_pkt_buf;
   sr_infos.packet.buf_capacity = user_pkt_buf_cap;
@@ -241,19 +197,27 @@ void loop() {
 
   delay(250);
 
-  // setIndirectAddress //////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////
-
-  DEBUG_SERIAL.print("\n>>>>>> Indirect Address Test : ");
+  // setIndirectAddress                                                             //
+  ////////////////////////////////////////////////////////////////////////////////////
+  DEBUG_SERIAL.print("\n>>>>>>>>>>>>> Indirect Address Test : ");
   DEBUG_SERIAL.println(try_count++);
   if(dxl.setIndirectAddress(&id_infos) == true){
     DEBUG_SERIAL.println("[Indirect Address] Success!!");
     for(i=0; i<id_infos.xel_count; i++){
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(id_infos.p_xels[i].id);
-      DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(id_data[i].led);
-      // DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(id_data[i].goal_position);
+      DEBUG_SERIAL.print("\tHEX ADDR[0]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[1]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+1), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[2]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+2), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[3]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+3), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[4]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+4), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[5]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+5), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[6]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+6), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[7]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+7), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[8]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+8), HEX);
+      DEBUG_SERIAL.print("\tHEX ADDR[9]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+9), HEX);
     }
-  } else{
+  } else {
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
     DEBUG_SERIAL.print(dxl.getLastLibErrCode());
   }
@@ -261,15 +225,12 @@ void loop() {
 
   delay(250);
 
-  // syncWrite ///////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////
-
+  // syncWrite                                                                      //
+  ////////////////////////////////////////////////////////////////////////////////////
   for(i = 0; i < DXL_ID_CNT; i++){
-    // sw_data[i].goal_position = 100 + sw_data[i].goal_position;
-    // if(sw_data[i].goal_position >= 200){
-    //   sw_data[i].goal_position = 0;
-    // }
-     sw_data[i].led = led_state[led_index];
+    sw_data[i].led = led_state[state_index];
+    sw_data[i].goal_position = position_state[state_index];
   }
   sw_infos.is_info_changed = true;
 
@@ -277,13 +238,22 @@ void loop() {
     DEBUG_SERIAL.println("[SyncWrite] Success!!");
     for(i=0; i<sw_infos.xel_count; i++){
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(sw_infos.p_xels[i].id);
-      DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].led);
+      DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].led+0);
+      DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+0);
+      DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+1);
+      DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+2);
+      DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+3);        
+      // DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].led+0, HEX);
+      // DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+0, HEX);
+      // DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+1, HEX);
+      // DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+2, HEX);
+      // DEBUG_SERIAL.print("\t LED: ");DEBUG_SERIAL.println(sw_data[i].goal_position+3, HEX);                        
       // DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(sw_data[i].goal_position);
     }
-    if(led_index == 0)
-      led_index = 1;
+    if(state_index == 0)
+      state_index = 1;
     else
-      led_index = 0;
+      state_index = 0;
   }else{
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
     DEBUG_SERIAL.print(dxl.getLastLibErrCode());
@@ -292,9 +262,9 @@ void loop() {
 
   delay(250);
 
-  // syncRead ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////
-
+  // syncRead                                                                       //
+  ////////////////////////////////////////////////////////////////////////////////////
   recv_cnt = dxl.syncRead(&sr_infos);
   if(recv_cnt > 0){
     DEBUG_SERIAL.print("[SyncRead] Success!! Received ID Count: ");

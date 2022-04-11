@@ -1054,18 +1054,16 @@ Master::rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t ti
   return p_ret;
 }
 
-
-
 bool 
 Master::setIndirectAddress(InfoIndirectAddressInst_t* p_info)
 {
   bool ret = false;
   DXLLibErrorCode_t err = DXL_LIB_OK;
-  uint8_t i, tx_param[4], param_len = 0;
-  uint8_t data_param[2], data_len = 0;
+  uint8_t i, tx_param[4], param_len = 0, data_len = 0;
   uint8_t* p_packet_buf = nullptr;
   uint16_t packet_buf_cap;
   XELInfoIndirectAddress_t* p_xel;
+  uint8_t data_array[p_info->addr_length];
 
   // Parameter exception handling
   if(p_port_ == nullptr){
@@ -1109,17 +1107,10 @@ Master::setIndirectAddress(InfoIndirectAddressInst_t* p_info)
       if(err == DXL_LIB_OK){
         for(i=0; i<p_info->xel_count; i++){
           p_xel = &p_info->p_xels[i];
+
           err = add_param_to_dxl_packet(&info_tx_packet_, &p_xel->id, 1);
           if(err == DXL_LIB_OK){
-            for(i=0; i<(p_info->addr_length)/2; i++){
-              data_param[data_len++] = p_xel->p_data >> 0;
-              data_param[data_len++] = p_xel->p_data >> 8;
-              err = add_param_to_dxl_packet(&info_tx_packet_, data_param, data_len);
-
-              data_param[0]= 0;
-              data_param[1]= 0;              
-              data_len = 0;              
-            }
+            err = add_param_to_dxl_packet(&info_tx_packet_, p_xel->p_data, p_info->addr_length);
             if(err != DXL_LIB_OK){
               break;
             }
@@ -1150,6 +1141,22 @@ Master::setIndirectAddress(InfoIndirectAddressInst_t* p_info)
   return ret;
 }
 
+// uint8_t* Master::uint16_to_uint8(uint16_t* arr, uint16_t size) {
+//   uint16_t data_arr_len = size * 2;
+//   uint8_t data_arr[data_arr_len];
+//   uint8_t* p_data_arr = (uint8_t*)arr;
+
+//   for(uint8_t i = 0; i<data_arr_len; i++) {
+//     data_arr[i] = *(p_data_arr + i);
+//   }
+
+//   return data_arr;
+// }
+
+
+// uint8_t* Master::uint32_to_uint8(uint32_t* arr) {
+//  TODO
+// }
 
 
 // >> Legacy (Deprecated since v0.4.0)
