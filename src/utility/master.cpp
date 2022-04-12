@@ -1059,11 +1059,10 @@ Master::setIndirectAddress(InfoIndirectAddressInst_t* p_info)
 {
   bool ret = false;
   DXLLibErrorCode_t err = DXL_LIB_OK;
-  uint8_t i, tx_param[4], param_len = 0, data_len = 0;
+  uint8_t i, tx_param[4], param_len = 0;
   uint8_t* p_packet_buf = nullptr;
   uint16_t packet_buf_cap;
   XELInfoIndirectAddress_t* p_xel;
-  uint8_t data_array[p_info->addr_length];
 
   // Parameter exception handling
   if(p_port_ == nullptr){
@@ -1107,7 +1106,6 @@ Master::setIndirectAddress(InfoIndirectAddressInst_t* p_info)
       if(err == DXL_LIB_OK){
         for(i=0; i<p_info->xel_count; i++){
           p_xel = &p_info->p_xels[i];
-
           err = add_param_to_dxl_packet(&info_tx_packet_, &p_xel->id, 1);
           if(err == DXL_LIB_OK){
             err = add_param_to_dxl_packet(&info_tx_packet_, p_xel->p_data, p_info->addr_length);
