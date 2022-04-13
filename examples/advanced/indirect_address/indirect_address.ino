@@ -74,8 +74,8 @@ const uint16_t ID_START_ADDR = 168; // Indirect Address1 Address. Starting Data 
 const uint16_t SW_ADDR_LEN = 5; // Data Length (1+4), Can differ depending on how many address to access. 
 const uint16_t SW_START_ADDR = 224; // Indirect Data1 Address. Starting Data Addr, Can differ Depending on what address to access
 
-const uint16_t SR_ADDR_LEN = 4; // Data Length (1+4), Can differ depending on how many address to access. 
-const uint16_t SR_START_ADDR = 132; // Indirect Data1 Address. Starting Data Addr, Can differ Depending on what address to access
+const uint16_t SR_ADDR_LEN = 1; // Data Length 4, Can differ depending on how many address to access. 
+const uint16_t SR_START_ADDR = 11; // Present Position Address. Starting Data Addr, Can differ Depending on what address to access
 
 typedef struct id_data{
   uint8_t* indirect_addr;
@@ -91,8 +91,8 @@ typedef struct sr_data{
 } __attribute__((packed)) sr_data_t;
 
 id_data_t id_data[DXL_ID_CNT];
-DYNAMIXEL::InfoIndirectAddressInst_t id_infos;
-DYNAMIXEL::XELInfoIndirectAddress_t info_xels_id[DXL_ID_CNT];
+DYNAMIXEL::InfoSyncWriteInst_t id_infos;
+DYNAMIXEL::XELInfoSyncWrite_t info_xels_id[DXL_ID_CNT];
 
 sw_data_t sw_data[DXL_ID_CNT];
 DYNAMIXEL::InfoSyncWriteInst_t sw_infos;
@@ -108,7 +108,7 @@ Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 using namespace ControlTableItem;
 
 int8_t led_state[2] = {0, 1};
-int32_t position_state[2] = {1000, 1020};
+int32_t position_state[2] = {1024, 2048};
 uint8_t state_index = 0;
 
 void setup() {
@@ -121,7 +121,7 @@ void setup() {
   
   for(i=0; i<DXL_ID_CNT; i++){
     dxl.torqueOff(DXL_ID_LIST[i]);
-    dxl.setOperatingMode(DXL_ID_LIST[i], OP_VELOCITY);
+    dxl.setOperatingMode(DXL_ID_LIST[i], OP_POSITION);
   }
   dxl.torqueOn(BROADCAST_ID);
 
@@ -138,6 +138,7 @@ void setup() {
 
   id_data[0].indirect_addr = (uint8_t*)&INDIRECT_ADDR_ARRY;
   id_data[1].indirect_addr = (uint8_t*)&INDIRECT_ADDR_ARRY;
+  id_data[2].indirect_addr = (uint8_t*)&INDIRECT_ADDR_ARRY;
 
   for(i=0; i<DXL_ID_CNT; i++){
     info_xels_id[i].id = DXL_ID_LIST[i];
@@ -203,15 +204,20 @@ void loop() {
 
   DEBUG_SERIAL.print("\n>>>>>>>>>>>>> Indirect Address Test : ");
   DEBUG_SERIAL.println(try_count++);
-  if(dxl.setIndirectAddress(&id_infos) == true){
+  if(dxl.syncWrite(&id_infos) == true){
     DEBUG_SERIAL.println("[Indirect Address] Success!!");
     for(i=0; i<id_infos.xel_count; i++){
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(id_infos.p_xels[i].id);
       DEBUG_SERIAL.print(", ADDR[0]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data));
-      DEBUG_SERIAL.print("\tADDR[2]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+2));      
-      DEBUG_SERIAL.print("\tADDR[4]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+4));
-      DEBUG_SERIAL.print("\tADDR[6]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+6));
-      DEBUG_SERIAL.print("\tADDR[8]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+8));
+      DEBUG_SERIAL.print("\t ADDR[1]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+1));
+      DEBUG_SERIAL.print("\t ADDR[2]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+2));      
+      DEBUG_SERIAL.print("\t ADDR[3]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+3));
+      DEBUG_SERIAL.print("\t ADDR[4]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+4));
+      DEBUG_SERIAL.print("\t ADDR[5]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+5));
+      DEBUG_SERIAL.print("\t ADDR[6]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+6));
+      DEBUG_SERIAL.print("\t ADDR[7]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+7));
+      DEBUG_SERIAL.print("\t ADDR[8]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+8));
+      DEBUG_SERIAL.print("\t ADDR[9]: ");DEBUG_SERIAL.println(*(info_xels_id[i].p_data+9));      
     }
   } else {
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
