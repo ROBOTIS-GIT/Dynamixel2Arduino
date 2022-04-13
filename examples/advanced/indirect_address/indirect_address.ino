@@ -74,8 +74,8 @@ const uint16_t ID_START_ADDR = 168; // Indirect Address1 Address. Starting Data 
 const uint16_t SW_ADDR_LEN = 5; // Data Length (1+4), Can differ depending on how many address to access. 
 const uint16_t SW_START_ADDR = 224; // Indirect Data1 Address. Starting Data Addr, Can differ Depending on what address to access
 
-const uint16_t SR_ADDR_LEN = 1; // Data Length 4, Can differ depending on how many address to access. 
-const uint16_t SR_START_ADDR = 11; // Present Position Address. Starting Data Addr, Can differ Depending on what address to access
+const uint16_t SR_ADDR_LEN = 4; // Data Length 4, Can differ depending on how many address to access. 
+const uint16_t SR_START_ADDR = 132; // Present Position Address. Starting Data Addr, Can differ Depending on what address to access
 
 typedef struct id_data{
   uint8_t* indirect_addr;
@@ -108,7 +108,7 @@ Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 using namespace ControlTableItem;
 
 int8_t led_state[2] = {0, 1};
-int32_t position_state[2] = {1024, 2048};
+int32_t position_state[2] = {1024, 1536};
 uint8_t state_index = 0;
 
 void setup() {
@@ -138,7 +138,6 @@ void setup() {
 
   id_data[0].indirect_addr = (uint8_t*)&INDIRECT_ADDR_ARRY;
   id_data[1].indirect_addr = (uint8_t*)&INDIRECT_ADDR_ARRY;
-  id_data[2].indirect_addr = (uint8_t*)&INDIRECT_ADDR_ARRY;
 
   for(i=0; i<DXL_ID_CNT; i++){
     info_xels_id[i].id = DXL_ID_LIST[i];
@@ -254,7 +253,7 @@ void loop() {
   }
   DEBUG_SERIAL.println();
 
-  delay(250);
+  delay(500);
 
   ////////////////////////////////////////////////////////////////////////////////////
   // syncRead                                                                       //
