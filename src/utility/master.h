@@ -222,8 +222,6 @@ class Master
     bool setPort(DXLPortHandler *p_port);
     DXLPortHandler* getPort() const;
 
-    uint8_t* uint16_to_uint8(uint16_t* arr, uint16_t size);
-    uint8_t* uint32_to_uint8(uint32_t* arr, uint16_t size);
 
     /* Instructions */
     uint8_t ping(uint8_t id, uint8_t *p_recv_id_array, uint8_t recv_array_capacity,
