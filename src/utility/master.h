@@ -149,6 +149,7 @@ typedef struct InfoSyncWriteInst{
   InfoSyncBulkBuffer_t packet;
 } __attribute__((packed)) InfoSyncWriteInst_t;
 
+
 /* Bulk Instructions */
 typedef struct XELInfoBulkRead{
   uint16_t addr;
@@ -220,6 +221,7 @@ class Master
     bool setPort(DXLPortHandler &port);
     bool setPort(DXLPortHandler *p_port);
     DXLPortHandler* getPort() const;
+
 
     /* Instructions */
     uint8_t ping(uint8_t id, uint8_t *p_recv_id_array, uint8_t recv_array_capacity,

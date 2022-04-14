@@ -1133,6 +1133,7 @@ Master::rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t ti
 }
 
 
+
 //fastRxStatusPacket
 const InfoToParseDXLPacket_t* 
 Master::fastRxStatusPacket(XELInfoFastSyncRead_t* p_xel_info, uint16_t param_buf_cap, uint8_t xel_count, uint32_t timeout_ms)
@@ -1189,6 +1190,7 @@ Master::fastRxStatusPacket(XELInfoFastSyncRead_t* p_xel_info, uint16_t param_buf
 
   return p_ret;
 }
+
 
 
 
