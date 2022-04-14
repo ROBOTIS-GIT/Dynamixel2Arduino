@@ -93,7 +93,7 @@ void loop() {
   int i_present_position = 0;
   float f_present_position = 0.0;
 
-  while (abs(512 - i_present_position) > 10)
+  while (abs(4000 - i_present_position) > 10)
   {
     f_present_position = dxl.getPresentPosition(DXL_ID, UNIT_DEGREE);
     i_present_position = dxl.getPresentPosition(DXL_ID);
