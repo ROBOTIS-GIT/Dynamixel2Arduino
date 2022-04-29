@@ -45,6 +45,7 @@ void SerialPortHandler::begin(unsigned long baud)
 
   baud_ = baud;
   port_.begin(baud_);
+  mbedTXdelayus = 24000000 / baud;
   
   if(dir_pin_ != -1){
     pinMode(dir_pin_, OUTPUT);
@@ -107,6 +108,9 @@ size_t SerialPortHandler::write(uint8_t *buf, size_t len)
 
   if(dir_pin_ != -1){
     port_.flush();
+#if defined(ARDUINO_ARCH_MBED)
+  delayMicroseconds(mbedTXdelayus);
+#endif
     digitalWrite(dir_pin_, LOW);
     while(digitalRead(dir_pin_) != LOW);
   }
