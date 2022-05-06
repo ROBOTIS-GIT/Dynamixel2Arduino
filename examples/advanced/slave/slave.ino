@@ -41,7 +41,7 @@
   #define DXL_SERIAL   Serial3
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 84; // OpenCR Board's DIR PIN.    
-#elif defined(ARDUINO_OpenRB)  // When using official ROBOTIS OpenCM-X MKR board.
+#elif defined(ARDUINO_OpenRB)  // When using OpenRB-150
   //OpenRB does not require the DIR control pin.
   #define DXL_SERIAL Serial1
   #define DEBUG_SERIAL Serial
