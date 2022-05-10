@@ -35,6 +35,12 @@ void SerialPortHandler::begin(unsigned long baud)
   if(port_ == Serial1 && getOpenState() == false){
     Serial1.setDxlMode(true);
   }
+#elif defined(ARDUINO_OpenRB)
+  if(port_ == Serial1 && getOpenState() == false){
+    pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
+    digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
+    delay(300); // Wait for the FET to turn on.
+  }
 #elif defined(ARDUINO_OpenCR)
   if(port_ == Serial3 && getOpenState() == false){
     pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
