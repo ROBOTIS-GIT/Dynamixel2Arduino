@@ -54,6 +54,7 @@ class Slave
     void setFirmwareVersion(uint8_t version);
     uint8_t getFirmwareVersion() const;
     
+    void begin();
     bool setPort(DXLPortHandler &port);
     bool setPort(DXLPortHandler *p_port);
     DXLPortHandler* getPort() const;

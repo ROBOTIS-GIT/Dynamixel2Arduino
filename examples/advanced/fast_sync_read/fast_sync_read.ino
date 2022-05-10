@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+// Author: Ashe Kim
+
 #include <Dynamixel2Arduino.h>
 
 // Please modify it to suit your hardware.
@@ -51,71 +53,70 @@
   #define DEBUG_SERIAL Serial
   const int DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
+#define DXL_MOVING_STATUS_THRESHOLD  10
 
-
-/* syncRead
+/* FastsyncRead
   DYNAMIXEL PROTOCOL 1.0 does NOT support Sync Read feature.
-  Structures containing the necessary information to process the 'syncRead' packet.
+  Structures containing the necessary information to process the 'fastSyncRead' packet.
 
-  typedef struct XELInfoBulkRead{
-    uint16_t addr;
-    uint16_t addr_length;
-    uint8_t *p_recv_buf;
-    uint8_t id;
-    uint8_t error;
-  } __attribute__((packed)) XELInfoBulkRead_t;
+  typedef struct XELInfoFastSyncRead{
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoFastSyncRead_t;
 
-  typedef struct InfoBulkReadInst{
-    XELInfoBulkRead_t* p_xels;
-    uint8_t xel_count;
-    bool is_info_changed;
-    InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkReadInst_t;
+typedef struct InfoFastSyncReadInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoFastSyncRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoFastSyncReadInst_t;
 */
 
 /* syncWrite
   DYNAMIXEL PROTOCOL 1.0 supports Control Table address up to 255.
   Structures containing the necessary information to process the 'syncWrite' packet.
 
-  typedef struct XELInfoBulkWrite{
-    uint16_t addr;
-    uint16_t addr_length;
+  typedef struct XELInfoSyncWrite{
     uint8_t* p_data;
     uint8_t id;
-  } __attribute__((packed)) XELInfoBulkWrite_t;
+} __attribute__((packed)) XELInfoSyncWrite_t;
 
-  typedef struct InfoBulkWriteInst{
-    XELInfoBulkWrite_t* p_xels;
+  typedef struct InfoSyncWriteInst{
+    uint16_t addr;
+    uint16_t addr_length;
+    XELInfoSyncWrite_t* p_xels;
     uint8_t xel_count;
     bool is_info_changed;
     InfoSyncBulkBuffer_t packet;
-  } __attribute__((packed)) InfoBulkWriteInst_t;
+} __attribute__((packed)) InfoSyncWriteInst_t;
 */
 
-const uint8_t BROADCAST_ID = 254;
 const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
+const uint8_t BROADCAST_ID = 254;
 const uint8_t DXL_ID_CNT = 2;
 const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
 const uint16_t user_pkt_buf_cap = 128;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
 
-const uint16_t SR_START_ADDR = 126; // Starting Data Addr, Can differ Depending on what address to access
-const uint16_t SR_ADDR_LEN = 10; // Data Length (2+4+4), Can differ depending on how many address to access. 
-const uint16_t SW_START_ADDR = 104; 
+const uint16_t SR_START_ADDR = 132; //Present position
+const uint16_t SR_ADDR_LEN = 4;
+const uint16_t SW_START_ADDR = 116; //Goal position
 const uint16_t SW_ADDR_LEN = 4;
+
 typedef struct sr_data{
-  int16_t present_current;
-  int32_t present_velocity;
   int32_t present_position;
 } __attribute__((packed)) sr_data_t;
 typedef struct sw_data{
-  int32_t goal_velocity;
+  int32_t goal_position;
 } __attribute__((packed)) sw_data_t;
 
 
 sr_data_t sr_data[DXL_ID_CNT];
-DYNAMIXEL::InfoSyncReadInst_t sr_infos;
-DYNAMIXEL::XELInfoSyncRead_t info_xels_sr[DXL_ID_CNT];
+DYNAMIXEL::InfoFastSyncReadInst_t sr_infos;
+DYNAMIXEL::XELInfoFastSyncRead_t info_xels_sr[DXL_ID_CNT];
 
 sw_data_t sw_data[DXL_ID_CNT];
 DYNAMIXEL::InfoSyncWriteInst_t sw_infos;
@@ -126,8 +127,10 @@ Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 //This namespace is required to use Control table item names
 using namespace ControlTableItem;
 
+int32_t dxl_goal_position = 1024;
+char keyboard;
+
 void setup() {
-  // put your setup code here, to run once:
   uint8_t i;
   pinMode(LED_BUILTIN, OUTPUT);
   DEBUG_SERIAL.begin(115200);
@@ -136,13 +139,13 @@ void setup() {
   
   for(i=0; i<DXL_ID_CNT; i++){
     dxl.torqueOff(DXL_ID_LIST[i]);
-    dxl.setOperatingMode(DXL_ID_LIST[i], OP_VELOCITY);
+    dxl.setOperatingMode(DXL_ID_LIST[i], OP_POSITION);
   }
   dxl.torqueOn(BROADCAST_ID);
 
-  // Fill the members of structure to syncRead using external user packet buffer
-  sr_infos.packet.p_buf = user_pkt_buf;
+  // Fill the members of structure to fastSyncRead using external user packet buffer
   sr_infos.packet.buf_capacity = user_pkt_buf_cap;
+  sr_infos.packet.p_buf = user_pkt_buf;
   sr_infos.packet.is_completed = false;
   sr_infos.addr = SR_START_ADDR;
   sr_infos.addr_length = SR_ADDR_LEN;
@@ -156,6 +159,7 @@ void setup() {
   }
   sr_infos.is_info_changed = true;
 
+
   // Fill the members of structure to syncWrite using internal packet buffer
   sw_infos.packet.p_buf = nullptr;
   sw_infos.packet.is_completed = false;
@@ -164,63 +168,80 @@ void setup() {
   sw_infos.p_xels = info_xels_sw;
   sw_infos.xel_count = 0;
 
-  sw_data[0].goal_velocity = 0;
-  sw_data[1].goal_velocity = 100;
+  // Insert a initial Position to the syncWrite Packet
+  for(i = 0; i < DXL_ID_CNT; i++){
+    sw_data[i].goal_position = dxl_goal_position;
+  }
   
   for(i=0; i<DXL_ID_CNT; i++){
     info_xels_sw[i].id = DXL_ID_LIST[i];
-    info_xels_sw[i].p_data = (uint8_t*)&sw_data[i].goal_velocity;
+    info_xels_sw[i].p_data = (uint8_t*)&sw_data[i].goal_position;
     sw_infos.xel_count++;
   }
   sw_infos.is_info_changed = true;
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   static uint32_t try_count = 0;
   uint8_t i, recv_cnt;
-  
-  for(i = 0; i < DXL_ID_CNT; i++){
-    sw_data[i].goal_velocity = 5 + sw_data[i].goal_velocity;
-    if(sw_data[i].goal_velocity >= 200){
-      sw_data[i].goal_velocity = 0;
+
+  if (Serial.available()) {
+    keyboard = Serial.read();
+    if (keyboard == 'u') { // position increase
+      dxl_goal_position = dxl_goal_position + 256;
+    }
+    else if (keyboard == 'd') { // position decrease
+      dxl_goal_position = dxl_goal_position - 256;
+    }
+    else if (keyboard == 'r') { // position reset
+      dxl_goal_position = 1024;
     }
   }
+
+  // Insert a new Goal Position to the syncWrite Packet
+  for(i = 0; i < DXL_ID_CNT; i++){
+    sw_data[i].goal_position = dxl_goal_position;
+  }
+
+  // Update the SyncWrite packet status
   sw_infos.is_info_changed = true;
 
   DEBUG_SERIAL.print("\n>>>>>> Sync Instruction Test : ");
   DEBUG_SERIAL.println(try_count++);
+
+  // Build a syncWrite Packet and transmit to DYNAMIXEL
   if(dxl.syncWrite(&sw_infos) == true){
     DEBUG_SERIAL.println("[SyncWrite] Success");
     for(i=0; i<sw_infos.xel_count; i++){
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.println(sw_infos.p_xels[i].id);
-      DEBUG_SERIAL.print("\t Goal Velocity: ");DEBUG_SERIAL.println(sw_data[i].goal_velocity);
-    }
+      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sw_infos.p_xels[i].id);
+      DEBUG_SERIAL.print("\t Goal Position: ");DEBUG_SERIAL.println(sw_data[i].goal_position);
+    }   
   }else{
     DEBUG_SERIAL.print("[SyncWrite] Fail, Lib error code: ");
     DEBUG_SERIAL.print(dxl.getLastLibErrCode());
   }
   DEBUG_SERIAL.println();
 
-  delay(250);
+  delay(300);
 
-  recv_cnt = dxl.syncRead(&sr_infos);
+  // Transmit predefined fastSyncRead instruction packet
+  // and receive a status packet from each DYNAMIXEL
+  recv_cnt = dxl.fastSyncRead(&sr_infos);
   if(recv_cnt > 0){
-    DEBUG_SERIAL.print("[SyncRead] Success, Received ID Count: ");
+    DEBUG_SERIAL.print("[fastSyncRead] Success, Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
-    for(i=0; i<recv_cnt; i++){
+    for(i=0; i<recv_cnt; i++) {
       DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
-      DEBUG_SERIAL.print(", Error: ");DEBUG_SERIAL.println(sr_infos.p_xels[i].error);
-      DEBUG_SERIAL.print("\t Present Current: ");DEBUG_SERIAL.println(sr_data[i].present_current);
-      DEBUG_SERIAL.print("\t Present Velocity: ");DEBUG_SERIAL.println(sr_data[i].present_velocity);
       DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(sr_data[i].present_position);
     }
-  }else{
-    DEBUG_SERIAL.print("[SyncRead] Fail, Lib error code: ");
+  } else {
+    DEBUG_SERIAL.print("[fastSyncRead] Fail, Lib error code: ");
     DEBUG_SERIAL.println(dxl.getLastLibErrCode());
   }
+
+  DEBUG_SERIAL.println();
   DEBUG_SERIAL.println("=======================================================");
 
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  delay(750);
+  delay(1000);
 }

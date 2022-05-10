@@ -10,7 +10,7 @@ fi
 # this will be eval'd in the functions below because arrays can't be exported
 # For creating a new main platform, please refer to https://arduino.github.io/arduino-cli/latest/platform-specification/#hardware-folders-structure
 # and https://arduino.github.io/arduino-cli/latest/platform-specification/#boardstxt
-export MAIN_PLATFORMS='declare -A main_platforms=([uno]="arduino:avr:uno" [mega2560]="arduino:avr:mega:cpu=atmega2560" [leonardo]="arduino:avr:leonardo" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [mzero]="arduino:samd:mzero_bl" [mzeropro]="arduino:samd:mzero_pro_bl" [mkrzero]="arduino:samd:mkrzero" [mkr1000]="arduino:samd:mkr1000" [mkrwifi1010]="arduino:samd:mkrwifi1010" [opencr]="OpenCR:OpenCR:OpenCR" [portenta]="arduino:mbed_portenta:envie_m7")'
+export MAIN_PLATFORMS='declare -A main_platforms=([uno]="arduino:avr:uno" [mega2560]="arduino:avr:mega:cpu=atmega2560" [leonardo]="arduino:avr:leonardo" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [mzero]="arduino:samd:mzero_bl" [mzeropro]="arduino:samd:mzero_pro_bl" [mkrzero]="arduino:samd:mkrzero" [mkr1000]="arduino:samd:mkr1000" [mkrwifi1010]="arduino:samd:mkrwifi1010" [opencr]="OpenCR:OpenCR:OpenCR" [openrb-150]="OpenRB-150:samd:OpenRB-150" [portenta]="arduino:mbed_portenta:envie_m7")'
 
 # make display available for arduino CLI
 /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16
@@ -38,13 +38,17 @@ sudo apt-get update
 sudo apt-get install libc6:i386
 
 echo -n "ADD PACKAGE INDEX: "
-DEPENDENCY_OUTPUT=$(arduino --pref "boardsmanager.additional.urls=https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCR/master/arduino/opencr_release/package_opencr_index.json,https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCM9.04/master/arduino/opencm_release/package_opencm9.04_index.json,https://github.com/espressif/arduino-esp32/releases/download/1.0.1/package_esp32_index.json" --save-prefs 2>&1)
+DEPENDENCY_OUTPUT=$(arduino --pref "boardsmanager.additional.urls=https://github.com/espressif/arduino-esp32/releases/download/1.0.1/package_esp32_index.json" --save-prefs 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
 # install other board packages
-echo -n "ADD OpenCR PACKAGE INDEX: "
-DEPENDENCY_OUTPUT=$(arduino --pref "boardsmanager.additional.urls=https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCR/master/arduino/opencr_release/package_opencr_index.json" --save-prefs 2>&1)
+echo -n "ADD OpenRB-150 PACKAGE INDEX: "
+DEPENDENCY_OUTPUT=$(arduino --pref "boardsmanager.additional.urls=https://raw.githubusercontent.com/ROBOTIS-GIT/OpenRB-150/master/package_openrb_index.json" --save-prefs 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
+
+# echo -n "ADD OpenCR PACKAGE INDEX: "
+# DEPENDENCY_OUTPUT=$(arduino --pref "boardsmanager.additional.urls=https://raw.githubusercontent.com/ROBOTIS-GIT/OpenCR/master/arduino/opencr_release/package_opencr_index.json" --save-prefs 2>&1)
+# if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
 echo -n "INSTALL DUE(sam): "
 DEPENDENCY_OUTPUT=$(arduino --install-boards arduino:sam 2>&1)
@@ -58,8 +62,12 @@ echo -n "INSTALL Portenta H7: "
 DEPENDENCY_OUTPUT=$(arduino --install-boards arduino:mbed_portenta 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
-echo -n "INSTALL OpenCR: "
-DEPENDENCY_OUTPUT=$(arduino --install-boards OpenCR:OpenCR 2>&1)
+# echo -n "INSTALL OpenCR: "
+# DEPENDENCY_OUTPUT=$(arduino --install-boards OpenCR:OpenCR 2>&1)
+# if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
+
+echo -n "INSTALL OpenRB-150: "
+DEPENDENCY_OUTPUT=$(arduino --install-boards OpenRB-150:samd 2>&1)
 if [ $? -ne 0 ]; then echo -e "\xe2\x9c\x96"; else echo -e "\xe2\x9c\x93"; fi
 
 # install random lib so the arduino IDE grabs a new library index

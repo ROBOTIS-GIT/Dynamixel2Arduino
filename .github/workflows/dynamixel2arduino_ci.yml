@@ -16,7 +16,7 @@ jobs:
       - name: Run Arduino CI Script
         run: |
           source <(curl -SLs https://raw.githubusercontent.com/ROBOTIS-GIT/Dynamixel2Arduino/master/install.sh) ${{github.ref}}
-          build_platform opencr
+          build_platform openrb-150
           build_platform uno
           build_platform mega2560
           build_platform mkrzero
