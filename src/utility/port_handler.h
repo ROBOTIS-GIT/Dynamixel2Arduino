@@ -61,6 +61,7 @@ class SerialPortHandler : public DXLPortHandler
     HardwareSerial& port_;
     const int dir_pin_;
     unsigned long baud_;
+    unsigned int mbedTXdelayus;
 };
 
 
