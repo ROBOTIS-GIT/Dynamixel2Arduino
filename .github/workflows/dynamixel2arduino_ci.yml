@@ -15,8 +15,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run Arduino CI Script
         run: |
-          source <(curl -SLs https://raw.githubusercontent.com/ROBOTIS-GIT/Dynamixel2Arduino/master/install.sh) ${{github.ref}}
-          build_platform opencr
+          source <(curl -SLs https://raw.githubusercontent.com/ROBOTIS-GIT/Dynamixel2Arduino/$GITHUB_REF_NAME/install.sh) ${{github.ref}}
+          build_platform openrb-150
           build_platform uno
           build_platform mega2560
           build_platform mkrzero
