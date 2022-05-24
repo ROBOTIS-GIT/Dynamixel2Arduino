@@ -175,6 +175,7 @@ Master::ping(uint8_t id, uint8_t *p_recv_id_array, uint8_t recv_array_capacity, 
         }
       }
     }else{
+      timeout_ms = 3*253;
       pre_time_ms = millis();
       while(ret_id_cnt < recv_array_capacity)
       {
@@ -219,6 +220,7 @@ Master::ping(uint8_t id, InfoFromPing_t *recv_ping_info_array, uint8_t recv_arra
         }
       }
     }else{
+      timeout_ms = 3*253;
       pre_time_ms = millis();
       while(ret_id_cnt < recv_array_cnt)
       {
