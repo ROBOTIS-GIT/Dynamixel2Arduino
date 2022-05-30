@@ -252,6 +252,9 @@
 #ifndef PRO_M54P_060_S250_R
 #define PRO_M54P_060_S250_R (uint16_t)2120
 #endif
+#ifndef CM_550
+#define CM_550 (uint16_t)450
+#endif
 
 namespace ControlTableItem{
   enum ControlTableItemIndex{

@@ -33,6 +33,8 @@
 #define ENABLE_ACTUATOR_PRO_RA          1
 #define ENABLE_ACTUATOR_PRO_PLUS        1
 
+#define ENABLE_ACTUATOR_CM_550          1 // Enable CM-550 
+
 
 #if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
   || defined (ARDUINO_AVR_INDUSTRIAL101)

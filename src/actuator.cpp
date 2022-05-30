@@ -549,6 +549,10 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case PRO_M54P_060_S250_R:
       p_common_ctable = pro_ra_pro_plus_control_table;
       break;
+
+    case CM_550:
+      p_common_ctable = nullptr; // CM-550 does not success the ordinary control tables. 
+      break;      
       
     default:
       break;

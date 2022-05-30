@@ -60,7 +60,9 @@ const uint16_t model_number_table[] PROGMEM = {
     PRO_M42P_010_S260_R, 
     PRO_M54P_040_S250_R, PRO_M54P_060_S250_R,
     PRO_H42P_020_S300_R, 
-    PRO_H54P_100_S500_R, PRO_H54P_200_S500_R
+    PRO_H54P_100_S500_R, PRO_H54P_200_S500_R,
+
+    CM_550
 };
 
 const uint8_t model_number_table_count = sizeof(model_number_table)/sizeof(model_number_table[0]);
