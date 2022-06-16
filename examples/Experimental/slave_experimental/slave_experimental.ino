@@ -14,6 +14,14 @@
 * limitations under the License.
 *******************************************************************************/
 
+// Example Environment
+//
+// - Controller: OpenCR 1.0 / SAMD based controller (Arduino MKR, OpenRB-150)
+// - Library: DYNAMIXEL2Arduino 
+// - Description: Make your controller as slave and do communication, at USB Serial or Hardware serial, under DYNAMIXEL Protocol 1.0/2.0 rules 
+// - NOTE: The experimental codes may not guarantee full technical support. Note that the given code is subject to change / delete without any notice.
+// Author: David Park
+
 #include <Dynamixel2Arduino.h>
 
 // Please modify it to suit your hardware.
@@ -46,11 +54,6 @@
   #define DEBUG_SERIAL Serial
   const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 #endif
-
-bool temp = false; 
-
-// Tested: OpenRB-150 
-// 
 
 // Create a port object for DYNAMIXEL communication.
 // The list of available classes is as follows.

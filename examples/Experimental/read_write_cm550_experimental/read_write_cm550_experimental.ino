@@ -14,7 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-// NOTE: This example is to simply allow the communication between CM-550 and OpenCM 9.04 (without Exp Board) through USART2. 
+// Example Environment
+//
+// - Controller: CM-550 (Main Controller for ROBOTIS Engineer Kit2 )
+// - Library: DYNAMIXEL2Arduino 
+// - Description: Arduino your CM-550 !  (Read / Write to CM-550 at Arduino IDE)
+// - NOTE: The experimental codes may not gurantee full technical support. Note that the given code is subject to change / delete without any notice. 
+// Author: David Park
 
 #include <Dynamixel2Arduino.h>
 
