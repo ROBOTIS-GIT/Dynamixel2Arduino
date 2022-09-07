@@ -21,7 +21,7 @@
 #include "port_handler.h"
 #include "config.h"
 
-#define CONTROL_ITEM_MAX         64
+#define CONTROL_ITEM_MAX         80
 #define CONTROL_ITEM_ADDR_LIMIT (DEFAULT_DXL_BUF_LENGTH-11)
 
 
