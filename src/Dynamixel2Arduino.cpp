@@ -61,6 +61,9 @@ const uint16_t model_number_table[] PROGMEM = {
     PRO_M54P_040_S250_R, PRO_M54P_060_S250_R,
     PRO_H42P_020_S300_R, 
     PRO_H54P_100_S500_R, PRO_H54P_200_S500_R
+
+    RH_P12_RN,
+    RH_P12_RNA
 };
 
 const uint8_t model_number_table_count = sizeof(model_number_table)/sizeof(model_number_table[0]);
@@ -311,6 +314,7 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case XC330_T181:
     case XL330_M288:
     case XL330_M077:
+    case RH_P12_RN:
       switch(baudrate)
       {
         case 9600:
@@ -455,6 +459,7 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
     case PRO_M42P_010_S260_R:
     case PRO_M54P_040_S250_R:
     case PRO_M54P_060_S250_R:
+    case RH_P12_RNA:
       switch(baudrate)
       {
         case 9600:
@@ -757,7 +762,17 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 16);
       }
       break;
-      
+
+    case RH_P12_RN:
+    case RH_P12_RNA:
+      if (mode == OP_CURRENT) {
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 0);
+      }
+      else if (mode == OP_CURRENT_BASED_POSITION) {
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 5);
+      }
+      break;
+
     default:
       break;
   }

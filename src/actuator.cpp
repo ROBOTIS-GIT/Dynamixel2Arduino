@@ -349,7 +349,8 @@ const ModelControlTableInfo_t pro_r_control_table[] PROGMEM = {
 
 const ModelControlTableInfo_t pro_ra_pro_plus_control_table[] PROGMEM = {
 #if (ENABLE_ACTUATOR_PRO_RA\
- || ENABLE_ACTUATOR_PRO_PLUS)
+ || ENABLE_ACTUATOR_PRO_PLUS\
+ || ENABLE_ACTUATOR_RH_P12_RNA)
   {ControlTableItem::MODEL_NUMBER,             0, 2},
   {ControlTableItem::MODEL_INFORMATION,        2, 4},
   {ControlTableItem::FIRMWARE_VERSION,         6, 1},
@@ -412,6 +413,58 @@ const ModelControlTableInfo_t pro_ra_pro_plus_control_table[] PROGMEM = {
   {ControlTableItem::EXTERNAL_PORT_DATA_2,    602, 2},
   {ControlTableItem::EXTERNAL_PORT_DATA_3,    604, 2},
   {ControlTableItem::EXTERNAL_PORT_DATA_4,    606, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+const ModelControlTableInfo_t rh_p12_rn_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_RH_P12_RN)
+  {ControlTableItem::MODEL_NUMBER,             0, 2},
+  {ControlTableItem::MODEL_INFORMATION,        2, 4},
+  {ControlTableItem::FIRMWARE_VERSION,         6, 1},
+  {ControlTableItem::ID,                       7, 1},
+  {ControlTableItem::BAUD_RATE,                8, 1},
+  {ControlTableItem::RETURN_DELAY_TIME,        9, 1},
+  {ControlTableItem::OPERATING_MODE,          11, 1},
+  {ControlTableItem::MOVING_THRESHOLD,        17, 4},
+  {ControlTableItem::TEMPERATURE_LIMIT,       21, 1},
+  {ControlTableItem::MAX_VOLTAGE_LIMIT,       22, 2},
+  {ControlTableItem::MIN_VOLTAGE_LIMIT,       24, 2},
+  {ControlTableItem::ACCELERATION_LIMIT,      26, 4},
+  {ControlTableItem::CURRENT_LIMIT,			  30, 2},
+  {ControlTableItem::VELOCITY_LIMIT,          32, 4},
+  {ControlTableItem::MAX_POSITION_LIMIT,      36, 4},
+  {ControlTableItem::MIN_POSITION_LIMIT,      40, 4},
+  {ControlTableItem::EXTERNAL_PORT_MODE_1,    44, 1},
+  {ControlTableItem::EXTERNAL_PORT_MODE_2,    45, 1},
+  {ControlTableItem::EXTERNAL_PORT_MODE_3,    46, 1},
+  {ControlTableItem::EXTERNAL_PORT_MODE_4,    47, 1},
+  {ControlTableItem::SHUTDOWN,                48, 1},
+
+  {ControlTableItem::TORQUE_ENABLE,           562, 1},
+  {ControlTableItem::LED_RED,                 563, 1},
+  {ControlTableItem::LED_GREEN,               564, 1},
+  {ControlTableItem::LED_BLUE,                565, 1},
+  {ControlTableItem::POSITION_D_GAIN,         590, 2},
+  {ControlTableItem::POSITION_I_GAIN,         592, 2},
+  {ControlTableItem::POSITION_P_GAIN,         594, 2},
+  {ControlTableItem::GOAL_POSITION,			  596, 4},
+  {ControlTableItem::GOAL_VELOCITY,           600, 4},
+  {ControlTableItem::GOAL_CURRENT,            604, 2},
+  {ControlTableItem::GOAL_ACCELERATION,       606, 4},
+  {ControlTableItem::MOVING,                  610, 1},
+  {ControlTableItem::PRESENT_POSITION,        611, 4},
+  {ControlTableItem::PRESENT_VELOCITY,        615, 4},
+  {ControlTableItem::PRESENT_CURRENT,         621, 2},
+  {ControlTableItem::PRESENT_INPUT_VOLTAGE,   623, 2},
+  {ControlTableItem::PRESENT_TEMPERATURE,     625, 1},
+  {ControlTableItem::EXTERNAL_PORT_DATA_1,    600, 2},
+  {ControlTableItem::EXTERNAL_PORT_DATA_2,    602, 2},
+  {ControlTableItem::EXTERNAL_PORT_DATA_3,    604, 2},
+  {ControlTableItem::EXTERNAL_PORT_DATA_4,    606, 2},
+  {ControlTableItem::STATUS_RETURN_LEVEL,     891, 1},
+  {ControlTableItem::HARDWARE_ERROR_STATUS,   892, 1},
+
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
@@ -547,9 +600,14 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
     case PRO_M42P_010_S260_R:
     case PRO_M54P_040_S250_R:
     case PRO_M54P_060_S250_R:
+    case RH_P12_RNA:
       p_common_ctable = pro_ra_pro_plus_control_table;
       break;
-      
+
+    case RH_P12_RN:
+	  p_common_ctable = rh_p12_rn_control_table;
+	  break;
+
     default:
       break;
   }

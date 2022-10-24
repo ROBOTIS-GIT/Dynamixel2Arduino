@@ -180,6 +180,14 @@
 #ifndef PRO_L42_10_S300_R
 #define PRO_L42_10_S300_R   (uint16_t)35072
 #endif
+
+#ifndef RH_P12_RN
+#define RH_P12_RN           (uint16_t)35073
+#endif
+#ifndef RH_P12_RNA
+#define RH_P12_RNA          (uint16_t)35074
+#endif
+
 #ifndef PRO_L54_30_S400_R
 #define PRO_L54_30_S400_R   (uint16_t)37928
 #endif
