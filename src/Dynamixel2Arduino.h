@@ -80,9 +80,10 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * dxl.begin(57600);
      * @endcode
      * @param baud The port speed you want on the board (the speed to communicate with DYNAMIXEL) (default : 57600)
+     * @param delay Delay in milliseconds after opening to allow hardware to settle (default: 300)
      * @return It returns true(1) on success, false(0) on failure.
      */    
-    void begin(unsigned long baud = 57600);
+    void begin(unsigned long baud = 57600, uint32_t delay = 300);
 
     /**
      * @brief It is API for getting serial baudrate of board port.
