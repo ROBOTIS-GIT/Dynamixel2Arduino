@@ -24,7 +24,7 @@ Slave::Slave(DXLPortHandler &port, const uint16_t model_num, float protocol_ver)
   setPortProtocolVersion(protocol_ver);
   addDefaultControlItem();
 
-  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
+  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH + DXL_BYTE_STUFF_SAFE_CNT];
   if(p_packet_buf_ != nullptr){
     packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
     is_buf_malloced_ = true;
@@ -42,7 +42,7 @@ Slave::Slave(const uint16_t model_num, float protocol_ver)
   setPortProtocolVersion(protocol_ver);
   addDefaultControlItem();
 
-  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH];
+  p_packet_buf_ = new uint8_t[DEFAULT_DXL_BUF_LENGTH + DXL_BYTE_STUFF_SAFE_CNT];
   if(p_packet_buf_ != nullptr){
     packet_buf_capacity_ = DEFAULT_DXL_BUF_LENGTH;
     is_buf_malloced_ = true;
@@ -432,7 +432,7 @@ Slave::processInstRead()
         if(addr_length+11 > packet_buf_capacity_){
           err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
         }
-        p_tx_param = &p_packet_buf_[9];
+        p_tx_param = &p_packet_buf_[9 + DXL_BYTE_STUFF_SAFE_CNT];
       }else{
         err = DXL_LIB_ERROR_WRONG_PACKET;
       }
@@ -443,7 +443,7 @@ Slave::processInstRead()
         if(addr_length+6 > packet_buf_capacity_){
           err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
         }
-        p_tx_param = &p_packet_buf_[5];
+        p_tx_param = &p_packet_buf_[5 + DXL_BYTE_STUFF_SAFE_CNT];
       }else{
         err = DXL_LIB_ERROR_WRONG_PACKET;
       }
