@@ -39,14 +39,14 @@ void SerialPortHandler::begin(unsigned long baud)
   if(port_ == Serial1 && getOpenState() == false){
     pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
     digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
-    delay(1000); // Wait for the FET to turn on.
+    delay(500); // Wait for the FET to turn on.
   }
 #elif defined(ARDUINO_OpenCR)
   if(port_ == Serial3 && getOpenState() == false){
     pinMode(BDPIN_DXL_PWR_EN, OUTPUT);
     digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
   }
-  delay(1000); // Wait for the DYNAMIXEL to power up normally.
+  delay(500); // Wait for the DYNAMIXEL to power up normally.
 #endif
 
   baud_ = baud;
