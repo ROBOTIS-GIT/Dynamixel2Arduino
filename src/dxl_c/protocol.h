@@ -20,8 +20,50 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define DXL_BROADCAST_ID        0xFE
+const int DXL_BROADCAST_ID = 0xFE;
 
+namespace DYNAMIXEL {
+
+typedef struct InfoSyncBulkBuffer{
+  uint8_t* p_buf;
+  uint16_t buf_capacity;
+  uint16_t gen_length;
+  bool is_completed;
+} __attribute__((packed)) InfoSyncBulkBuffer_t;
+
+typedef struct XELInfoFastSyncRead{
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoFastSyncRead_t;
+
+typedef struct InfoFastSyncReadInst{
+  uint16_t addr;
+  uint16_t addr_length;
+  XELInfoFastSyncRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoFastSyncReadInst_t;
+
+typedef struct XELInfoFastBulkRead{
+  uint16_t addr;
+  uint16_t addr_length;
+  uint8_t *p_recv_buf;
+  uint8_t id;
+  uint8_t error;
+} __attribute__((packed)) XELInfoFastBulkRead_t;
+
+typedef struct InfoFastBulkReadInst{
+  XELInfoFastBulkRead_t* p_xels;
+  uint8_t xel_count;
+  bool is_info_changed;
+  InfoSyncBulkBuffer_t packet;
+} __attribute__((packed)) InfoFastBulkReadInst_t;
+
+}
+
+using namespace DYNAMIXEL;
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +85,7 @@ enum DXLInstruction{
   DXL_INST_FAST_SYNC_READ = 0x8A, //ONLY Protocol2.0
   DXL_INST_SYNC_WRITE = 0x83,
   DXL_INST_BULK_READ = 0x92,
+  DXL_INST_FAST_BULK_READ = 0x9A, // ONLY Protocol2.0
   DXL_INST_BULK_WRITE = 0x93 //ONLY Protocol2.0
 };
 
@@ -137,7 +180,7 @@ typedef struct InfoToParseDXLPacket{
   uint8_t parse_state;
   uint8_t param_count;
   uint8_t xel_count;
-  uint8_t check_xel_count;
+  // uint8_t check_xel_count;
   bool is_init;
 }InfoToParseDXLPacket_t;
 
@@ -153,7 +196,6 @@ typedef struct InfoToMakeDXLPacket{
   bool is_init;
 }InfoToMakeDXLPacket_t;
 
-
 typedef int32_t DXLLibErrorCode_t;
 
 DXLLibErrorCode_t begin_make_dxl_packet(InfoToMakeDXLPacket_t* p_make_packet, 
@@ -163,13 +205,14 @@ DXLLibErrorCode_t add_param_to_dxl_packet(InfoToMakeDXLPacket_t* p_make_packet,
   uint8_t *p_param, uint16_t param_len);
 DXLLibErrorCode_t end_make_dxl_packet(InfoToMakeDXLPacket_t* p_make_packet);
 
-
 DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
   uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_cap);
-DXLLibErrorCode_t fast_begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
-  uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_cap, uint8_t xel_count);
 DXLLibErrorCode_t parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data);
-DXLLibErrorCode_t fast_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data);
+
+DXLLibErrorCode_t fast_begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
+  uint8_t protocol_ver);//, uint8_t* p_param_buf, uint16_t param_buf_cap, uint8_t xel_count);
+DXLLibErrorCode_t fast_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data,
+                                        InfoFastSyncReadInst_t *sync_read, InfoFastBulkReadInst_t *bulk_read);
 
 #ifdef __cplusplus
 }
