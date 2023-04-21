@@ -91,110 +91,6 @@ typedef struct RecvInfoFromStatusInst{
 
 namespace DYNAMIXEL {
 
-typedef struct InfoFromPing{
-  uint8_t id;
-  uint16_t model_number;
-  uint8_t firmware_version;
-} InfoFromPing_t;
-
-// typedef struct InfoSyncBulkBuffer{
-//   uint8_t* p_buf;
-//   uint16_t buf_capacity;
-//   uint16_t gen_length;
-//   bool is_completed;
-// } __attribute__((packed)) InfoSyncBulkBuffer_t;
-
-/* Sync Instructions */
-typedef struct XELInfoSyncRead{
-  uint8_t *p_recv_buf;
-  uint8_t id;
-  uint8_t error;
-} __attribute__((packed)) XELInfoSyncRead_t;
-
-typedef struct InfoSyncReadInst{
-  uint16_t addr;
-  uint16_t addr_length;
-  XELInfoSyncRead_t* p_xels;
-  uint8_t xel_count;
-  bool is_info_changed;
-  InfoSyncBulkBuffer_t packet;
-} __attribute__((packed)) InfoSyncReadInst_t;
-
-// typedef struct XELInfoFastSyncRead{
-//   uint8_t *p_recv_buf;
-//   uint8_t id;
-//   uint8_t error;
-// } __attribute__((packed)) XELInfoFastSyncRead_t;
-
-// typedef struct InfoFastSyncReadInst{
-//   uint16_t addr;
-//   uint16_t addr_length;
-//   XELInfoFastSyncRead_t* p_xels;
-//   uint8_t xel_count;
-//   bool is_info_changed;
-//   InfoSyncBulkBuffer_t packet;
-// } __attribute__((packed)) InfoFastSyncReadInst_t;
-
-typedef struct XELInfoSyncWrite{
-  uint8_t* p_data;
-  uint8_t id;
-} __attribute__((packed)) XELInfoSyncWrite_t;
-
-typedef struct InfoSyncWriteInst{
-  uint16_t addr;
-  uint16_t addr_length;
-  XELInfoSyncWrite_t* p_xels;
-  uint8_t xel_count;
-  bool is_info_changed;
-  InfoSyncBulkBuffer_t packet;
-} __attribute__((packed)) InfoSyncWriteInst_t;
-
-/* Bulk Instructions */
-typedef struct XELInfoBulkRead{
-  uint16_t addr;
-  uint16_t addr_length;
-  uint8_t *p_recv_buf;
-  uint8_t id;
-  uint8_t error;
-} __attribute__((packed)) XELInfoBulkRead_t;
-
-typedef struct InfoBulkReadInst{
-  XELInfoBulkRead_t* p_xels;
-  uint8_t xel_count;
-  bool is_info_changed;
-  InfoSyncBulkBuffer_t packet;
-} __attribute__((packed)) InfoBulkReadInst_t;
-
-// typedef struct XELInfoFastBulkRead{
-//   uint16_t addr;
-//   uint16_t addr_length;
-//   uint8_t *p_recv_buf;
-//   uint8_t id;
-//   uint8_t error;
-// } __attribute__((packed)) XELInfoFastBulkRead_t;
-
-// typedef struct InfoFastBulkReadInst{
-//   XELInfoFastBulkRead_t* p_xels;
-//   uint8_t xel_count;
-//   bool is_info_changed;
-//   InfoSyncBulkBuffer_t packet;
-// } __attribute__((packed)) InfoFastBulkReadInst_t;
-
-typedef struct XELInfoBulkWrite{
-  uint16_t addr;
-  uint16_t addr_length;
-  uint8_t* p_data;
-  uint8_t id;
-} __attribute__((packed)) XELInfoBulkWrite_t;
-
-typedef struct InfoBulkWriteInst{
-  XELInfoBulkWrite_t* p_xels;
-  uint8_t xel_count;
-  bool is_info_changed;
-  InfoSyncBulkBuffer_t packet;
-} __attribute__((packed)) InfoBulkWriteInst_t;
-
-
 class Master
 {
   public:
@@ -257,8 +153,8 @@ class Master
     uint8_t bulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
     bool bulkWrite(InfoBulkWriteInst_t* p_info);
 
-    uint8_t fastSyncRead(InfoFastSyncReadInst_t* p_info, uint32_t timeout_ms = 10);
-    uint8_t fastBulkRead(InfoFastBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
+    uint8_t fastSyncRead(InfoSyncReadInst_t* p_info, uint32_t timeout_ms = 10);
+    uint8_t fastBulkRead(InfoBulkReadInst_t* p_info, uint32_t timeout_ms = 10);
 
     uint8_t getLastStatusPacketError() const;
     DXLLibErrorCode_t getLastLibErrCode() const;
@@ -276,7 +172,7 @@ class Master
     // raw APIs
     bool txInstPacket(uint8_t id, uint8_t inst_idx, uint8_t *p_param, uint16_t param_len);
     const InfoToParseDXLPacket_t* rxStatusPacket(uint8_t* p_param_buf, uint16_t param_buf_cap, uint32_t timeout_ms = 10);
-    const InfoToParseDXLPacket_t* fastRxStatusPacket(InfoFastSyncReadInst_t* p_sr_info, InfoFastBulkReadInst_t* p_br_info, uint32_t timeout_ms = 10);
+    const InfoToParseDXLPacket_t* fastRxStatusPacket(InfoSyncReadInst_t* sync_read, InfoBulkReadInst_t* bulk_read, uint32_t timeout_ms = 10);
 
   private:
     DXLPortHandler *p_port_;
