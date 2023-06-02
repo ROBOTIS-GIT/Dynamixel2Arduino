@@ -1362,9 +1362,9 @@ bool Master::bulkRead(const ParamForBulkReadInst_t &param_info, RecvInfoFromStat
         tx_param[param_len++] = p_xel->length >> 0;
         tx_param[param_len++] = p_xel->length >> 8;
       }else if(protocol_ver_idx_ == 1){
+        tx_param[param_len++] = p_xel->length & 0xFF;
         tx_param[param_len++] = p_xel->id;
         tx_param[param_len++] = p_xel->addr & 0xFF;
-        tx_param[param_len++] = p_xel->length & 0xFF;
       }
       err = add_param_to_dxl_packet(&info_tx_packet_, tx_param, param_len);
       if(err != DXL_LIB_OK){
