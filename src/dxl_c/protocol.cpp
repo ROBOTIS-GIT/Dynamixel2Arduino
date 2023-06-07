@@ -493,13 +493,14 @@ static DXLLibErrorCode_t parse_dxl1_0_packet(InfoToParseDXLPacket_t* p_parse_pac
 static DXLLibErrorCode_t parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data)
 {
   DXLLibErrorCode_t ret = DXL_LIB_PROCEEDING;
-  uint16_t byte_stuffing_cnt = 0;
+  static uint16_t byte_stuffing_cnt = 0;  // static variable
 
   switch(p_parse_packet->parse_state)
   {
     case DXL2_0_PACKET_PARSING_STATE_IDLE:
       if(p_parse_packet->header_cnt >= 3){
         p_parse_packet->header_cnt = 0;
+        byte_stuffing_cnt = 0;  // static variable initialization
       }
       p_parse_packet->header[p_parse_packet->header_cnt++] = recv_data;
       if(p_parse_packet->header_cnt == 3){
@@ -568,17 +569,11 @@ static DXLLibErrorCode_t parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_parse_pac
         if(p_parse_packet->packet_len < 4){ // 4 = Instruction(1)+Error(1)+CRC(2)
           ret = DXL_LIB_ERROR_LENGTH;
           p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-        }else if(p_parse_packet->packet_len > p_parse_packet->param_buf_capacity+4){ // 4 = Instruction(1)+Error(1)+CRC(2)
-          ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
         }else{
           p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
         }
       }else{
-        if(p_parse_packet->packet_len > p_parse_packet->param_buf_capacity+3){ // 3 = Instruction(1)+CRC(2)
-          ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
-        }else if(p_parse_packet->packet_len == 3){ // 3 = Instruction(1)+CRC(2)
+        if(p_parse_packet->packet_len == 3){ // 3 = Instruction(1)+CRC(2)
           p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
         }else{
           p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
@@ -600,8 +595,13 @@ static DXLLibErrorCode_t parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_parse_pac
       if(p_parse_packet->p_param_buf == NULL){
         ret = DXL_LIB_ERROR_NULLPTR;
         p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+        break;
       }
-
+      if(p_parse_packet->param_buf_capacity < p_parse_packet->recv_param_len) {
+        ret = DXL_LIB_ERROR_BUFFER_OVERFLOW;
+        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
+        break;
+      }
       p_parse_packet->p_param_buf[p_parse_packet->recv_param_len++] = recv_data;
       update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
 
