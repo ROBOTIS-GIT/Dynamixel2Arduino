@@ -33,8 +33,10 @@
 #define ENABLE_ACTUATOR_PRO_RA          1
 #define ENABLE_ACTUATOR_PRO_PLUS        1
 
+
 #define ENABLE_ACTUATOR_RH_P12_RN       1
 #define ENABLE_ACTUATOR_RH_P12_RNA      1
+#define DXL_BYTE_STUFF_SAFE_CNT         8
 
 
 #if defined (ARDUINO_AVR_UNO) || defined (ARDUINO_AVR_YUN) \
@@ -42,7 +44,7 @@
 #define DEFAULT_DXL_BUF_LENGTH       192
 #elif defined (ARDUINO_AVR_LEONARDO)
 #define DEFAULT_DXL_BUF_LENGTH       256
-#elif defined (OpenCR)
+#elif defined (__OPENCR__)
 #define DEFAULT_DXL_BUF_LENGTH       2048
 #else
 #define DEFAULT_DXL_BUF_LENGTH       1024
@@ -63,7 +65,7 @@
 #elif defined (ARDUINO_AVR_LEONARDO)
 #define DXL_MAX_NODE                   16
 #define DXL_MAX_NODE_BUFFER_SIZE       12
-#elif defined (OpenCR)
+#elif defined (__OPENCR__)
 #define DXL_MAX_NODE                  253 // Max number of XEL on DYNAMIXEL protocol
 #define DXL_MAX_NODE_BUFFER_SIZE       32
 #else
