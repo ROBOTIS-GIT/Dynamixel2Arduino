@@ -426,11 +426,11 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
       uint8_t id, int32_t data, uint32_t timeout = 100);
 
     uint8_t getHardwareError(uint8_t id);
-
-#if 0 //TODO
     bool setDirectionToNormal(uint8_t id);
     bool setDirectionToReverse(uint8_t id);
     bool setDirection(uint8_t id, bool dir);
+
+#if 0 //TODO
 
     bool setProfileBase(uint8_t id, uint8_t base);
     bool setProfileToVelocityBased(uint8_t id);
