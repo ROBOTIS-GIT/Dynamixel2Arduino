@@ -425,6 +425,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
     bool writeControlTableItem(uint8_t item_idx, 
       uint8_t id, int32_t data, uint32_t timeout = 100);
 
+    uint8_t getHardwareError(uint8_t id);
 
 #if 0 //TODO
     bool setDirectionToNormal(uint8_t id);
@@ -441,8 +442,6 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
     bool setPositionPIDGain(uint8_t id, uint16_t p_gain, uint16_t i_gain, uint16_t d_gain);
     bool setVelocityPIGain(uint8_t id, uint16_t p_gain, uint16_t i_gain);
     bool setFeedForwardGain(uint8_t id, uint16_t fisrt_gain, uint16_t second_gain);
-
-    uint8_t getHardwareError(uint8_t id);
     
     // https://github.com/ROBOTIS-GIT/Dynamixel2Arduino/issues/73
     uint8_t getOperatingMode(uint8_t id);

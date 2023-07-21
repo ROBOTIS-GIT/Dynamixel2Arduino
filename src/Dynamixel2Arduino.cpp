@@ -886,7 +886,12 @@ bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int3
   return ret;
 }
 
+uint8_t Dynamixel2Arduino::getHardwareError(uint8_t id)
+{
+    int32_t ret = readControlTableItem(ControlTableItem::HARDWARE_ERROR_STATUS, id);
 
+    return (uint8_t)ret;
+}
 
 
 /* Private Member Function */
