@@ -59,39 +59,39 @@
   DYNAMIXEL PROTOCOL 1.0 does NOT support Sync Read feature.
   Structures containing the necessary information to process the 'fastSyncRead' packet.
 
-  typedef struct XELInfoFastSyncRead{
-  uint8_t *p_recv_buf;
-  uint8_t id;
-  uint8_t error;
-} __attribute__((packed)) XELInfoFastSyncRead_t;
+  struct XELInfoSyncRead_t {
+    uint8_t *p_recv_buf;
+    uint8_t id;
+    uint8_t error;
+  } __attribute__((packed));
 
-typedef struct InfoFastSyncReadInst{
-  uint16_t addr;
-  uint16_t addr_length;
-  XELInfoFastSyncRead_t* p_xels;
-  uint8_t xel_count;
-  bool is_info_changed;
-  InfoSyncBulkBuffer_t packet;
-} __attribute__((packed)) InfoFastSyncReadInst_t;
+  struct InfoSyncReadInst_t {
+    uint16_t addr;
+    uint16_t addr_length;
+    XELInfoSyncRead_t* p_xels;
+    uint8_t xel_count;
+    bool is_info_changed;
+    InfoSyncBulkBuffer_t packet;
+  } __attribute__((packed));
 */
 
 /* syncWrite
   DYNAMIXEL PROTOCOL 1.0 supports Control Table address up to 255.
   Structures containing the necessary information to process the 'syncWrite' packet.
 
-  typedef struct XELInfoSyncWrite{
+  struct XELInfoSyncWrite_t {
     uint8_t* p_data;
     uint8_t id;
-} __attribute__((packed)) XELInfoSyncWrite_t;
+  } __attribute__((packed));
 
-  typedef struct InfoSyncWriteInst{
+  struct InfoSyncWriteInst_t {
     uint16_t addr;
     uint16_t addr_length;
     XELInfoSyncWrite_t* p_xels;
     uint8_t xel_count;
     bool is_info_changed;
     InfoSyncBulkBuffer_t packet;
-} __attribute__((packed)) InfoSyncWriteInst_t;
+  } __attribute__((packed));
 */
 
 const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
@@ -115,8 +115,8 @@ typedef struct sw_data{
 
 
 sr_data_t sr_data[DXL_ID_CNT];
-DYNAMIXEL::InfoFastSyncReadInst_t sr_infos;
-DYNAMIXEL::XELInfoFastSyncRead_t info_xels_sr[DXL_ID_CNT];
+DYNAMIXEL::InfoSyncReadInst_t sr_infos;
+DYNAMIXEL::XELInfoSyncRead_t info_xels_sr[DXL_ID_CNT];
 
 sw_data_t sw_data[DXL_ID_CNT];
 DYNAMIXEL::InfoSyncWriteInst_t sw_infos;
@@ -231,8 +231,10 @@ void loop() {
     DEBUG_SERIAL.print("[fastSyncRead] Success, Received ID Count: ");
     DEBUG_SERIAL.println(recv_cnt);
     for(i=0; i<recv_cnt; i++) {
-      DEBUG_SERIAL.print("  ID: ");DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
-      DEBUG_SERIAL.print("\t Present Position: ");DEBUG_SERIAL.println(sr_data[i].present_position);
+      DEBUG_SERIAL.print("  ID: ");
+      DEBUG_SERIAL.print(sr_infos.p_xels[i].id);
+      DEBUG_SERIAL.print("\t Present Position: ");
+      DEBUG_SERIAL.println(sr_data[i].present_position);
     }
   } else {
     DEBUG_SERIAL.print("[fastSyncRead] Fail, Lib error code: ");
