@@ -211,11 +211,11 @@ void safetyCheck(uint8_t id_a, uint8_t id_b)
       DEBUG_SERIAL.print(F("ID "));
       DEBUG_SERIAL.print(id_a);
       DEBUG_SERIAL.print(F(" firmware version : "));
-      DEBUG_SERIAL.println(modelNumberA);
+      DEBUG_SERIAL.println(fwVersionA);
       DEBUG_SERIAL.print(F("ID "));
       DEBUG_SERIAL.print(id_b);
       DEBUG_SERIAL.print(F(" firmware version : "));
-      DEBUG_SERIAL.println(modelNumberB);
+      DEBUG_SERIAL.println(fwVersionB);
     }
     // Compare EEPROM Data
     else
