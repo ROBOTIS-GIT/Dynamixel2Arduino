@@ -227,11 +227,11 @@ bool Dynamixel2Arduino::setID(uint8_t id, uint8_t new_id)
 
 bool Dynamixel2Arduino::setDirectionToNormal(uint8_t id){
 
-  return writeControlTableItem(ControlTableItem::DRIVE_MODE, id, 0x00);
+  return writeControlTableItem(ControlTableItem::DRIVE_MODE, id, 0x80);
 }
 bool Dynamixel2Arduino::setDirectionToReverse(uint8_t id){
 
-  return writeControlTableItem(ControlTableItem::DRIVE_MODE, id, 0x01);
+  return writeControlTableItem(ControlTableItem::DRIVE_MODE, id, 0x81);
 
 }
 bool Dynamixel2Arduino::setDirection(uint8_t id, bool dir){
