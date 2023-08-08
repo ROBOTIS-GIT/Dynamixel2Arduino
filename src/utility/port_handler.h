@@ -54,7 +54,7 @@ class SerialPortHandler : public DXLPortHandler
     virtual size_t write(uint8_t) override;
     virtual size_t write(uint8_t *buf, size_t len) override;
 
-    virtual void begin(unsigned long baud, uint32_t delay=300);
+    virtual void begin(unsigned long baud, uint32_t delay = 500);
     virtual unsigned long getBaud() const;
 
   private:
