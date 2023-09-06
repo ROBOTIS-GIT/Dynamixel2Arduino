@@ -33,6 +33,9 @@
 #define ENABLE_ACTUATOR_PRO_RA          1
 #define ENABLE_ACTUATOR_PRO_PLUS        1
 
+
+#define ENABLE_ACTUATOR_RH_P12_RN       1
+#define ENABLE_ACTUATOR_RH_P12_RNA      1
 #define DXL_BYTE_STUFF_SAFE_CNT         8
 
 
