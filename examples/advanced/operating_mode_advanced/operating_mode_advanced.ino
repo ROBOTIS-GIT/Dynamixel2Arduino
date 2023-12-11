@@ -54,6 +54,7 @@
  
 
 const uint8_t DXL_ID = 1;
+static uint8_t op_mode = OP_POSITION;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 
@@ -72,8 +73,7 @@ void loop() {
   static uint32_t pre_time_write, pre_time_read, pre_time_op_mode, pre_time_led;
   static float value = 0;
   static bool led_state, flag_op_changed = true;
-  static uint8_t op_mode = OP_POSITION;
-
+  
   switch(op_mode)
   {
     case OP_POSITION:
@@ -81,7 +81,7 @@ void loop() {
         value = 0;
         dxl.torqueOff(DXL_ID);
         if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
-          op_mode++;
+          nextOperatingMode();
           break;
         }
         dxl.torqueOn(DXL_ID);
@@ -105,7 +105,7 @@ void loop() {
         value = 0;
         dxl.torqueOff(DXL_ID);
         if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
-          op_mode++;
+          nextOperatingMode();
           break;
         }
         dxl.torqueOn(DXL_ID);
@@ -129,7 +129,7 @@ void loop() {
         value = 0;
         dxl.torqueOff(DXL_ID);
         if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
-          op_mode++;
+          nextOperatingMode();
           break;
         }
         dxl.torqueOn(DXL_ID);
@@ -153,7 +153,7 @@ void loop() {
         value = 0;
         dxl.torqueOff(DXL_ID);
         if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
-          op_mode++;
+          nextOperatingMode();
           break;
         }
         dxl.torqueOn(DXL_ID);
@@ -177,7 +177,7 @@ void loop() {
         value = 0;
         dxl.torqueOff(DXL_ID);
         if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
-          op_mode++;
+          nextOperatingMode();
           break;
         }
         dxl.torqueOn(DXL_ID);
@@ -201,7 +201,7 @@ void loop() {
         value = 0;
         dxl.torqueOff(DXL_ID);
         if(dxl.setOperatingMode(DXL_ID, op_mode) == false){
-          op_mode++;
+          nextOperatingMode();
           break;
         }
         dxl.torqueOn(DXL_ID);
@@ -227,7 +227,7 @@ void loop() {
 
   if(millis() - pre_time_op_mode >= (uint32_t)60*1000){
     pre_time_op_mode = millis();
-    op_mode++;
+    nextOperatingMode();
     flag_op_changed = true;
   }
 
@@ -235,5 +235,30 @@ void loop() {
     pre_time_led = millis();
     led_state == true ? dxl.ledOn(DXL_ID) : dxl.ledOff(DXL_ID);
     led_state = !led_state;
+  }
+}
+
+void nextOperatingMode() {
+  switch (op_mode) {
+    case OP_CURRENT:
+      op_mode = OP_VELOCITY;
+      break;
+    case OP_VELOCITY:
+      op_mode = OP_POSITION;
+      break;
+    case OP_POSITION:
+      op_mode = OP_EXTENDED_POSITION;
+      break;
+    case OP_EXTENDED_POSITION:
+      op_mode = OP_CURRENT_BASED_POSITION;
+      break;
+    case OP_CURRENT_BASED_POSITION:
+      op_mode = OP_PWM;
+      break;
+    case OP_PWM:
+      op_mode = OP_CURRENT;
+      break;
+    default:
+      op_mode = OP_POSITION;
   }
 }

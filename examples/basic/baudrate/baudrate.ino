@@ -70,6 +70,7 @@ void setup() {
   
   // Use UART port of DYNAMIXEL Shield to debug.
   DEBUG_SERIAL.begin(115200);
+  while(!DEBUG_SERIAL);
   
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(BAUDRATE);
