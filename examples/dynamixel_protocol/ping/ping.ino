@@ -64,6 +64,8 @@ uint8_t ret = 0;
 uint8_t recv_count = 0;
 
 const uint8_t DXL_ID = BROADCAST_ID;
+// MX and AX servos use DYNAMIXEL Protocol 1.0 by default.
+// to use MX and AX servos with this example, change the following line to: const float DXL_PROTOCOL_VERSION = 1.0;
 const float DXL_PROTOCOL_VERSION = 2.0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
