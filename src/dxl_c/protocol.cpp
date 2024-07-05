@@ -701,6 +701,9 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
           && p_parse_packet->header[2] == 0xFD){
             p_parse_packet->recv_param_len = 0;
             p_parse_packet->calculated_crc = 0;
+            p_parse_packet->xel_index = 0;
+            p_parse_packet->buf_index = 0;
+
             update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
             update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
             update_dxl_crc(&p_parse_packet->calculated_crc, 0xFD);          
