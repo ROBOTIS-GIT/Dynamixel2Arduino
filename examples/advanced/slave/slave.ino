@@ -85,6 +85,8 @@ void setup() {
   // Speed setting for communication (not necessary for USB)
   dxl_port.begin(1000000);
 
+// MX and AX servos use DYNAMIXEL Protocol 1.0 by default.
+// to use MX and AX servos with this example, change the following line to: dxl.setPortProtocolVersion(DXL_PROTOCOL_VER_1_0);
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VER_2_0);
   dxl.setFirmwareVersion(1);
   dxl.setID(1);

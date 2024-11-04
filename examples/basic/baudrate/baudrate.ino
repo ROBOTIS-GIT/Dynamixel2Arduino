@@ -54,6 +54,8 @@
  
 
 const uint8_t DXL_ID = 1;
+// MX and AX servos use DYNAMIXEL Protocol 1.0 by default.
+// to use MX and AX servos with this example, change the following line to: const float DXL_PROTOCOL_VERSION = 1.0;
 const float DXL_PROTOCOL_VERSION = 2.0;
 uint32_t BAUDRATE = 57600;
 uint32_t NEW_BAUDRATE = 1000000; //1Mbsp

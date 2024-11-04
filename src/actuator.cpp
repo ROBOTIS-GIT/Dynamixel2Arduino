@@ -319,9 +319,9 @@ const ModelControlTableInfo_t pro_r_control_table[] PROGMEM = {
   {ControlTableItem::SHUTDOWN,                48, 1},
 
   {ControlTableItem::TORQUE_ENABLE,           562, 1},
-  {ControlTableItem::LED_RED,                 563, 1},
-  {ControlTableItem::LED_GREEN,               564, 1},
-  {ControlTableItem::LED_BLUE,                565, 1},
+  {ControlTableItem::RGB_LED_RED,                 563, 1},
+  {ControlTableItem::RGB_LED_GREEN,               564, 1},
+  {ControlTableItem::RGB_LED_BLUE,                565, 1},
   {ControlTableItem::VELOCITY_I_GAIN,         586, 2},
   {ControlTableItem::VELOCITY_P_GAIN,         588, 2},
   {ControlTableItem::POSITION_P_GAIN,         594, 2},
@@ -377,9 +377,9 @@ const ModelControlTableInfo_t pro_ra_pro_plus_control_table[] PROGMEM = {
   {ControlTableItem::SHUTDOWN,                63, 1},
 
   {ControlTableItem::TORQUE_ENABLE,           512, 1},
-  {ControlTableItem::LED_RED,                 513, 1},
-  {ControlTableItem::LED_GREEN,               514, 1},
-  {ControlTableItem::LED_BLUE,                515, 1},
+  {ControlTableItem::RGB_LED_RED,                 513, 1},
+  {ControlTableItem::RGB_LED_GREEN,               514, 1},
+  {ControlTableItem::RGB_LED_BLUE,                515, 1},
   {ControlTableItem::STATUS_RETURN_LEVEL,     516, 1},
   {ControlTableItem::REGISTERED_INSTRUCTION,  517, 1},
   {ControlTableItem::HARDWARE_ERROR_STATUS,   518, 1},
@@ -412,6 +412,103 @@ const ModelControlTableInfo_t pro_ra_pro_plus_control_table[] PROGMEM = {
   {ControlTableItem::EXTERNAL_PORT_DATA_2,    602, 2},
   {ControlTableItem::EXTERNAL_PORT_DATA_3,    604, 2},
   {ControlTableItem::EXTERNAL_PORT_DATA_4,    606, 2},
+#endif
+  {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
+};
+
+const ModelControlTableInfo_t dy_control_table[] PROGMEM = {
+#if (ENABLE_ACTUATOR_DY)
+  {ControlTableItem::MODEL_NUMBER,             0, 2},
+  {ControlTableItem::MODEL_INFORMATION,        2, 4},
+  {ControlTableItem::FIRMWARE_VERSION,         6, 1},
+  {ControlTableItem::ID,                       7, 1},
+  {ControlTableItem::BUS_WATCHDOG,             8, 2},
+  {ControlTableItem::SECONDARY_ID,            10, 1},
+  {ControlTableItem::PROTOCOL_TYPE,           11, 1},
+  {ControlTableItem::BAUD_RATE,               12, 1},
+  {ControlTableItem::RETURN_DELAY_TIME,       13, 1},
+  {ControlTableItem::STATUS_RETURN_LEVEL,     15, 1},
+  {ControlTableItem::REGISTERED_INSTRUCTION,  16, 1},
+  {ControlTableItem::DRIVE_MODE,              32, 1},
+  {ControlTableItem::OPERATING_MODE,          33, 1},
+  {ControlTableItem::STARTUP_CONFIGURATION,   34, 1},
+  {ControlTableItem::POSITION_LIMIT_THRESHOLD,38, 2},
+  {ControlTableItem::IN_POSITION_THRESHOLD,   40, 4},
+  {ControlTableItem::FOLLOWING_ERROR_THRESHOLD,44, 4},
+  {ControlTableItem::MOVING_THRESHOLD,        48, 4},
+  {ControlTableItem::HOMING_OFFSET,           52, 4},
+  {ControlTableItem::INVERTER_TEMPURATURE_LIMIT,56, 1},
+  {ControlTableItem::MOTOR_TEMPURATURE_LIMIT, 56, 1},
+  {ControlTableItem::MAX_VOLTAGE_LIMIT,       60, 2},
+  {ControlTableItem::MIN_VOLTAGE_LIMIT,       62, 2},
+  {ControlTableItem::PWM_LIMIT,               64, 2},
+  {ControlTableItem::CURRENT_LIMIT,           66, 2},
+  {ControlTableItem::ACCELERATION_LIMIT,      68, 4},
+  {ControlTableItem::VELOCITY_LIMIT,          72, 4},
+  {ControlTableItem::MAX_POSITION_LIMIT,      76, 4},
+  {ControlTableItem::MIN_POSITION_LIMIT,      84, 4},
+  {ControlTableItem::ELECTRONIC_GEAR_RATIO_NUMERATOR,96, 4},
+  {ControlTableItem::ELECTRONIC_GEAR_RATIO_DENOMINATOR,100, 4},
+  {ControlTableItem::SAFE_STOP_TIME,          104, 2},
+  {ControlTableItem::BRAKE_DELAY,             106, 2},
+  {ControlTableItem::GOAL_UPDATE_DELAY,       108, 2},
+  {ControlTableItem::OVEREXCITATION_VOLTAGE,  110, 1},
+  {ControlTableItem::NORMAL_EXCITATION_VOLTAGE,111, 1},
+  {ControlTableItem::OVEREXCITATION_TIME,     112, 2},
+  {ControlTableItem::PRESENT_VELOCITY_LPF_FREQUENCY,132, 2},
+  {ControlTableItem::GOAL_CURRENT_LPF_FREQUENCY,134, 2},
+  {ControlTableItem::POSITION_FF_LPF_TIME,    136, 2},
+  {ControlTableItem::VELOCITY_FF_LPF_TIME,    138, 2},
+  {ControlTableItem::CONTROLLER_STATE,        152, 1},
+  {ControlTableItem::ERROR_CODE,              153, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_1,    154, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_2,    155, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_3,    156, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_4,    157, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_5,    158, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_6,    159, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_7,    160, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_8,    161, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_9,    162, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_10,   163, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_11,   164, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_12,   165, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_13,   166, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_14,   167, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_15,   168, 1},
+  {ControlTableItem::ERROR_CODE_HISTORY_16,   169, 1},
+  {ControlTableItem::HYBRID_SAVE,             170, 1},
+  {ControlTableItem::VELOCITY_I_GAIN,         212, 4},
+  {ControlTableItem::VELOCITY_P_GAIN,         216, 4},
+  {ControlTableItem::VELOCITY_FF_GAIN,        220, 4},
+  {ControlTableItem::POSITION_D_GAIN,         224, 4},
+  {ControlTableItem::POSITION_I_GAIN,         228, 4},
+  {ControlTableItem::POSITION_P_GAIN,         232, 4},
+  {ControlTableItem::POSITION_FF_GAIN,        236, 4},
+  {ControlTableItem::PROFILE_ACCELERATION,    240, 4},
+  {ControlTableItem::PROFILE_VELOCITY,        244, 4},
+  {ControlTableItem::PROFILE_ACCELERATION_TIME,248, 4},
+  {ControlTableItem::PROFILE_TIME,            252, 4},
+  {ControlTableItem::TORQUE_ENABLE,           512, 1},
+  {ControlTableItem::LED,                     513, 1},
+  {ControlTableItem::PWM_OFFSET,              516, 2},
+  {ControlTableItem::CURRENT_OFFSET,          518, 2},
+  {ControlTableItem::VELOCITY_OFFSET,         520, 2},
+  {ControlTableItem::GOAL_PWM,                524, 2},
+  {ControlTableItem::GOAL_CURRENT,            526, 2},
+  {ControlTableItem::GOAL_VELOCITY,           528, 4},
+  {ControlTableItem::GOAL_POSITION,           532, 4},
+  {ControlTableItem::MOVING_STATUS,           541, 1},    
+  {ControlTableItem::REALTIME_TICK,           542, 2},
+  {ControlTableItem::PRESENT_PWM,             544, 2},
+  {ControlTableItem::PRESENT_CURRENT,         546, 2},
+  {ControlTableItem::PRESENT_VELOCITY,        548, 4},
+  {ControlTableItem::PRESENT_POSITION,        552, 4},
+  {ControlTableItem::POSITION_TRAJECTORY,     560, 4},  
+  {ControlTableItem::VELOCITY_TRAJECTORY,     564, 4},
+  {ControlTableItem::PRESENT_INPUT_VOLTAGE,   568, 2},
+  {ControlTableItem::PRESENT_INVERTER_TEMPERATURE,570, 1},
+  {ControlTableItem::PRESENT_MOTOR_TEMPURATURE,571, 1},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
@@ -521,11 +618,11 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
       p_dep_ctable = xw430_540_control_table;
       break;
 
-    // case PRO_L42_10_S300_R:
-    // case PRO_L54_30_S400_R:
-    // case PRO_L54_30_S500_R:
-    // case PRO_L54_50_S290_R:
-    // case PRO_L54_50_S500_R:
+    case PRO_L42_10_S300_R:
+    case PRO_L54_30_S400_R:
+    case PRO_L54_30_S500_R:
+    case PRO_L54_50_S290_R:
+    case PRO_L54_50_S500_R:
     case PRO_M42_10_S260_R:
     case PRO_M54_40_S250_R:
     case PRO_M54_60_S250_R:
@@ -550,6 +647,15 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
       p_common_ctable = pro_ra_pro_plus_control_table;
       break;
       
+    case YM070_210_M001_RH:
+    case YM070_210_R051_RH:
+    case YM070_210_R099_RH:
+    case YM080_230_M001_RH:
+    case YM080_230_R051_RH:
+    case YM080_230_R099_RH:
+      p_common_ctable = dy_control_table;
+      break;
+
     default:
       break;
   }

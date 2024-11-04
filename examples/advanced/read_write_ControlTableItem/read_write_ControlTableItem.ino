@@ -162,6 +162,8 @@ using namespace ControlTableItem;
 void setup() {
   // put your setup code here, to run once:
   DEBUG_SERIAL.begin(115200);
+// MX and AX servos use DYNAMIXEL Protocol 1.0 by default.
+// to use MX and AX servos with this example, change the following line to: dxl.setPortProtocolVersion(2.0);
   dxl.setPortProtocolVersion(2.0);
   dxl.begin(57600);
   dxl.scan();

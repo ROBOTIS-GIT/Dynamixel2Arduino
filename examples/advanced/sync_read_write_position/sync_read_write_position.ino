@@ -99,6 +99,8 @@
 */
 
 const uint8_t BROADCAST_ID = 254;
+// MX and AX servos use DYNAMIXEL Protocol 1.0 by default.
+// to use MX and AX servos with this example, change the following line to: const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
 const float DYNAMIXEL_PROTOCOL_VERSION = 2.0;
 const uint8_t DXL_ID_CNT = 2;
 const uint8_t DXL_ID_LIST[DXL_ID_CNT] = {1, 2};
