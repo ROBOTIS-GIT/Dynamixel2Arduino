@@ -437,8 +437,8 @@ const ModelControlTableInfo_t dy_control_table[] PROGMEM = {
   {ControlTableItem::FOLLOWING_ERROR_THRESHOLD,44, 4},
   {ControlTableItem::MOVING_THRESHOLD,        48, 4},
   {ControlTableItem::HOMING_OFFSET,           52, 4},
-  {ControlTableItem::INVERTER_TEMPERATURE_LIMIT,56, 1},
-  {ControlTableItem::MOTOR_TEMPERATURE_LIMIT, 56, 1},
+  {ControlTableItem::INVERTER_TEMPURATURE_LIMIT,56, 1},
+  {ControlTableItem::MOTOR_TEMPURATURE_LIMIT, 56, 1},
   {ControlTableItem::MAX_VOLTAGE_LIMIT,       60, 2},
   {ControlTableItem::MIN_VOLTAGE_LIMIT,       62, 2},
   {ControlTableItem::PWM_LIMIT,               64, 2},
@@ -508,7 +508,7 @@ const ModelControlTableInfo_t dy_control_table[] PROGMEM = {
   {ControlTableItem::VELOCITY_TRAJECTORY,     564, 4},
   {ControlTableItem::PRESENT_INPUT_VOLTAGE,   568, 2},
   {ControlTableItem::PRESENT_INVERTER_TEMPERATURE,570, 1},
-  {ControlTableItem::PRESENT_MOTOR_TEMPERATURE,571, 1},
+  {ControlTableItem::PRESENT_MOTOR_TEMPURATURE,571, 1},
 #endif
   {ControlTableItem::LAST_DUMMY_ITEM,          0, 0}
 };
@@ -618,11 +618,11 @@ ControlTableItemInfo_t DYNAMIXEL::getControlTableItemInfo(uint16_t model_num, ui
       p_dep_ctable = xw430_540_control_table;
       break;
 
-    // case PRO_L42_10_S300_R:
-    // case PRO_L54_30_S400_R:
-    // case PRO_L54_30_S500_R:
-    // case PRO_L54_50_S290_R:
-    // case PRO_L54_50_S500_R:
+    case PRO_L42_10_S300_R:
+    case PRO_L54_30_S400_R:
+    case PRO_L54_30_S500_R:
+    case PRO_L54_50_S290_R:
+    case PRO_L54_50_S500_R:
     case PRO_M42_10_S260_R:
     case PRO_M54_40_S250_R:
     case PRO_M54_60_S250_R:
