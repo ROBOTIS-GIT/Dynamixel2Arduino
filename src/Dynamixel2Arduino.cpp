@@ -60,7 +60,10 @@ const uint16_t model_number_table[] PROGMEM = {
     PRO_M42P_010_S260_R, 
     PRO_M54P_040_S250_R, PRO_M54P_060_S250_R,
     PRO_H42P_020_S300_R, 
-    PRO_H54P_100_S500_R, PRO_H54P_200_S500_R
+    PRO_H54P_100_S500_R, PRO_H54P_200_S500_R,
+
+    YM070_210_M001_RH, YM070_210_B001_RH, YM070_210_R051_RH, YM070_210_R099_RH, YM070_210_A051_RH, YM070_210_A099_RH,
+    YM080_230_M001_RH, YM080_230_B001_RH, YM080_230_R051_RH, YM080_230_R099_RH, YM080_230_A051_RH, YM080_230_A099_RH
 };
 
 const uint8_t model_number_table_count = sizeof(model_number_table)/sizeof(model_number_table[0]);
@@ -492,6 +495,55 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
       }                
       break;
 
+    case YM070_210_M001_RH:
+    case YM070_210_B001_RH:
+    case YM070_210_R051_RH:
+    case YM070_210_R099_RH:
+    case YM070_210_A051_RH:
+    case YM070_210_A099_RH:
+    case YM080_230_M001_RH:
+    case YM080_230_B001_RH:
+    case YM080_230_R051_RH:
+    case YM080_230_R099_RH:
+    case YM080_230_A051_RH:
+    case YM080_230_A099_RH:
+      switch(baudrate)
+      {
+        case 9600:
+          baud_idx = 0;
+          break;
+        case 57600:
+          baud_idx = 1;
+          break;
+        case 115200:
+          baud_idx = 2;
+          break;
+        case 1000000:
+          baud_idx = 3;
+          break;
+        case 2000000:
+          baud_idx = 4;
+          break;
+        case 3000000:
+          baud_idx = 5;
+          break;
+        case 4000000:
+          baud_idx = 6;
+          break;
+        case 4500000:
+          baud_idx = 7;
+          break;
+        case 6000000:
+          baud_idx = 8;
+          break;          
+        case 10500000:
+          baud_idx = 9;
+          break;          
+        default:
+          return false;          
+      }                
+      break;
+
     default:
       return false;
       break;
@@ -757,15 +809,34 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
         ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 16);
       }
       break;
-      
+
+    case YM070_210_M001_RH:
+    case YM070_210_B001_RH:
+    case YM070_210_R051_RH:
+    case YM070_210_R099_RH:
+    case YM070_210_A051_RH:
+    case YM070_210_A099_RH:
+    case YM080_230_M001_RH:
+    case YM080_230_B001_RH:
+    case YM080_230_R051_RH:
+    case YM080_230_R099_RH:
+    case YM080_230_A051_RH:
+    case YM080_230_A099_RH:
+      if(mode == OP_POSITION){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 3);
+      }else if(mode == OP_VELOCITY){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 1);
+      }else if(mode == OP_CURRENT){
+        ret = writeControlTableItem(ControlTableItem::OPERATING_MODE, id, 0);
+      }
+      break;
+
     default:
       break;
   }
 
   return ret;
 }
-
-
 
 bool Dynamixel2Arduino::setGoalPosition(uint8_t id, float value, uint8_t unit)
 {
@@ -1450,6 +1521,89 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_200[] PRO
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ym070_210_000_rh[] PROGMEM = {
+#if (ENABLE_ACTUATOR_Y)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483648, 2147483647, 0.0006866455},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.0006866455},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -642200, 642200, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -642200, 642200, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2080, 2080, 0.01},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2080, 2080, 0.01},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ym070_210_051_rh[] PROGMEM = {
+#if (ENABLE_ACTUATOR_Y)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483648, 2147483647, 0.0006866455},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.0006866455},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -12592, 12592, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -12592, 12592, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2080, 2080, 0.01},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2080, 2080, 0.01},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ym070_210_099_rh[] PROGMEM = {
+#if (ENABLE_ACTUATOR_Y)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483648, 2147483647, 0.0006866455},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.0006866455},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -6486, 6486, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -6486, 6486, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2080, 2080, 0.01},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2080, 2080, 0.01},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ym080_230_000_rh[] PROGMEM = {
+#if (ENABLE_ACTUATOR_Y)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483648, 2147483647, 0.0006866455},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.0006866455},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -355600, 355600, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -355600, 355600, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2240, 2240, 0.01},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2240, 2240, 0.01},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ym080_230_051_rh[] PROGMEM = {
+#if (ENABLE_ACTUATOR_Y)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483648, 2147483647, 0.0006866455},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.0006866455},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -6972, 6972, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -6972, 6972, 0.01},  
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2240, 2240, 0.01},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2240, 2240, 0.01},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ym080_230_099_rh[] PROGMEM = {
+#if (ENABLE_ACTUATOR_Y)
+  {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483648, 2147483647, 0.0006866455},
+  {GET_POSITION, PRESENT_POSITION, UNIT_DEGREE, -2147483648 , 2147483647, 0.0006866455},
+
+  {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -3591, 3591, 0.01},
+  {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -3591, 3591, 0.01},
+
+  {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -2240, 2240, 0.01},
+  {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -2240, 2240, 0.01},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
 
 static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t func_num)
 {
@@ -1646,7 +1800,32 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
       p_common_ctable = dependency_ctable_pro_ra_pro_plus_model;
       p_dep_ctable = dependency_pro_ra_plus_h54_200;
       break;
-      
+
+    case YM070_210_M001_RH:
+    case YM070_210_B001_RH:
+      p_common_ctable = dependency_ym070_210_000_rh;
+      break;
+    case YM070_210_R051_RH:
+    case YM070_210_A051_RH:
+      p_common_ctable = dependency_ym070_210_051_rh;
+      break;
+    case YM070_210_R099_RH:
+    case YM070_210_A099_RH:
+      p_common_ctable = dependency_ym070_210_099_rh;
+      break;
+    case YM080_230_M001_RH:
+    case YM080_230_B001_RH:
+      p_common_ctable = dependency_ym080_230_000_rh;
+      break;
+    case YM080_230_R051_RH:
+    case YM080_230_A051_RH:
+      p_common_ctable = dependency_ym080_230_051_rh;
+      break;
+    case YM080_230_R099_RH:
+    case YM080_230_A099_RH:
+      p_common_ctable = dependency_ym080_230_099_rh;
+      break;
+
     default:
       break;
   }
