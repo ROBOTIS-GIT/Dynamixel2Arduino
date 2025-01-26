@@ -228,6 +228,27 @@ bool Dynamixel2Arduino::setID(uint8_t id, uint8_t new_id)
   return writeControlTableItem(ControlTableItem::ID, id, new_id);
 }
 
+bool Dynamixel2Arduino::setDirectionToNormal(uint8_t id){
+
+  return writeControlTableItem(ControlTableItem::DRIVE_MODE, id, 0x80);
+}
+bool Dynamixel2Arduino::setDirectionToReverse(uint8_t id){
+
+  return writeControlTableItem(ControlTableItem::DRIVE_MODE, id, 0x81);
+
+}
+bool Dynamixel2Arduino::setDirection(uint8_t id, bool dir){
+  
+  bool ret = false;
+  if(dir){
+    ret = setDirectionToNormal(id);
+  }else{
+    ret = setDirectionToReverse(id);
+  }
+  return ret;
+}
+
+
 bool Dynamixel2Arduino::setProtocol(uint8_t id, float version)
 {
   uint8_t ver_idx;
@@ -957,7 +978,12 @@ bool Dynamixel2Arduino::writeControlTableItem(uint8_t item_idx, uint8_t id, int3
   return ret;
 }
 
+uint8_t Dynamixel2Arduino::getHardwareError(uint8_t id)
+{
+    int32_t ret = readControlTableItem(ControlTableItem::HARDWARE_ERROR_STATUS, id);
 
+    return (uint8_t)ret;
+}
 
 
 /* Private Member Function */
