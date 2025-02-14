@@ -94,6 +94,17 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @return It returns serial baudrate of board port.
      */   
     unsigned long getPortBaud();
+
+    /**
+     * @brief API for getting library error code.
+     * @code
+     * const int DXL_DIR_PIN = 2;
+     * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
+     * Serial.print(dxl.getErr());
+     * @endcode
+     * @return It returns error code from library.
+     */
+    int getLibErrCode();
     
     /**
      * @brief It is API for To checking the communication connection status of DYNAMIXEL.

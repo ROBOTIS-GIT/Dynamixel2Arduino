@@ -155,6 +155,11 @@ unsigned long Dynamixel2Arduino::getPortBaud()
   return p_dxl_port_->getBaud();
 }
 
+int Dynamixel2Arduino::getLibErrCode()
+{
+  return getLastLibErrCode();
+}
+
 bool Dynamixel2Arduino::scan()
 {
   bool ret = true;
