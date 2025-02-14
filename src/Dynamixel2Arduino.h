@@ -100,7 +100,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @code
      * const int DXL_DIR_PIN = 2;
      * Dynamixel2Arduino dxl(Serial1, DXL_DIR_PIN);
-     * Serial.print(dxl.getErr());
+     * Serial.print(dxl.getLibErrCode());
      * @endcode
      * @return It returns error code from library.
      */
