@@ -99,7 +99,7 @@ struct InfoBulkWriteInst_t {
 
 }
 
-using namespace DYNAMIXEL;
+//using namespace DYNAMIXEL;  //comment out for fixed build error
 
 #ifdef __cplusplus
 extern "C" {
