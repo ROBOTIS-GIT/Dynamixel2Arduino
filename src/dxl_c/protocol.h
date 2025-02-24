@@ -97,9 +97,7 @@ struct InfoBulkWriteInst_t {
   InfoSyncBulkBuffer_t packet;
 } __attribute__((packed));
 
-}
-
-//using namespace DYNAMIXEL;  //comment out for fixed build error
+} // namespace DYNAMIXEL
 
 #ifdef __cplusplus
 extern "C" {
@@ -258,7 +256,7 @@ DXLLibErrorCode_t parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8
 DXLLibErrorCode_t fast_begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
   uint8_t protocol_ver);//, uint8_t* p_param_buf, uint16_t param_buf_cap, uint8_t xel_count);
 DXLLibErrorCode_t fast_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t recv_data,
-                                        InfoSyncReadInst_t *sync_read, InfoBulkReadInst_t *bulk_read);
+                                        DYNAMIXEL::InfoSyncReadInst_t *sync_read, DYNAMIXEL::InfoBulkReadInst_t *bulk_read);
 
 #ifdef __cplusplus
 }
