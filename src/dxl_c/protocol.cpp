@@ -12,6 +12,7 @@
   #define pgm_read_word_near(x) (*(uint16_t*)(x))
 #endif
 
+using namespace DYNAMIXEL; 
 
 // 2.0 Protocol
 #define DXL2_0_PACKET_IDX_HEADER_1        0
