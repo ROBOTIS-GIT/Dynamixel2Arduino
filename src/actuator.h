@@ -7,6 +7,12 @@
 #define DXL_TORQUE_ON  1
 #define DXL_TORQUE_OFF  0
 
+#if defined(ARDUINO_UNOR4_WIFI) || defined(ARDUINO_MINIMA) || defined(ARDUINO_ARCH_STM32)
+#undef LED_RED
+#undef LED_GREEN
+#undef LED_BLUE
+#endif
+
 // The reason for checking #ifndef here is to avoid conflict with Dynamixel SDK.
 #ifndef AX12A
 #define AX12A               (uint16_t)12
