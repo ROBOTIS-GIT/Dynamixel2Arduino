@@ -7,8 +7,9 @@
 #define DXL_TORQUE_ON  1
 #define DXL_TORQUE_OFF  0
 
-#if defined(ARDUINO_UNOR4_WIFI) || defined(ARDUINO_MINIMA)
+#if defined(ARDUINO_UNOR4_WIFI) || defined(ARDUINO_MINIMA) || defined(ARDUINO_ARCH_STM32)
 #undef LED_RED
+#undef LED_GREEN
 #undef LED_BLUE
 #endif
 
