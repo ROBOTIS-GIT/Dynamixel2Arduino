@@ -125,6 +125,12 @@ class Slave
     virtual bool processInstPing();
     virtual bool processInstRead();
     virtual bool processInstWrite();
+    virtual bool processInstSyncWrite();
+    virtual bool processInstBulkWrite();
+    virtual bool processInstSyncRead();
+    virtual bool processInstBulkRead();
+    virtual bool processInstFastSyncRead();
+    virtual bool processInstFastBulkRead();
     
     bool processInst(uint8_t inst_idx);
     bool addDefaultControlItem();    

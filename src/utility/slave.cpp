@@ -632,6 +632,282 @@ Slave::processInstWrite()
 }
 
 bool 
+Slave::processInstSyncWrite()
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t *p_rx_param;
+  uint16_t addr, data_length = 0;
+  uint8_t packet_err = 0;
+
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if(p_rx_info->id != DXL_BROADCAST_ID){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  // extract start address and length from the instruction packet
+  switch (p_rx_info->protocol_ver)
+  {
+  case 2:
+    if(p_rx_info->recv_param_len <= 2) { //2 = Address(2)+Length(2)+Data(n)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+    } 
+    else {
+      addr = ((uint16_t)p_rx_param[1]<<8) | (uint16_t)p_rx_param[0];
+      data_length = ((uint16_t)p_rx_param[3]<<8) | (uint16_t)p_rx_param[2];
+      p_rx_param += 4; // Skip address and length
+      
+      if(data_length+11 > packet_buf_capacity_){
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+      }
+    }
+    break;
+  
+  case 1:  
+    if(p_rx_info->recv_param_len <= 2){ //2 = Address(1)+Length(1)+Data(n)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+    }
+    else {
+      addr = p_rx_param[0];
+      data_length = p_rx_param[1];
+      p_rx_param += 2; // Skip address and length
+      
+      if(data_length+6 > packet_buf_capacity_){
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+      }
+    }
+    break;
+
+  default:
+    err = DXL_LIB_ERROR_WRONG_PACKET;
+    break;
+  }
+
+  if(err == DXL_LIB_OK){
+    uint8_t i, j;
+    uint8_t backup_data[32];      // we max support registers of 32 bytes
+    uint16_t item_start_addr, item_addr_length;
+    ControlItem_t *p_item;
+
+    // Process each ID's data in the sync write packet
+    while(p_rx_info->recv_param_len > 0) {
+      uint8_t id = p_rx_param[0];
+      uint8_t *p_data = &p_rx_param[1];
+      
+      if(id == id_) { // Only process if this is our ID
+        for(i=0; i < registered_item_cnt_; i++){
+          p_item = &control_table_[i];
+          item_start_addr = p_item->start_addr;
+          item_addr_length = p_item->length;
+
+          if(item_addr_length != 0 && p_item->p_data != nullptr
+          && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+
+            // backup data, copy new data
+            for(j=0; j<item_addr_length; j++){
+              // backup supported only for registers smaller than 32 bytes
+              if (item_addr_length <= 32) {
+                backup_data[j] = p_item->p_data[j];
+              }
+              p_item->p_data[j] = p_data[item_start_addr - addr + j];
+            }
+
+            // Check data for ID, Protocol Version (Act as a system callback)
+            switch (item_start_addr) {
+              case ADDR_ITEM_ID:      // validate ID
+                if(protocol_ver_idx_ == 2 && id_ >= 0xFD){
+                  packet_err = DXL2_0_ERR_DATA_RANGE;
+                }
+                if(protocol_ver_idx_ == 1 && id_ >= 0xFE){
+                  packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+                }   
+                break;
+              
+              case ADDR_ITEM_PROTOCOL_VER: // validate Protocol Version 
+                if(protocol_ver_idx_ != 1 && protocol_ver_idx_ != 2){
+                  if(backup_data[0] == 2){
+                    packet_err = DXL2_0_ERR_DATA_RANGE;
+                  }
+                  else if(backup_data[0] == 1){
+                    packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+                  }
+                }
+                break;
+
+              case ADDR_ITEM_MODEL_NUMBER:  // model number if Read Only
+              case ADDR_ITEM_FIRMWARE_VER:  // firmware is Read Only
+                if(backup_data[0] == 2){
+                  packet_err = DXL2_0_ERR_DATA_RANGE;
+                }
+                else if(backup_data[0] == 1){
+                  packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+                }
+                break;
+            }
+
+            // Run user callback for Write instruction
+            if (packet_err == 0 && user_write_callback_ != nullptr){
+              user_write_callback_(item_start_addr, packet_err, user_write_callbakc_arg_);
+            }
+
+            if(packet_err != 0){
+              // If an error occurs restore the previous data.
+              // backup supported only for registers smaller than 32 bytes
+              if (item_addr_length <= 32) {
+                for(j=0; j<item_addr_length; j++){
+                  p_item->p_data[j] = backup_data[j];
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Move to next ID's data
+      p_rx_param += 1 + data_length; // Skip ID and data
+      p_rx_info->recv_param_len -= (1 + data_length);
+    }
+
+    ret = true;
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
+
+bool 
+Slave::processInstBulkWrite()
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t *p_rx_param;
+  uint8_t packet_err = 0;
+
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if(p_rx_info->id != DXL_BROADCAST_ID){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  if(p_rx_info->protocol_ver != 2.0){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORTED;
+    return false;
+  }
+
+  // Process each ID's data in the bulk write packet
+  while(p_rx_info->recv_param_len > 0) {
+    if(p_rx_info->recv_param_len < 5) { // Need at least ID(1) + Address(2) + Length(2)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+      break;
+    }
+
+    uint8_t id = p_rx_param[0];
+    uint16_t addr = ((uint16_t)p_rx_param[2]<<8) | (uint16_t)p_rx_param[1];
+    uint16_t data_length = ((uint16_t)p_rx_param[4]<<8) | (uint16_t)p_rx_param[3];
+    uint8_t *p_data = &p_rx_param[5];
+
+    if(p_rx_info->recv_param_len < (5 + data_length)) {
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+      break;
+    }
+
+    if(id == id_) { // Only process if this is our ID
+      uint8_t i, j;
+      uint8_t backup_data[32];      // we max support registers of 32 bytes
+      uint16_t item_start_addr, item_addr_length;
+      ControlItem_t *p_item;
+
+      for(i=0; i < registered_item_cnt_; i++){
+        p_item = &control_table_[i];
+        item_start_addr = p_item->start_addr;
+        item_addr_length = p_item->length;
+
+        if(item_addr_length != 0 && p_item->p_data != nullptr
+        && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+
+          // backup data, copy new data
+          for(j=0; j<item_addr_length; j++){
+            // backup supported only for registers smaller than 32 bytes
+            if (item_addr_length <= 32) {
+              backup_data[j] = p_item->p_data[j];
+            }
+            p_item->p_data[j] = p_data[item_start_addr - addr + j];
+          }
+
+          // Check data for ID, Protocol Version (Act as a system callback)
+          switch (item_start_addr) {
+            case ADDR_ITEM_ID:      // validate ID
+              if(protocol_ver_idx_ == 2 && id_ >= 0xFD){
+                packet_err = DXL2_0_ERR_DATA_RANGE;
+              }
+              if(protocol_ver_idx_ == 1 && id_ >= 0xFE){
+                packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+              }   
+              break;
+            
+            case ADDR_ITEM_PROTOCOL_VER: // validate Protocol Version 
+              if(protocol_ver_idx_ != 1 && protocol_ver_idx_ != 2){
+                if(backup_data[0] == 2){
+                  packet_err = DXL2_0_ERR_DATA_RANGE;
+                }
+                else if(backup_data[0] == 1){
+                  packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+                }
+              }
+              break;
+
+            case ADDR_ITEM_MODEL_NUMBER:  // model number if Read Only
+            case ADDR_ITEM_FIRMWARE_VER:  // firmware is Read Only
+              if(backup_data[0] == 2){
+                packet_err = DXL2_0_ERR_DATA_RANGE;
+              }
+              else if(backup_data[0] == 1){
+                packet_err |= 1<<DXL1_0_ERR_RANGE_BIT;
+              }
+              break;
+          }
+
+          // Run user callback for Write instruction
+          if (packet_err == 0 && user_write_callback_ != nullptr){
+            user_write_callback_(item_start_addr, packet_err, user_write_callbakc_arg_);
+          }
+
+          if(packet_err != 0){
+            // If an error occurs restore the previous data.
+            // backup supported only for registers smaller than 32 bytes
+            if (item_addr_length <= 32) {
+              for(j=0; j<item_addr_length; j++){
+                p_item->p_data[j] = backup_data[j];
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Move to next ID's data
+    p_rx_param += 5 + data_length; // Skip ID(1) + Address(2) + Length(2) + Data(n)
+    p_rx_info->recv_param_len -= (5 + data_length);
+  }
+
+  if(err == DXL_LIB_OK) {
+    ret = true;
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
+
+bool 
 Slave::addDefaultControlItem()
 {
   if(addControlItem(ADDR_ITEM_MODEL_NUMBER, (uint16_t&)model_num_) != DXL_LIB_OK
@@ -663,6 +939,30 @@ Slave::processInst(uint8_t inst_idx)
       ret = processInstWrite();
       break;
 
+    case DXL_INST_SYNC_WRITE:
+      ret = processInstSyncWrite();
+      break;
+
+    case DXL_INST_BULK_WRITE:
+      ret = processInstBulkWrite();
+      break;
+
+    case DXL_INST_SYNC_READ:
+      ret = processInstSyncRead();
+      break;
+
+    case DXL_INST_BULK_READ:
+      ret = processInstBulkRead();
+      break;
+
+    case DXL_INST_FAST_SYNC_READ:
+      ret = processInstFastSyncRead();
+      break;
+
+    case DXL_INST_FAST_BULK_READ:
+      ret = processInstFastBulkRead();
+      break;
+
     default:
       last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORTED;
       break;  
@@ -671,6 +971,106 @@ Slave::processInst(uint8_t inst_idx)
   return ret;
 }
 
+bool 
+Slave::processInstSyncRead()
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t *p_rx_param;
+  uint16_t addr, data_length = 0;
+  uint8_t packet_err = 0;
+
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if(p_rx_info->id != DXL_BROADCAST_ID){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  // extract start address and length from the instruction packet
+  switch (p_rx_info->protocol_ver)
+  {
+  case 2:
+    if(p_rx_info->recv_param_len <= 2) { //2 = Address(2)+Length(2)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+    } 
+    else {
+      addr = ((uint16_t)p_rx_param[1]<<8) | (uint16_t)p_rx_param[0];
+      data_length = ((uint16_t)p_rx_param[3]<<8) | (uint16_t)p_rx_param[2];
+      
+      if(data_length+11 > packet_buf_capacity_){
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+      }
+    }
+    break;
+  
+  case 1:  
+    if(p_rx_info->recv_param_len <= 2){ //2 = Address(1)+Length(1)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+    }
+    else {
+      addr = p_rx_param[0];
+      data_length = p_rx_param[1];
+      
+      if(data_length+6 > packet_buf_capacity_){
+        err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+      }
+    }
+    break;
+
+  default:
+    err = DXL_LIB_ERROR_WRONG_PACKET;
+    break;
+  }
+
+  if(err == DXL_LIB_OK){
+    uint8_t i, j;
+    uint16_t item_start_addr, item_addr_length;
+    ControlItem_t *p_item;
+    uint8_t *p_tx_param;
+
+    // Prepare response data
+    if(p_rx_info->protocol_ver == 2){
+      p_tx_param = &p_packet_buf_[9 + DXL_BYTE_STUFF_SAFE_CNT];
+    }else{
+      p_tx_param = &p_packet_buf_[5 + DXL_BYTE_STUFF_SAFE_CNT];
+    }
+
+    memset(p_packet_buf_, 0, packet_buf_capacity_);
+
+    // Process each registered item
+    for(i=0; i < registered_item_cnt_; i++){
+      p_item = &control_table_[i];
+      item_start_addr = p_item->start_addr;
+      item_addr_length = p_item->length;
+
+      if(item_addr_length != 0 && p_item->p_data != nullptr
+      && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+
+        if(user_read_callback_ != nullptr){
+          user_read_callback_(item_start_addr, packet_err, user_read_callbakc_arg_);
+          if(packet_err != 0){      
+            break;
+          }
+        }
+
+        for(j=0; j<item_addr_length; j++){
+          p_tx_param[item_start_addr-addr+j] = p_item->p_data[j];
+        }
+      }
+    }
+
+    if(packet_err == 0){
+      ret = txStatusPacket(id_, 0, p_tx_param, data_length);
+    }
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
 
 bool 
 Slave::txStatusPacket(uint8_t id, uint8_t err_code, uint8_t *p_param, uint16_t param_len)
@@ -746,7 +1146,251 @@ Slave::rxInstPacket(uint8_t* p_param_buf, uint16_t param_buf_cap)
   return p_ret;
 }
 
+bool 
+Slave::processInstBulkRead()
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t *p_rx_param;
+  uint8_t packet_err = 0;
 
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if(p_rx_info->id != DXL_BROADCAST_ID){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  if(p_rx_info->protocol_ver != 2.0){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORTED;
+    return false;
+  }
+
+  // Process each ID's data in the bulk read packet
+  while(p_rx_info->recv_param_len > 0) {
+    if(p_rx_info->recv_param_len < 5) { // Need at least ID(1) + Address(2) + Length(2)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+      break;
+    }
+
+    uint8_t id = p_rx_param[0];
+    uint16_t addr = ((uint16_t)p_rx_param[2]<<8) | (uint16_t)p_rx_param[1];
+    uint16_t data_length = ((uint16_t)p_rx_param[4]<<8) | (uint16_t)p_rx_param[3];
+
+    if(id == id_) { // Only process if this is our ID
+      uint8_t i, j;
+      uint16_t item_start_addr, item_addr_length;
+      ControlItem_t *p_item;
+      uint8_t *p_tx_param;
+
+      // Prepare response data
+      p_tx_param = &p_packet_buf_[9 + DXL_BYTE_STUFF_SAFE_CNT];
+      memset(p_packet_buf_, 0, packet_buf_capacity_);
+
+      // Process each registered item
+      for(i=0; i < registered_item_cnt_; i++){
+        p_item = &control_table_[i];
+        item_start_addr = p_item->start_addr;
+        item_addr_length = p_item->length;
+
+        if(item_addr_length != 0 && p_item->p_data != nullptr
+        && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+
+          if(user_read_callback_ != nullptr){
+            user_read_callback_(item_start_addr, packet_err, user_read_callbakc_arg_);
+            if(packet_err != 0){      
+              break;
+            }
+          }
+
+          for(j=0; j<item_addr_length; j++){
+            p_tx_param[item_start_addr-addr+j] = p_item->p_data[j];
+          }
+        }
+      }
+
+      if(packet_err == 0){
+        ret = txStatusPacket(id_, 0, p_tx_param, data_length);
+      }
+    }
+
+    // Move to next ID's data
+    p_rx_param += 5; // Skip ID(1) + Address(2) + Length(2)
+    p_rx_info->recv_param_len -= 5;
+  }
+
+  if(err == DXL_LIB_OK) {
+    ret = true;
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
+
+bool 
+Slave::processInstFastSyncRead()
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t *p_rx_param;
+  uint16_t addr, data_length = 0;
+  uint8_t packet_err = 0;
+
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if(p_rx_info->id != DXL_BROADCAST_ID){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  if(p_rx_info->protocol_ver != 2.0){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORTED;
+    return false;
+  }
+
+  // extract start address and length from the instruction packet
+  if(p_rx_info->recv_param_len <= 2) { //2 = Address(2)+Length(2)
+    err = DXL_LIB_ERROR_WRONG_PACKET;
+  } 
+  else {
+    addr = ((uint16_t)p_rx_param[1]<<8) | (uint16_t)p_rx_param[0];
+    data_length = ((uint16_t)p_rx_param[3]<<8) | (uint16_t)p_rx_param[2];
+    
+    if(data_length+11 > packet_buf_capacity_){
+      err = DXL_LIB_ERROR_NOT_ENOUGH_BUFFER_SIZE;
+    }
+  }
+
+  if(err == DXL_LIB_OK){
+    uint8_t i, j;
+    uint16_t item_start_addr, item_addr_length;
+    ControlItem_t *p_item;
+    uint8_t *p_tx_param;
+
+    // Prepare response data
+    p_tx_param = &p_packet_buf_[9 + DXL_BYTE_STUFF_SAFE_CNT];
+    memset(p_packet_buf_, 0, packet_buf_capacity_);
+
+    // Process each registered item
+    for(i=0; i < registered_item_cnt_; i++){
+      p_item = &control_table_[i];
+      item_start_addr = p_item->start_addr;
+      item_addr_length = p_item->length;
+
+      if(item_addr_length != 0 && p_item->p_data != nullptr
+      && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+
+        if(user_read_callback_ != nullptr){
+          user_read_callback_(item_start_addr, packet_err, user_read_callbakc_arg_);
+          if(packet_err != 0){      
+            break;
+          }
+        }
+
+        for(j=0; j<item_addr_length; j++){
+          p_tx_param[item_start_addr-addr+j] = p_item->p_data[j];
+        }
+      }
+    }
+
+    if(packet_err == 0){
+      ret = txStatusPacket(id_, 0, p_tx_param, data_length);
+    }
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
+
+bool 
+Slave::processInstFastBulkRead()
+{
+  bool ret = false;
+  DXLLibErrorCode_t err = DXL_LIB_OK;
+  InfoToParseDXLPacket_t *p_rx_info;
+  uint8_t *p_rx_param;
+  uint8_t packet_err = 0;
+
+  p_rx_info = &info_rx_packet_;
+  p_rx_param = p_rx_info->p_param_buf;
+
+  if(p_rx_info->id != DXL_BROADCAST_ID){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORT_BROADCAST;
+    return false;
+  }
+
+  if(p_rx_info->protocol_ver != 2.0){
+    last_lib_err_ = DXL_LIB_ERROR_NOT_SUPPORTED;
+    return false;
+  }
+
+  // Process each ID's data in the fast bulk read packet
+  while(p_rx_info->recv_param_len > 0) {
+    if(p_rx_info->recv_param_len < 5) { // Need at least ID(1) + Address(2) + Length(2)
+      err = DXL_LIB_ERROR_WRONG_PACKET;
+      break;
+    }
+
+    uint8_t id = p_rx_param[0];
+    uint16_t addr = ((uint16_t)p_rx_param[2]<<8) | (uint16_t)p_rx_param[1];
+    uint16_t data_length = ((uint16_t)p_rx_param[4]<<8) | (uint16_t)p_rx_param[3];
+
+    if(id == id_) { // Only process if this is our ID
+      uint8_t i, j;
+      uint16_t item_start_addr, item_addr_length;
+      ControlItem_t *p_item;
+      uint8_t *p_tx_param;
+
+      // Prepare response data
+      p_tx_param = &p_packet_buf_[9 + DXL_BYTE_STUFF_SAFE_CNT];
+      memset(p_packet_buf_, 0, packet_buf_capacity_);
+
+      // Process each registered item
+      for(i=0; i < registered_item_cnt_; i++){
+        p_item = &control_table_[i];
+        item_start_addr = p_item->start_addr;
+        item_addr_length = p_item->length;
+
+        if(item_addr_length != 0 && p_item->p_data != nullptr
+        && isAddrInRange(item_start_addr, item_addr_length, addr, data_length) == true){
+
+          if(user_read_callback_ != nullptr){
+            user_read_callback_(item_start_addr, packet_err, user_read_callbakc_arg_);
+            if(packet_err != 0){      
+              break;
+            }
+          }
+
+          for(j=0; j<item_addr_length; j++){
+            p_tx_param[item_start_addr-addr+j] = p_item->p_data[j];
+          }
+        }
+      }
+
+      if(packet_err == 0){
+        ret = txStatusPacket(id_, 0, p_tx_param, data_length);
+      }
+    }
+
+    // Move to next ID's data
+    p_rx_param += 5; // Skip ID(1) + Address(2) + Length(2)
+    p_rx_info->recv_param_len -= 5;
+  }
+
+  if(err == DXL_LIB_OK) {
+    ret = true;
+  }
+
+  last_lib_err_ = err;
+
+  return ret;
+}
 
 static bool isAddrInRange(uint16_t addr, uint16_t length,
   uint16_t range_addr, uint16_t range_length)
