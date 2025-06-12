@@ -1257,6 +1257,7 @@ const InfoToParseDXLPacket_t* Master::fastRxStatusPacket(InfoSyncReadInst_t* syn
       }
       if (millis()-pre_time_ms >= timeout_ms) {
         err = DXL_LIB_ERROR_TIMEOUT;
+        info_rx_packet_.parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
         break;
       }
     }

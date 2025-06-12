@@ -696,12 +696,20 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
           p_parse_packet->header_cnt = 0;
         }
         p_parse_packet->header[p_parse_packet->header_cnt++] = recv_data;
+
+        // Check if the header is correct.
         if(p_parse_packet->header_cnt == 3){
           if(p_parse_packet->header[0] == 0xFF
           && p_parse_packet->header[1] == 0xFF
           && p_parse_packet->header[2] == 0xFD){
+            // Start of packet found! Reset key variables.
             p_parse_packet->recv_param_len = 0;
             p_parse_packet->calculated_crc = 0;
+            p_parse_packet->xel_index = 0;
+            p_parse_packet->buf_index = 0;
+            p_parse_packet->fast_param_state = DXL_FAST_PARAM_ID;
+            p_parse_packet->err_idx = 0;
+
             update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
             update_dxl_crc(&p_parse_packet->calculated_crc, 0xFF);
             update_dxl_crc(&p_parse_packet->calculated_crc, 0xFD);          
@@ -756,11 +764,8 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
       case DXL2_0_PACKET_PARSING_STATE_INST:
         p_parse_packet->inst_idx = recv_data;
         update_dxl_crc(&p_parse_packet->calculated_crc, recv_data);
-        p_parse_packet->err_idx = 0;
-        p_parse_packet->recv_param_len = 0;
 
         if(recv_data == DXL_INST_STATUS){
-          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
           if(p_parse_packet->packet_len < 4){ // 4 = Instruction(1)+Error(1)+CRC(2)
             ret = DXL_LIB_ERROR_LENGTH;
             p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
@@ -768,11 +773,8 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
             p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_ERROR;
           }
         }else{
-          if(p_parse_packet->packet_len == 3){ // 3 = Instruction(1)+CRC(2)
-            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
-          }else{
-            p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
-          }
+          ret = DXL_LIB_ERROR_LENGTH;
+          p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_IDLE;
         }
         break;
 
@@ -783,16 +785,13 @@ static DXLLibErrorCode_t fast_parse_dxl2_0_packet(InfoToParseDXLPacket_t* p_pars
           p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_CRC_L;
           break;
         }
-        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
-
-        // p_parse_packet->fast_param_state = DXL_FAST_PARAM_ERROR;
-        p_parse_packet->xel_index = 0;
-        p_parse_packet->buf_index = 0;
-        if (nullptr != sync_read)
+        if (nullptr != sync_read) {
           sync_read->p_xels[0].error = recv_data;
-        else if (nullptr != bulk_read)
+        }
+        else if (nullptr != bulk_read) {
           bulk_read->p_xels[0].error = recv_data;
-        p_parse_packet->fast_param_state = DXL_FAST_PARAM_ID;
+        }
+        p_parse_packet->parse_state = DXL2_0_PACKET_PARSING_STATE_PARAM;
         break;
 
       case DXL2_0_PACKET_PARSING_STATE_PARAM:
