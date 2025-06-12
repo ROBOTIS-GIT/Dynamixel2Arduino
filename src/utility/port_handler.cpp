@@ -58,6 +58,11 @@ void SerialPortHandler::begin(unsigned long baud)
     digitalWrite(dir_pin_, LOW);
     while(digitalRead(dir_pin_) != LOW);
   }
+#ifdef ARDUINO_ARCH_STM32
+  else{
+    port_.enableHalfDuplexRx();
+  }
+#endif  // ARDUINO_ARCH_STM32
 
   setOpenState(true);
 }
@@ -98,6 +103,11 @@ size_t SerialPortHandler::write(uint8_t c)
     digitalWrite(dir_pin_, LOW);
     while(digitalRead(dir_pin_) != LOW);
   }
+#ifdef ARDUINO_ARCH_STM32
+  else{
+    port_.enableHalfDuplexRx();
+  }
+#endif  // ARDUINO_ARCH_STM32
 
   return ret;
 }
@@ -120,6 +130,11 @@ size_t SerialPortHandler::write(uint8_t *buf, size_t len)
     digitalWrite(dir_pin_, LOW);
     while(digitalRead(dir_pin_) != LOW);
   }
+#ifdef ARDUINO_ARCH_STM32
+  else{
+    port_.enableHalfDuplexRx();
+  }
+#endif  // ARDUINO_ARCH_STM32
 
   return ret;      
 }
