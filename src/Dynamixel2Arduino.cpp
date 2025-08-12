@@ -1521,6 +1521,15 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_pro_ra_plus_h54_200[] PRO
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
 
+/* YM series */
+const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_ym_model[] PROGMEM = {
+#if (ENABLE_ACTUATOR_Y)
+  {SET_PWM, GOAL_PWM, UNIT_RAW, -1000, 1000, 1},
+  {GET_PWM, PRESENT_PWM, UNIT_RAW, -1000, 1000, 1},
+#endif
+  {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+};
+
 const ModelDependencyFuncItemAndRangeInfo_t dependency_ym070_210_000_rh[] PROGMEM = {
 #if (ENABLE_ACTUATOR_Y)
   {SET_POSITION, GOAL_POSITION, UNIT_DEGREE, -2147483648, 2147483647, 0.0006866455},
@@ -1803,27 +1812,33 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
 
     case YM070_210_M001_RH:
     case YM070_210_B001_RH:
-      p_common_ctable = dependency_ym070_210_000_rh;
+      p_common_ctable = dependency_ctable_ym_model;
+      p_dep_ctable = dependency_ym070_210_000_rh;
       break;
     case YM070_210_R051_RH:
     case YM070_210_A051_RH:
-      p_common_ctable = dependency_ym070_210_051_rh;
+      p_common_ctable = dependency_ctable_ym_model;
+      p_dep_ctable = dependency_ym070_210_051_rh;
       break;
     case YM070_210_R099_RH:
     case YM070_210_A099_RH:
-      p_common_ctable = dependency_ym070_210_099_rh;
+      p_common_ctable = dependency_ctable_ym_model;
+      p_dep_ctable = dependency_ym070_210_099_rh;
       break;
     case YM080_230_M001_RH:
     case YM080_230_B001_RH:
-      p_common_ctable = dependency_ym080_230_000_rh;
+      p_common_ctable = dependency_ctable_ym_model;
+      p_dep_ctable = dependency_ym080_230_000_rh;
       break;
     case YM080_230_R051_RH:
     case YM080_230_A051_RH:
-      p_common_ctable = dependency_ym080_230_051_rh;
+      p_common_ctable = dependency_ctable_ym_model;
+      p_dep_ctable = dependency_ym080_230_051_rh;
       break;
     case YM080_230_R099_RH:
     case YM080_230_A099_RH:
-      p_common_ctable = dependency_ym080_230_099_rh;
+      p_common_ctable = dependency_ctable_ym_model;
+      p_dep_ctable = dependency_ym080_230_099_rh;
       break;
 
     default:
