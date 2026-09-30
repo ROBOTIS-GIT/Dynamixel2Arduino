@@ -93,6 +93,10 @@
 #define XC330_T288          (uint16_t)1220
 #endif
 
+#ifndef XM335_T323
+#define XM335_T323          (uint16_t)1710
+#endif
+
 #ifndef XC430_W150
 #define XC430_W150          (uint16_t)1070
 #endif

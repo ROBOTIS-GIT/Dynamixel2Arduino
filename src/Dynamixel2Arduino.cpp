@@ -37,6 +37,7 @@ const uint16_t model_number_table[] PROGMEM = {
     XC330_M288,    
     XC330_T181,
     XC330_T288,    
+    XM335_T323,
     XL430_W250,
     XXL430_W250,
     XC430_W150,  XC430_W240,
@@ -308,6 +309,7 @@ bool Dynamixel2Arduino::setBaudrate(uint8_t id, uint32_t baudrate)
           return false;                    
       }    
       break;
+    case XM335_T323:
     case XC330_M288:
     case XC330_M181:
     case XC330_T288:
@@ -727,7 +729,8 @@ bool Dynamixel2Arduino::setOperatingMode(uint8_t id, uint8_t mode)
     case XC330_M288:
     case XC330_M181:    
     case XC330_T181:
-    case XC330_T288:    
+    case XC330_T288:
+    case XM335_T323:    
     case XM430_W210:
     case XM430_W350:
     case XH430_V210:
@@ -1190,6 +1193,7 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_ctable_2_0_common[] PROGM
   || ENABLE_ACTUATOR_MX106_PROTOCOL2 \
   || ENABLE_ACTUATOR_XL330 \
   || ENABLE_ACTUATOR_XC330 \
+  || ENABLE_ACTUATOR_XM335 \
   || ENABLE_ACTUATOR_XC430 \
   || ENABLE_ACTUATOR_XL430 \
   || ENABLE_ACTUATOR_XM430 || ENABLE_ACTUATOR_XH430 || ENABLE_ACTUATOR_XD430 \
@@ -1266,6 +1270,17 @@ const ModelDependencyFuncItemAndRangeInfo_t dependency_xc330_t181_t288[] PROGMEM
 #endif
   {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
 };
+
+const ModelDependencyFuncItemAndRangeInfo_t dependency_xm335_t323[] PROGMEM = {
+  #if (ENABLE_ACTUATOR_XM335)
+    {SET_CURRENT, GOAL_CURRENT, UNIT_MILLI_AMPERE, -910, 910, 1},
+    {GET_CURRENT, PRESENT_CURRENT, UNIT_MILLI_AMPERE, -910, 910, 1},
+  
+    {SET_VELOCITY, GOAL_VELOCITY, UNIT_RPM, -2047, 2047, 0.229},
+    {GET_VELOCITY, PRESENT_VELOCITY, UNIT_RPM, -2047, 2047, 0.229},
+  #endif
+    {LAST_DUMMY_FUNC, ControlTableItem::LAST_DUMMY_ITEM, UNIT_RAW, 0, 0, 0}
+  };
 
 const ModelDependencyFuncItemAndRangeInfo_t dependency_xm430_w210_w350[] PROGMEM = {
 #if (ENABLE_ACTUATOR_XM430)
@@ -1690,6 +1705,11 @@ static ItemAndRangeInfo_t getModelDependencyFuncInfo(uint16_t model_num, uint8_t
     case XC330_T288:
       p_common_ctable = dependency_ctable_2_0_common;
       p_dep_ctable = dependency_xc330_t181_t288;
+      break;
+
+    case XM335_T323:
+      p_common_ctable = dependency_ctable_2_0_common;
+      p_dep_ctable = dependency_xm335_t323;
       break;
 
     case XM430_W210:
