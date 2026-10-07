@@ -404,7 +404,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * If the read fails, 0 is returned. Whether or not this is an actual value can be confirmed with @getLastLibErrCode().
      */  
     int32_t readControlTableItem(uint8_t item_idx, 
-      uint8_t id, uint32_t timeout = 100);
+      uint8_t id, uint32_t timeout = 10);
 
     /**
      * @brief It is API for controlling data of a DYNAMIXEL control table item.
@@ -423,7 +423,7 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
      * @return It returns true(1) on success, false(0) on failure.
      */
     bool writeControlTableItem(uint8_t item_idx, 
-      uint8_t id, int32_t data, uint32_t timeout = 100);
+      uint8_t id, int32_t data, uint32_t timeout = 10);
 
 
 #if 0 //TODO
@@ -464,10 +464,10 @@ class Dynamixel2Arduino : public DYNAMIXEL::Master
     bool writeForRangeDependencyFunc(uint8_t func_idx, uint8_t id, float value, uint8_t unit);
 
     int32_t readControlTableItem(uint16_t model_num,
-      uint8_t item_idx, uint8_t id, uint32_t timeout = 100);
+      uint8_t item_idx, uint8_t id, uint32_t timeout = 10);
     
     bool writeControlTableItem(uint16_t model_num, 
-      uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout = 100);  
+      uint8_t item_idx, uint8_t id, int32_t data, uint32_t timeout = 10);  
 };
 
 

@@ -332,6 +332,10 @@ static DXLLibErrorCode_t end_make_dxl2_0_packet(InfoToMakeDXLPacket_t* p_make_pa
 DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, 
   uint8_t protocol_ver, uint8_t* p_param_buf, uint16_t param_buf_capacity)
 {
+  if(p_parse_packet == NULL){
+    return DXL_LIB_ERROR_NULLPTR;
+  }
+
   if(param_buf_capacity > 0 && p_param_buf == NULL){
     return DXL_LIB_ERROR_NULLPTR;
   }
@@ -340,11 +344,10 @@ DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet,
     return DXL_LIB_ERROR_INVAILD_PROTOCOL_VERSION;
   }
 
+  memset(p_parse_packet, 0, sizeof(InfoToParseDXLPacket_t));
   p_parse_packet->protocol_ver = protocol_ver;
   p_parse_packet->p_param_buf = p_param_buf;
   p_parse_packet->param_buf_capacity = param_buf_capacity;
-  // p_parse_packet->recv_param_len = 0;
-  // p_parse_packet->parse_state = 0;
   p_parse_packet->is_init = true;
 
   return DXL_LIB_OK;
@@ -352,9 +355,13 @@ DXLLibErrorCode_t begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet,
 
 DXLLibErrorCode_t fast_begin_parse_dxl_packet(InfoToParseDXLPacket_t* p_parse_packet, uint8_t protocol_ver)
 {
+  if (p_parse_packet == NULL)
+    return DXL_LIB_ERROR_NULLPTR;
+
   if (protocol_ver != 2)
     return DXL_LIB_ERROR_INVAILD_PROTOCOL_VERSION;
 
+  memset(p_parse_packet, 0, sizeof(InfoToParseDXLPacket_t));
   p_parse_packet->protocol_ver = protocol_ver;
   p_parse_packet->p_param_buf = nullptr;
   p_parse_packet->param_buf_capacity = 0;

@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <cstring>
 
 const int DXL_BROADCAST_ID = 0xFE;
 
